@@ -43,19 +43,23 @@ enum
 
 
 
-static void thunarx_property_page_get_property  (GObject                  *object,
-                                                 guint                     prop_id,
-                                                 GValue                   *value,
-                                                 GParamSpec               *pspec);
-static void thunarx_property_page_set_property  (GObject                  *object,
-                                                 guint                     prop_id,
-                                                 const GValue             *value,
-                                                 GParamSpec               *pspec);
-static void thunarx_property_page_destroy       (GtkObject                *object);
-static void thunarx_property_page_size_request  (GtkWidget                *widget,
-                                                 GtkRequisition           *requisition);
-static void thunarx_property_page_size_allocate (GtkWidget                *widget,
-                                                 GtkAllocation            *allocation);
+static void thunarx_property_page_get_property        (GObject                  *object,
+                                                        guint                     prop_id,
+                                                        GValue                   *value,
+                                                        GParamSpec               *pspec);
+static void thunarx_property_page_set_property         (GObject                  *object,
+                                                        guint                     prop_id,
+                                                        const GValue             *value,
+                                                        GParamSpec               *pspec);
+static void thunarx_property_page_destroy              (GtkWidget                *widget);
+static void thunarx_property_page_get_preferred_width  (GtkWidget                *widget,
+                                                        gint                     *minimal_width,
+                                                        gint                     *natural_width);
+static void thunarx_property_page_get_preferred_height (GtkWidget                *widget,
+                                                        gint                     *minimal_height,
+                                                        gint                     *natural_height);
+static void thunarx_property_page_size_allocate        (GtkWidget                *widget,
+                                                        GtkAllocation            *allocation);
 
 
 
@@ -73,7 +77,6 @@ G_DEFINE_TYPE (ThunarxPropertyPage, thunarx_property_page, GTK_TYPE_BIN)
 static void
 thunarx_property_page_class_init (ThunarxPropertyPageClass *klass)
 {
-  GtkObjectClass *gtkobject_class;
   GtkWidgetClass *gtkwidget_class;
   GObjectClass   *gobject_class;
 
@@ -84,12 +87,11 @@ thunarx_property_page_class_init (ThunarxPropertyPageClass *klass)
   gobject_class->get_property = thunarx_property_page_get_property;
   gobject_class->set_property = thunarx_property_page_set_property;
 
-  gtkobject_class = GTK_OBJECT_CLASS (klass);
-  gtkobject_class->destroy = thunarx_property_page_destroy;
-
   gtkwidget_class = GTK_WIDGET_CLASS (klass);
-  gtkwidget_class->size_request = thunarx_property_page_size_request;
+  gtkwidget_class->get_preferred_width  = thunarx_property_page_get_preferred_width;
+  gtkwidget_class->get_preferred_height = thunarx_property_page_get_preferred_height;
   gtkwidget_class->size_allocate = thunarx_property_page_size_allocate;
+  gtkwidget_class->destroy = thunarx_property_page_destroy;
 
   /**
    * ThunarxPropertyPage::label:
@@ -181,41 +183,65 @@ thunarx_property_page_set_property (GObject      *object,
 
 
 static void
-thunarx_property_page_destroy (GtkObject *object)
+thunarx_property_page_destroy (GtkWidget *object)
 {
   ThunarxPropertyPage *property_page = THUNARX_PROPERTY_PAGE (object);
 
   /* destroy the label widget (if any) */
   if (G_LIKELY (property_page->priv->label_widget != NULL))
     {
-      gtk_object_destroy (GTK_OBJECT (property_page->priv->label_widget));
+      gtk_widget_destroy (property_page->priv->label_widget);
       g_object_unref (G_OBJECT (property_page->priv->label_widget));
       property_page->priv->label_widget = NULL;
     }
 
-  (*GTK_OBJECT_CLASS (thunarx_property_page_parent_class)->destroy) (object);
+  (*GTK_WIDGET_CLASS (thunarx_property_page_parent_class)->destroy) (object);
 }
 
 
 
 static void
-thunarx_property_page_size_request (GtkWidget      *widget,
-                                    GtkRequisition *requisition)
+thunarx_property_page_get_preferred_width (GtkWidget *widget,
+                                           gint      *minimal_width,
+                                           gint      *natural_width)
 {
-  GtkBin *bin = GTK_BIN (widget);
+  GtkWidget *child;
+  gint       minimal = 0;
+  gint       natural = 0;
+  gint       border;
 
-  if (G_LIKELY (bin->child != NULL && GTK_WIDGET_VISIBLE (bin->child)))
-    {
-      gtk_widget_size_request (bin->child, requisition);
-    }
-  else
-    {
-      requisition->width = 0;
-      requisition->height = 0;
-    }
+  child = gtk_bin_get_child (GTK_BIN (widget));
+  if (G_LIKELY (child != NULL))
+    gtk_widget_get_preferred_width (child, &minimal, &natural);
 
-  requisition->width += 2 * (GTK_CONTAINER (bin)->border_width + widget->style->xthickness);
-  requisition->height += 2 * (GTK_CONTAINER (bin)->border_width + widget->style->ythickness);
+  /* TODO, we previously also added widget->style->[xy]thickness */
+  border = 2 * gtk_container_get_border_width (GTK_CONTAINER (widget));
+
+  *minimal_width = minimal + border;
+  *natural_width = natural + border;
+}
+
+
+
+static void
+thunarx_property_page_get_preferred_height (GtkWidget *widget,
+                                            gint      *minimal_height,
+                                            gint      *natural_height)
+{
+  GtkWidget *child;
+  gint       minimal = 0;
+  gint       natural = 0;
+  gint       border;
+
+  child = gtk_bin_get_child (GTK_BIN (widget));
+  if (G_LIKELY (child != NULL))
+    gtk_widget_get_preferred_height (child, &minimal, &natural);
+
+  /* TODO, we previously also added widget->style->[xy]thickness */
+  border = 2 * gtk_container_get_border_width (GTK_CONTAINER (widget));
+
+  *minimal_height = minimal + border;
+  *natural_height = natural + border;
 }
 
 
@@ -224,23 +250,28 @@ static void
 thunarx_property_page_size_allocate (GtkWidget     *widget,
                                      GtkAllocation *allocation)
 {
-  GtkAllocation child_allocation;
-  GtkBin       *bin = GTK_BIN (widget);
+  GtkAllocation  child_allocation;
+  gint           border_width;
+  GtkWidget     *child;
 
   /* apply the allocation to the property page */
-  widget->allocation = *allocation;
+  gtk_widget_set_allocation (widget, allocation);
 
   /* apply the child allocation if we have a child */
-  if (G_LIKELY (bin->child != NULL && GTK_WIDGET_VISIBLE (bin->child)))
+  child = gtk_bin_get_child (GTK_BIN (widget));
+  if (child != NULL
+      && gtk_widget_get_visible (child))
     {
+      border_width = gtk_container_get_border_width (GTK_CONTAINER (widget));
+
       /* calculate the allocation for the child widget */
-      child_allocation.x = allocation->x + GTK_CONTAINER (bin)->border_width + widget->style->xthickness;
-      child_allocation.y = allocation->y + GTK_CONTAINER (bin)->border_width + widget->style->ythickness;
-      child_allocation.width = allocation->width - 2 * (GTK_CONTAINER (bin)->border_width + widget->style->xthickness);
-      child_allocation.height = allocation->height - 2 * (GTK_CONTAINER (bin)->border_width + widget->style->ythickness);
+      child_allocation.x = allocation->x + border_width;
+      child_allocation.y = allocation->y + border_width;
+      child_allocation.width = allocation->width - 2 * border_width;
+      child_allocation.height = allocation->height - 2 * border_width;
 
       /* apply the child allocation */
-      gtk_widget_size_allocate (bin->child, &child_allocation);
+      gtk_widget_size_allocate (child, &child_allocation);
     }
 }
 
@@ -367,7 +398,7 @@ thunarx_property_page_set_label_widget (ThunarxPropertyPage *property_page,
                                         GtkWidget           *label_widget)
 {
   g_return_if_fail (THUNARX_IS_PROPERTY_PAGE (property_page));
-  g_return_if_fail (label_widget == NULL || (GTK_IS_WIDGET (label_widget) && label_widget->parent == NULL));
+  g_return_if_fail (label_widget == NULL || (GTK_IS_WIDGET (label_widget)));
 
   if (G_UNLIKELY (label_widget == property_page->priv->label_widget))
     return;
