@@ -199,7 +199,7 @@ thunar_preferences_dialog_init (ThunarPreferencesDialog *dialog)
 
   notebook = gtk_notebook_new ();
   gtk_container_set_border_width (GTK_CONTAINER (notebook), 6);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), notebook, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), notebook, TRUE, TRUE, 0);
   gtk_widget_show (notebook);
 
 
@@ -445,11 +445,11 @@ thunar_preferences_dialog_init (ThunarPreferencesDialog *dialog)
   gtk_table_attach (GTK_TABLE (table), align, 0, 1, 1, 2, GTK_EXPAND | GTK_FILL, 0, 0, 0);
   gtk_widget_show (align);
 
-  hbox = gtk_hbox_new (FALSE, 0);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_container_add (GTK_CONTAINER (align), hbox);
   gtk_widget_show (hbox);
 
-  ibox = gtk_vbox_new (FALSE, 0);
+  ibox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start (GTK_BOX (hbox), ibox, FALSE, FALSE, 0);
   gtk_widget_show (ibox);
 
@@ -636,7 +636,8 @@ thunar_preferences_dialog_configure (ThunarPreferencesDialog *dialog)
   argv[2] = NULL;
 
   /* invoke the configuration interface of thunar-volman */
-  if (!gdk_spawn_on_screen (gtk_widget_get_screen (GTK_WIDGET (dialog)), NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &err))
+  /* TODO use xfce_spawn */
+  if (!gdk_spawn_on_screen (NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &err))
     {
       /* tell the user that we failed to come up with the thunar-volman configuration dialog */
       thunar_dialogs_show_error (dialog, err, _("Failed to display the volume management settings"));

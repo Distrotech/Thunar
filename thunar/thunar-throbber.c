@@ -123,7 +123,7 @@ thunar_throbber_class_init (ThunarThrobberClass *klass)
 static void
 thunar_throbber_init (ThunarThrobber *throbber)
 {
-  GTK_WIDGET_SET_FLAGS (throbber, GTK_NO_WINDOW);
+  gtk_widget_set_has_window (GTK_WIDGET (throbber), FALSE);
   throbber->timer_id = -1;
 }
 

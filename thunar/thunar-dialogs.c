@@ -90,7 +90,6 @@ thunar_dialogs_show_rename_file (gpointer    parent,
   dialog = gtk_dialog_new_with_buttons (title,
                                         window,
                                         GTK_DIALOG_MODAL
-                                        | GTK_DIALOG_NO_SEPARATOR
                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                         _("_Rename"), GTK_RESPONSE_OK,
@@ -104,7 +103,7 @@ thunar_dialogs_show_rename_file (gpointer    parent,
     gtk_window_set_screen (GTK_WINDOW (dialog), screen);
 
   table = g_object_new (GTK_TYPE_TABLE, "border-width", 6, "column-spacing", 6, "row-spacing", 3, NULL);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), table, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), table, TRUE, TRUE, 0);
   gtk_widget_show (table);
 
   icon_theme = gtk_icon_theme_get_for_screen (gtk_widget_get_screen (dialog));
@@ -434,7 +433,7 @@ thunar_dialogs_show_job_ask (GtkWindow        *parent,
         }
 
       button = gtk_button_new_with_mnemonic (mnemonic);
-      GTK_WIDGET_SET_FLAGS (button, GTK_CAN_DEFAULT);
+      gtk_widget_set_can_default (button, TRUE);
       gtk_dialog_add_action_widget (GTK_DIALOG (message), button, response);
       gtk_widget_show (button);
 
@@ -502,7 +501,6 @@ thunar_dialogs_show_job_ask_replace (GtkWindow  *parent,
   dialog = gtk_dialog_new_with_buttons (_("Confirm to replace files"),
                                         parent,
                                         GTK_DIALOG_MODAL
-                                        | GTK_DIALOG_NO_SEPARATOR
                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                         _("S_kip All"), THUNAR_JOB_RESPONSE_NO_ALL,
@@ -530,7 +528,7 @@ thunar_dialogs_show_job_ask_replace (GtkWindow  *parent,
                         "row-spacing", 6,
                         "column-spacing", 5,
                         NULL);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), table, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), table, TRUE, TRUE, 0);
   gtk_widget_show (table);
 
   image = gtk_image_new_from_icon_name ("stock_folder-copy", GTK_ICON_SIZE_BUTTON);

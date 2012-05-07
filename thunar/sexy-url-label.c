@@ -220,7 +220,7 @@ sexy_url_label_motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
 	SexyUrlLabelLink *llink = NULL;
 
 	if (event->is_hint)
-		gdk_window_get_pointer(event->window, &x, &y, &state);
+		gdk_window_get_device_position(event->window, event->device, &x, &y, &state);
 	else
 	{
 		x = event->x;
@@ -254,7 +254,7 @@ sexy_url_label_motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
 			cursor = gdk_cursor_new_for_display(
 				gtk_widget_get_display(widget), GDK_HAND2);
 			gdk_window_set_cursor(priv->event_window, cursor);
-			gdk_cursor_unref(cursor);
+			g_object_unref(cursor);
 
 			priv->active_link = llink;
 		}
@@ -270,7 +270,7 @@ sexy_url_label_motion_notify_event(GtkWidget *widget, GdkEventMotion *event)
 				cursor = gdk_cursor_new_for_display(
 					gtk_widget_get_display(widget), GDK_XTERM);
 				gdk_window_set_cursor(priv->event_window, cursor);
-				gdk_cursor_unref(cursor);
+				g_object_unref(cursor);
 			}
 			else
 				gdk_window_set_cursor(priv->event_window, NULL);

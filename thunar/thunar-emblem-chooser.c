@@ -136,7 +136,9 @@ thunar_emblem_chooser_init (ThunarEmblemChooser *chooser)
   gtk_widget_show (viewport);
 
   /* setup the wrap table */
-  chooser->table = g_object_new (EXO_TYPE_WRAP_TABLE, "border-width", 6, "homogeneous", TRUE, NULL);
+  chooser->table = gtk_grid_new ();
+  gtk_container_set_border_width (GTK_CONTAINER (chooser->table), 6);
+  gtk_grid_set_row_homogeneous (GTK_GRID (chooser->table), TRUE);
   gtk_container_add (GTK_CONTAINER (viewport), chooser->table);
   gtk_widget_show (chooser->table);
 
@@ -416,12 +418,12 @@ thunar_emblem_chooser_create_button (ThunarEmblemChooser *chooser,
 
   /* allocate the button */
   button = gtk_check_button_new ();
-  GTK_WIDGET_UNSET_FLAGS (button, GTK_CAN_FOCUS);
+  gtk_widget_set_can_focus (button, FALSE);
   g_object_set_data_full (G_OBJECT (button), I_("thunar-emblem"), g_strdup (emblem), g_free);
   g_signal_connect (G_OBJECT (button), "toggled", G_CALLBACK (thunar_emblem_chooser_button_toggled), chooser);
 
   /* allocate the box */
-  vbox = gtk_vbox_new (FALSE, 2);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   gtk_size_group_add_widget (chooser->size_group, vbox);
   gtk_container_add (GTK_CONTAINER (button), vbox);
   gtk_widget_show (vbox);

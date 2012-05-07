@@ -85,7 +85,7 @@ static void     thunar_folder_monitor                     (GFileMonitor         
 
 struct _ThunarFolderClass
 {
-  GtkObjectClass __parent__;
+  GObjectClass __parent__;
 
   /* signals */
   void (*error)         (ThunarFolder *folder,
@@ -98,7 +98,7 @@ struct _ThunarFolderClass
 
 struct _ThunarFolder
 {
-  GtkObject __parent__;
+  GObject __parent__;
 
   ThunarJob         *job;
 
@@ -118,7 +118,7 @@ static GQuark thunar_folder_quark;
 
 
 
-G_DEFINE_TYPE (ThunarFolder, thunar_folder, GTK_TYPE_OBJECT)
+G_DEFINE_TYPE (ThunarFolder, thunar_folder, G_TYPE_OBJECT)
 
 
 
@@ -491,7 +491,7 @@ thunar_folder_file_destroyed (ThunarFileMonitor *file_monitor,
   if (G_UNLIKELY (folder->corresponding_file == file))
     {
       /* the folder is useless now */
-      gtk_object_destroy (GTK_OBJECT (folder));
+      g_object_unref (G_OBJECT (folder));
     }
   else
     {

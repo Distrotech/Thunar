@@ -119,13 +119,14 @@ thunar_icon_view_set_property (GObject      *object,
                                GParamSpec   *pspec)
 {
   ThunarStandardView *standard_view = THUNAR_STANDARD_VIEW (object);
+  GtkWidget          *icon_view = gtk_bin_get_child (GTK_BIN (standard_view));
 
   switch (prop_id)
     {
     case PROP_TEXT_BESIDE_ICONS:
       if (G_UNLIKELY (g_value_get_boolean (value)))
         {
-          exo_icon_view_set_orientation (EXO_ICON_VIEW (GTK_BIN (standard_view)->child), GTK_ORIENTATION_HORIZONTAL);
+          exo_icon_view_set_orientation (EXO_ICON_VIEW (icon_view), GTK_ORIENTATION_HORIZONTAL);
           g_object_set (G_OBJECT (standard_view->name_renderer), "wrap-width", 128, "yalign", 0.5f, NULL);
 
           /* disconnect the "zoom-level" signal handler, since we're using a fixed wrap-width here */
@@ -133,7 +134,7 @@ thunar_icon_view_set_property (GObject      *object,
         }
       else
         {
-          exo_icon_view_set_orientation (EXO_ICON_VIEW (GTK_BIN (standard_view)->child), GTK_ORIENTATION_VERTICAL);
+          exo_icon_view_set_orientation (EXO_ICON_VIEW (icon_view), GTK_ORIENTATION_VERTICAL);
           g_object_set (G_OBJECT (standard_view->name_renderer), "yalign", 0.0f, NULL);
 
           /* connect the "zoom-level" signal handler as the wrap-width is now synced with the "zoom-level" */

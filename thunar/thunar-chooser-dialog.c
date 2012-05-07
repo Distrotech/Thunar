@@ -189,7 +189,7 @@ thunar_chooser_dialog_init (ThunarChooserDialog *dialog)
   gtk_widget_show (vbox);
 
   /* create the header box */
-  header = gtk_hbox_new (FALSE, 6);
+  header = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   gtk_box_pack_start (GTK_BOX (vbox), header, FALSE, FALSE, 0);
   gtk_widget_show (header);
 
@@ -207,7 +207,7 @@ thunar_chooser_dialog_init (ThunarChooserDialog *dialog)
   gtk_widget_show (dialog->header_label);
 
   /* create the view box */
-  box = gtk_vbox_new (FALSE, 6);
+  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
   gtk_box_pack_start (GTK_BOX (vbox), box, TRUE, TRUE, 0);
   gtk_widget_show (box);
 
@@ -261,7 +261,7 @@ thunar_chooser_dialog_init (ThunarChooserDialog *dialog)
   gtk_widget_show (dialog->custom_expander);
 
   /* create the "Custom command" box */
-  hbox = gtk_hbox_new (FALSE, 2);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 2);
   gtk_container_add (GTK_CONTAINER (dialog->custom_expander), hbox);
   gtk_widget_show (hbox);
 
@@ -476,7 +476,7 @@ thunar_chooser_dialog_response (GtkDialog *widget,
   if (G_LIKELY (succeed && dialog->open))
     {
       /* create launch context */
-      context = gdk_app_launch_context_new ();
+      context = gdk_display_get_app_launch_context (gtk_widget_get_display (GTK_WIDGET (dialog)));
       gdk_app_launch_context_set_screen (context, gtk_widget_get_screen (GTK_WIDGET (dialog)));
 
       /* create fake file list */

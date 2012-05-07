@@ -336,11 +336,11 @@ thunar_tree_view_class_init (ThunarTreeViewClass *klass)
 
   /* setup the key bindings for the tree view */
   binding_set = gtk_binding_set_by_class (klass);
-  gtk_binding_entry_add_signal (binding_set, GDK_BackSpace, GDK_CONTROL_MASK, "delete-selected-files", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_Delete, 0, "delete-selected-files", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_Delete, GDK_SHIFT_MASK, "delete-selected-files", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_KP_Delete, 0, "delete-selected-files", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_KP_Delete, GDK_SHIFT_MASK, "delete-selected-files", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_BackSpace, GDK_CONTROL_MASK, "delete-selected-files", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_Delete, 0, "delete-selected-files", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_Delete, GDK_SHIFT_MASK, "delete-selected-files", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_KP_Delete, 0, "delete-selected-files", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_KP_Delete, GDK_SHIFT_MASK, "delete-selected-files", 0);
 }
 
 
@@ -2124,7 +2124,7 @@ thunar_tree_view_action_properties (ThunarTreeView *view)
     {
       /* determine the toplevel window */
       toplevel = gtk_widget_get_toplevel (GTK_WIDGET (view));
-      if (G_LIKELY (toplevel != NULL && GTK_WIDGET_TOPLEVEL (toplevel)))
+      if (G_LIKELY (toplevel != NULL && gtk_widget_get_toplevel (toplevel)))
         {
           /* popup the properties dialog */
           dialog = thunar_properties_dialog_new ();
@@ -2346,7 +2346,7 @@ thunar_tree_view_drag_scroll_timer (gpointer user_data)
   GDK_THREADS_ENTER ();
 
   /* verify that we are realized */
-  if (GTK_WIDGET_REALIZED (view))
+  if (gtk_widget_get_realized (view))
     {
       /* determine pointer location and window geometry */
       gdk_window_get_pointer (GTK_WIDGET (view)->window, NULL, &y, NULL);

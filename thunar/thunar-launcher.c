@@ -623,12 +623,14 @@ thunar_launcher_open_paths (GAppInfo       *app_info,
   gchar               *message;
   gchar               *name;
   guint                n;
+  GdkDisplay          *display;
 
   /* determine the screen on which to launch the application */
   screen = (launcher->widget != NULL) ? gtk_widget_get_screen (launcher->widget) : NULL;
 
   /* create launch context */
-  context = gdk_app_launch_context_new ();
+  display = screen != NULL ? gdk_screen_get_display (screen) : gdk_display_get_default ();
+  context = gdk_display_get_app_launch_context (display);
   gdk_app_launch_context_set_screen (context, screen);
 
   /* determine the working directory */

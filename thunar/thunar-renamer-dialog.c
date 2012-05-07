@@ -317,6 +317,7 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
   GList                  *lp;
   gint                    active = 0;
   guint                   n;
+  GtkWidget              *content_area;
 
   /* allocate a new bulk rename model */
   renamer_dialog->model = thunar_renamer_model_new ();
@@ -374,12 +375,13 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
   /* add the toolbar to the dialog */
   toolbar = gtk_ui_manager_get_widget (renamer_dialog->ui_manager, "/toolbar");
   exo_binding_new (G_OBJECT (renamer_dialog), "standalone", G_OBJECT (toolbar), "visible");
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (renamer_dialog)->vbox), toolbar, FALSE, FALSE, 0);
+  content_area = gtk_dialog_get_content_area (GTK_DIALOG (renamer_dialog));
+  gtk_box_pack_start (GTK_BOX (content_area), toolbar, FALSE, FALSE, 0);
 
   /* create the main vbox */
-  mbox = gtk_vbox_new (FALSE, 12);
+  mbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 12);
   gtk_container_set_border_width (GTK_CONTAINER (mbox), 6);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (renamer_dialog)->vbox), mbox, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (content_area), mbox, TRUE, TRUE, 0);
   gtk_widget_show (mbox);
 
   /* create the scrolled window for the tree view */
@@ -440,7 +442,7 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
   gtk_tree_view_append_column (GTK_TREE_VIEW (renamer_dialog->tree_view), column);
 
   /* create the vbox for the renamer parameters */
-  vbox = gtk_vbox_new (FALSE, 6);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
   gtk_box_pack_start (GTK_BOX (mbox), vbox, FALSE, FALSE, 0);
   gtk_widget_show (vbox);
 
@@ -1880,7 +1882,7 @@ thunar_show_renamer_dialog (gpointer     parent,
     gtk_window_set_startup_id (GTK_WINDOW (dialog), startup_id);
 
   /* check if we have a toplevel window */
-  if (G_LIKELY (window != NULL && GTK_WIDGET_TOPLEVEL (window)))
+  if (G_LIKELY (window != NULL && gtk_widget_get_toplevel (window)))
     {
       /* dialog is transient for toplevel window, but not modal */
       gtk_window_set_destroy_with_parent (GTK_WINDOW (dialog), TRUE);

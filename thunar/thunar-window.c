@@ -528,13 +528,13 @@ thunar_window_class_init (ThunarWindowClass *klass)
 
   /* setup the key bindings for the windows */
   binding_set = gtk_binding_set_by_class (klass);
-  gtk_binding_entry_add_signal (binding_set, GDK_BackSpace, 0, "back", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_F5, 0, "reload", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_F9, 0, "toggle-sidepane", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_KP_Add, GDK_CONTROL_MASK, "zoom-in", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_KP_Subtract, GDK_CONTROL_MASK, "zoom-out", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_KP_0, GDK_CONTROL_MASK, "zoom-reset", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_KP_Insert, GDK_CONTROL_MASK, "zoom-reset", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_BackSpace, 0, "back", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_F5, 0, "reload", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_F9, 0, "toggle-sidepane", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_KP_Add, GDK_CONTROL_MASK, "zoom-in", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_KP_Subtract, GDK_CONTROL_MASK, "zoom-out", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_KP_0, GDK_CONTROL_MASK, "zoom-reset", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_KP_Insert, GDK_CONTROL_MASK, "zoom-reset", 0);
 }
 
 
@@ -817,7 +817,7 @@ thunar_window_init (ThunarWindow *window)
       gtk_container_add (GTK_CONTAINER (ebox), label);
       gtk_widget_show (label);
 
-      separator = gtk_hseparator_new ();
+      separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
       gtk_table_attach (GTK_TABLE (window->table), separator, 0, 1, 3, 4, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
       gtk_widget_show (separator);
     }
@@ -2178,8 +2178,7 @@ thunar_window_action_open_templates (GtkAction    *action,
     {
       /* display the "About Templates" dialog */
       dialog = gtk_dialog_new_with_buttons (_("About Templates"), GTK_WINDOW (window),
-                                            GTK_DIALOG_DESTROY_WITH_PARENT
-                                            | GTK_DIALOG_NO_SEPARATOR,
+                                            GTK_DIALOG_DESTROY_WITH_PARENT,
                                             GTK_STOCK_OK, GTK_RESPONSE_OK,
                                             NULL);
 
@@ -2187,7 +2186,7 @@ thunar_window_action_open_templates (GtkAction    *action,
 
       hbox = gtk_hbox_new (FALSE, 6);
       gtk_container_set_border_width (GTK_CONTAINER (hbox), 8);
-      gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), hbox, TRUE, TRUE, 0);
+      gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), hbox, TRUE, TRUE, 0);
       gtk_widget_show (hbox);
 
       image = gtk_image_new_from_stock (GTK_STOCK_DIALOG_INFO, GTK_ICON_SIZE_DIALOG);
@@ -2195,7 +2194,7 @@ thunar_window_action_open_templates (GtkAction    *action,
       gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
       gtk_widget_show (image);
 
-      vbox = gtk_vbox_new (FALSE, 18);
+      vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 18);
       gtk_box_pack_start (GTK_BOX (hbox), vbox, TRUE, TRUE, 0);
       gtk_widget_show (vbox);
 
@@ -2586,7 +2585,7 @@ thunar_window_notify_loading (ThunarView   *view,
   _thunar_return_if_fail (THUNAR_IS_WINDOW (window));
   _thunar_return_if_fail (THUNAR_VIEW (window->view) == view);
 
-  if (GTK_WIDGET_REALIZED (window))
+  if (gtk_widget_get_realized (window))
     {
       /* setup the proper cursor */
       if (thunar_view_get_loading (view))

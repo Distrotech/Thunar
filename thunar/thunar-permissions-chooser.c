@@ -233,7 +233,7 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   gtk_table_attach (GTK_TABLE (chooser->table), label, 0, 1, row, row + 1, GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (label);
 
-  hbox = gtk_hbox_new (FALSE, 6);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   gtk_table_attach (GTK_TABLE (chooser->table), hbox, 1, 2, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 6);
   gtk_widget_show (hbox);
 
@@ -348,7 +348,7 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
 
   row += 1;
 
-  hbox = gtk_hbox_new (FALSE, 6);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   exo_binding_new (G_OBJECT (chooser), "mutable", G_OBJECT (hbox), "sensitive");
   exo_binding_new (G_OBJECT (chooser->program_button), "visible", G_OBJECT (hbox), "visible");
   gtk_table_attach (GTK_TABLE (chooser->table), hbox, 1, 2, row, row + 1, GTK_FILL, GTK_FILL, 0, 0);
@@ -364,7 +364,7 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   gtk_box_pack_start (GTK_BOX (hbox), label, TRUE, TRUE, 0);
   gtk_widget_show (label);
 
-  hbox = gtk_hbox_new (FALSE, 6);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   exo_binding_new (G_OBJECT (chooser), "mutable", G_OBJECT (hbox), "sensitive");
   gtk_table_attach (GTK_TABLE (chooser->table), hbox, 1, 2, row, row + 1, GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (hbox);
@@ -382,7 +382,7 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
 
   row += 1;
 
-  hbox = gtk_hbox_new (FALSE, 6);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   gtk_table_attach (GTK_TABLE (chooser->table), hbox, 1, 2, row, row + 1, GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (hbox);
 
@@ -394,7 +394,7 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   gtk_widget_show (chooser->fixperm_button);
 
   /* the job control stuff */
-  hbox = gtk_hbox_new (FALSE, 6);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   gtk_box_pack_start (GTK_BOX (chooser), hbox, FALSE, FALSE, 0);
 
   chooser->job_progress = gtk_progress_bar_new ();
@@ -520,7 +520,6 @@ thunar_permissions_chooser_ask_recursive (ThunarPermissionsChooser *chooser)
       /* allocate the question dialog */
       dialog = gtk_dialog_new_with_buttons (_("Question"), GTK_WINDOW (toplevel),
                                             GTK_DIALOG_DESTROY_WITH_PARENT
-                                            | GTK_DIALOG_NO_SEPARATOR
                                             | GTK_DIALOG_MODAL,
                                             GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                             GTK_STOCK_NO, GTK_RESPONSE_NO,
@@ -528,9 +527,9 @@ thunar_permissions_chooser_ask_recursive (ThunarPermissionsChooser *chooser)
                                             NULL);
       gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_YES);
 
-      hbox = gtk_hbox_new (FALSE, 6);
+      hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
       gtk_container_set_border_width (GTK_CONTAINER (hbox), 8);
-      gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), hbox, TRUE, TRUE, 0);
+      gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), hbox, TRUE, TRUE, 0);
       gtk_widget_show (hbox);
 
       image = gtk_image_new_from_stock (GTK_STOCK_DIALOG_QUESTION, GTK_ICON_SIZE_DIALOG);
@@ -538,7 +537,7 @@ thunar_permissions_chooser_ask_recursive (ThunarPermissionsChooser *chooser)
       gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
       gtk_widget_show (image);
 
-      vbox = gtk_vbox_new (FALSE, 6);
+      vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
       gtk_box_pack_start (GTK_BOX (hbox), vbox, TRUE, TRUE, 0);
       gtk_widget_show (vbox);
 

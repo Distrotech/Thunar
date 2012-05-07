@@ -263,7 +263,7 @@ thunar_location_button_init (ThunarLocationButton *location_button)
 
   /* create the toggle button */
   button = gtk_toggle_button_new ();
-  GTK_WIDGET_UNSET_FLAGS (button, GTK_CAN_FOCUS);
+  gtk_widget_set_can_focus (button, FALSE);
   g_signal_connect_swapped (G_OBJECT (button), "clicked", G_CALLBACK (thunar_location_button_clicked), location_button);
   exo_mutual_binding_new (G_OBJECT (location_button), "active", G_OBJECT (button), "active");
   gtk_container_add (GTK_CONTAINER (location_button), button);
@@ -282,7 +282,7 @@ thunar_location_button_init (ThunarLocationButton *location_button)
   g_signal_connect (G_OBJECT (button), "drag-motion", G_CALLBACK (thunar_location_button_drag_motion), location_button);
 
   /* create the horizontal box */
-  hbox = gtk_hbox_new (FALSE, 2);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 2);
   gtk_container_add (GTK_CONTAINER (button), hbox);
   gtk_widget_show (hbox);
 
@@ -485,7 +485,7 @@ thunar_location_button_file_changed (ThunarLocationButton *location_button,
       icon_name = thunar_file_get_icon_name (file, location_button->file_icon_state, 
                                              icon_theme);
     }
-  gtk_drag_source_set_icon_name (GTK_BIN (location_button)->child, icon_name);
+  gtk_drag_source_set_icon_name (gtk_bin_get_child (GTK_BIN (location_button)), icon_name);
   g_free (icon_name);
 }
 
@@ -648,7 +648,8 @@ thunar_location_button_drag_data_get (GtkWidget            *button,
       uri_string = thunar_g_file_list_to_string (&path_list);
 
       /* set the uri list for the drag selection */
-      gtk_selection_data_set (selection_data, selection_data->target, 8, (guchar *) uri_string, strlen (uri_string));
+      gtk_selection_data_set (selection_data, gtk_selection_data_get_target (selection_data),
+                              8, (guchar *) uri_string, strlen (uri_string));
 
       /* cleanup */
       g_free (uri_string);
@@ -968,7 +969,7 @@ thunar_location_button_set_file (ThunarLocationButton *location_button,
       g_signal_connect_swapped (G_OBJECT (file), "destroy", G_CALLBACK (thunar_location_button_file_destroy), location_button);
 
       /* update our internal state for the new file (if realized) */
-      if (GTK_WIDGET_REALIZED (location_button))
+      if (gtk_widget_get_realized (location_button))
         thunar_location_button_file_changed (location_button, file);
     }
 

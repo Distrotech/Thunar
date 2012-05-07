@@ -489,11 +489,11 @@ thunar_standard_view_class_init (ThunarStandardViewClass *klass)
 
   /* setup the key bindings for the standard views */
   binding_set = gtk_binding_set_by_class (klass);
-  gtk_binding_entry_add_signal (binding_set, GDK_BackSpace, GDK_CONTROL_MASK, "delete-selected-files", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_Delete, 0, "delete-selected-files", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_Delete, GDK_SHIFT_MASK, "delete-selected-files", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_KP_Delete, 0, "delete-selected-files", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_KP_Delete, GDK_SHIFT_MASK, "delete-selected-files", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_BackSpace, GDK_CONTROL_MASK, "delete-selected-files", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_Delete, 0, "delete-selected-files", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_Delete, GDK_SHIFT_MASK, "delete-selected-files", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_KP_Delete, 0, "delete-selected-files", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_KP_Delete, GDK_SHIFT_MASK, "delete-selected-files", 0);
 }
 
 
@@ -656,7 +656,7 @@ thunar_standard_view_constructor (GType                  type,
   exo_binding_new (object, "zoom-level", G_OBJECT (standard_view->preferences), THUNAR_STANDARD_VIEW_GET_CLASS (standard_view)->zoom_level_property_name);
 
   /* determine the real view widget (treeview or iconview) */
-  view = GTK_BIN (object)->child;
+  view = gtk_bin_get_child (GTK_BIN (object));
 
   /* apply our list model to the real view (the child of the scrolled window),
    * we therefore assume that all real views have the "model" property.
@@ -948,7 +948,7 @@ static void
 thunar_standard_view_grab_focus (GtkWidget *widget)
 {
   /* forward the focus grab to the real view */
-  gtk_widget_grab_focus (GTK_BIN (widget)->child);
+  gtk_widget_grab_focus (gtk_bin_get_child (GTK_BIN (widget)));
 }
 
 
@@ -1166,6 +1166,7 @@ thunar_standard_view_set_current_directory (ThunarNavigator *navigator,
   ThunarStandardView *standard_view = THUNAR_STANDARD_VIEW (navigator);
   ThunarFolder       *folder;
   gboolean            trashed;
+  GtkWidget          *child = gtk_bin_get_child (GTK_BIN (standard_view));
 
   _thunar_return_if_fail (THUNAR_IS_STANDARD_VIEW (standard_view));
   _thunar_return_if_fail (current_directory == NULL || THUNAR_IS_FILE (current_directory));
@@ -1184,13 +1185,13 @@ thunar_standard_view_set_current_directory (ThunarNavigator *navigator,
        * to update the selection everytime (i.e. closing a window with a lot of
        * selected files), so we temporarily disconnect the model from the view.
        */
-      g_object_set (G_OBJECT (GTK_BIN (standard_view)->child), "model", NULL, NULL);
+      g_object_set (G_OBJECT (child), "model", NULL, NULL);
 
       /* reset the folder for the model */
       thunar_list_model_set_folder (standard_view->model, NULL);
 
       /* reconnect the model to the view */
-      g_object_set (G_OBJECT (GTK_BIN (standard_view)->child), "model", standard_view->model, NULL);
+      g_object_set (G_OBJECT (child), "model", standard_view->model, NULL);
 
       /* and we're done */
       return;
@@ -1203,7 +1204,7 @@ thunar_standard_view_set_current_directory (ThunarNavigator *navigator,
   /* We drop the model from the view as a simple optimization to speed up
    * the process of disconnecting the model data from the view.
    */
-  g_object_set (G_OBJECT (GTK_BIN (standard_view)->child), "model", NULL, NULL);
+  g_object_set (G_OBJECT (child), "model", NULL, NULL);
 
   /* open the new directory as folder */
   folder = thunar_folder_get_for_file (current_directory);
@@ -1219,7 +1220,7 @@ thunar_standard_view_set_current_directory (ThunarNavigator *navigator,
   g_object_unref (G_OBJECT (folder));
 
   /* reconnect our model to the view */
-  g_object_set (G_OBJECT (GTK_BIN (standard_view)->child), "model", standard_view->model, NULL);
+  g_object_set (G_OBJECT (child), "model", standard_view->model, NULL);
 
   /* check if the new directory is in the trash */
   trashed = thunar_file_is_trashed (current_directory);
@@ -2128,7 +2129,6 @@ thunar_standard_view_action_select_by_pattern (GtkAction          *action,
   dialog = gtk_dialog_new_with_buttons (_("Select by Pattern"),
                                         GTK_WINDOW (window),
                                         GTK_DIALOG_MODAL
-                                        | GTK_DIALOG_NO_SEPARATOR
                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                         _("_Select"), GTK_RESPONSE_OK,
@@ -2137,7 +2137,7 @@ thunar_standard_view_action_select_by_pattern (GtkAction          *action,
   gtk_window_set_default_size (GTK_WINDOW (dialog), 290, -1);
 
   hbox = g_object_new (GTK_TYPE_HBOX, "border-width", 6, "spacing", 10, NULL);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), hbox, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), hbox, TRUE, TRUE, 0);
   gtk_widget_show (hbox);
 
   label = gtk_label_new_with_mnemonic (_("_Pattern:"));
@@ -2415,7 +2415,7 @@ thunar_standard_view_new_files (ThunarStandardView *standard_view,
           g_list_free (file_list);
 
           /* grab the focus to the view widget */
-          gtk_widget_grab_focus (GTK_BIN (standard_view)->child);
+          gtk_widget_grab_focus (gtk_bin_get_child (GTK_BIN (standard_view)));
         }
     }
 }
@@ -2553,7 +2553,7 @@ thunar_standard_view_key_press_event (GtkWidget          *view,
   if ((event->keyval == GDK_slash || event->keyval == GDK_asciitilde || event->keyval == GDK_dead_tilde) && !(event->state & (~GDK_SHIFT_MASK & gtk_accelerator_get_default_mod_mask ())))
     {
       /* popup the location selector (in whatever way) */
-      if (event->keyval == GDK_dead_tilde)
+      if (event->keyval == GDK_KEY_dead_tilde)
         g_signal_emit (G_OBJECT (standard_view), standard_view_signals[START_OPEN_LOCATION], 0, "~");
       else
         g_signal_emit (G_OBJECT (standard_view), standard_view_signals[START_OPEN_LOCATION], 0, event->string);
@@ -2783,7 +2783,7 @@ thunar_standard_view_drag_data_received (GtkWidget          *view,
 
                       /* determine the toplevel window */
                       toplevel = gtk_widget_get_toplevel (view);
-                      if (toplevel != NULL && GTK_WIDGET_TOPLEVEL (toplevel))
+                      if (toplevel != NULL && gtk_widget_get_toplevel (toplevel))
                         {
 #if defined(GDK_WINDOWING_X11)
                           /* on X11, we can supply the parent window id here */
@@ -2799,9 +2799,10 @@ thunar_standard_view_drag_data_received (GtkWidget          *view,
                       argv[n++] = NULL;
 
                       /* try to run exo-desktop-item-edit */
-                      succeed = gdk_spawn_on_screen (gtk_widget_get_screen (view), working_directory, argv, NULL,
-                                                     G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH,
-                                                     NULL, NULL, &pid, &error);
+                      /* TODO use xfce_spawn here */
+                      succeed = g_spawn_async (working_directory, argv, NULL,
+                                               G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH,
+                                               NULL, NULL, &pid, &error);
                       if (G_UNLIKELY (!succeed))
                         {
                           /* display an error dialog to the user */
@@ -3026,7 +3027,8 @@ thunar_standard_view_drag_data_get (GtkWidget          *view,
 
   /* set the URI list for the drag selection */
   uri_string = thunar_g_file_list_to_string (standard_view->priv->drag_g_file_list);
-  gtk_selection_data_set (selection_data, selection_data->target, 8, (guchar *) uri_string, strlen (uri_string));
+  gtk_selection_data_set (selection_data, gtk_selection_data_get_target (selection_data),
+                          8, (guchar *) uri_string, strlen (uri_string));
   g_free (uri_string);
 }
 
@@ -3211,15 +3213,17 @@ thunar_standard_view_drag_scroll_timer (gpointer user_data)
   gint                offset;
   gint                y, x;
   gint                w, h;
+  GtkWidget          *child;
 
   GDK_THREADS_ENTER ();
 
   /* verify that we are realized */
-  if (G_LIKELY (GTK_WIDGET_REALIZED (standard_view)))
+  if (G_LIKELY (gtk_widget_get_realized (standard_view)))
     {
       /* determine pointer location and window geometry */
-      gdk_window_get_pointer (GTK_BIN (standard_view)->child->window, &x, &y, NULL);
-      gdk_window_get_geometry (GTK_BIN (standard_view)->child->window, NULL, NULL, &w, &h, NULL);
+      child = gtk_bin_get_child (GTK_BIN (standard_view));
+      gdk_window_get_pointer (gtk_widget_get_window (child), &x, &y, NULL);
+      gdk_window_get_geometry (gtk_widget_get_window (child), NULL, NULL, &w, &h, NULL);
 
       /* check if we are near the edge (vertical) */
       offset = y - (2 * 20);
@@ -3291,9 +3295,11 @@ thunar_standard_view_drag_timer (gpointer user_data)
 static void
 thunar_standard_view_drag_timer_destroy (gpointer user_data)
 {
+  GtkWidget *child = gtk_bin_get_child (GTK_BIN (user_data));
+
   /* unregister the motion notify and button release event handlers (thread-safe) */
-  g_signal_handlers_disconnect_by_func (GTK_BIN (user_data)->child, thunar_standard_view_button_release_event, user_data);
-  g_signal_handlers_disconnect_by_func (GTK_BIN (user_data)->child, thunar_standard_view_motion_notify_event, user_data);
+  g_signal_handlers_disconnect_by_func (child, thunar_standard_view_button_release_event, user_data);
+  g_signal_handlers_disconnect_by_func (child, thunar_standard_view_motion_notify_event, user_data);
 
   /* reset the drag timer source id */
   THUNAR_STANDARD_VIEW (user_data)->priv->drag_timer_id = -1;
@@ -3591,7 +3597,7 @@ thunar_standard_view_queue_popup (ThunarStandardView *standard_view,
       standard_view->priv->drag_y = event->y;
 
       /* figure out the real view */
-      view = GTK_BIN (standard_view)->child;
+      view = gtk_bin_get_child (GTK_BIN (standard_view));
 
       /* we use the menu popup delay here, which should give us good values */
       settings = gtk_settings_get_for_screen (gtk_widget_get_screen (view));

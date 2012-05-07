@@ -194,8 +194,8 @@ thunar_properties_dialog_class_init (ThunarPropertiesDialogClass *klass)
 
   /* setup the key bindings for the properties dialog */
   binding_set = gtk_binding_set_by_class (klass);
-  gtk_binding_entry_add_signal (binding_set, GDK_F5, 0, "reload", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_r, GDK_CONTROL_MASK, "reload", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_F5, 0, "reload", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_r, GDK_CONTROL_MASK, "reload", 0);
 }
 
 
@@ -230,7 +230,7 @@ thunar_properties_dialog_init (ThunarPropertiesDialog *dialog)
 
   dialog->notebook = gtk_notebook_new ();
   gtk_container_set_border_width (GTK_CONTAINER (dialog->notebook), 6);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), dialog->notebook, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), dialog->notebook, TRUE, TRUE, 0);
   gtk_widget_show (dialog->notebook);
 
   table = gtk_table_new (2, 2, FALSE);
@@ -245,7 +245,7 @@ thunar_properties_dialog_init (ThunarPropertiesDialog *dialog)
   /*
      First box (icon, name)
    */
-  box = gtk_hbox_new (FALSE, 6);
+  box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   gtk_table_attach (GTK_TABLE (table), box, 0, 1, row, row + 1, GTK_FILL, GTK_FILL, 0, 3);
   gtk_widget_show (box);
 
@@ -271,7 +271,6 @@ thunar_properties_dialog_init (ThunarPropertiesDialog *dialog)
   gtk_widget_show (dialog->name_entry);
 
   ++row;
-
 
   spacer = g_object_new (GTK_TYPE_ALIGNMENT, "height-request", 12, NULL);
   gtk_table_attach (GTK_TABLE (table), spacer, 0, 2, row, row + 1, GTK_FILL, GTK_FILL, 0, 3);
@@ -434,7 +433,7 @@ thunar_properties_dialog_init (ThunarPropertiesDialog *dialog)
   gtk_table_attach (GTK_TABLE (table), label, 0, 1, row, row + 1, GTK_FILL, GTK_FILL, 0, 3);
   gtk_widget_show (label);
 
-  box = gtk_hbox_new (FALSE, 6);
+  box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   exo_binding_new (G_OBJECT (box), "visible", G_OBJECT (label), "visible");
   gtk_table_attach (GTK_TABLE (table), box, 1, 2, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 3);
   gtk_widget_show (box);

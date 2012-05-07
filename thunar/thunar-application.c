@@ -609,7 +609,7 @@ static gboolean
 thunar_application_volman_idle (gpointer user_data)
 {
   ThunarApplication *application = THUNAR_APPLICATION (user_data);
-  GdkScreen         *screen;
+  //GdkScreen         *screen;
   gboolean           misc_volume_management;
   GError            *err = NULL;
   gchar            **argv;
@@ -635,10 +635,11 @@ thunar_application_volman_idle (gpointer user_data)
           application->volman_udis = g_slist_delete_link (application->volman_udis, application->volman_udis);
 
           /* locate the currently active screen (the one with the pointer) */
-          screen = xfce_gdk_screen_get_active (NULL);
+          //screen = xfce_gdk_screen_get_active (NULL);
 
           /* try to spawn the volman on the active screen */
-          if (gdk_spawn_on_screen (screen, NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH, NULL, NULL, &pid, &err))
+          /* TODO use xfce_spawn */
+          if (g_spawn_async (NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH, NULL, NULL, &pid, &err))
             {
               /* add a child watch for the volman handler */
               application->volman_watch_id = g_child_watch_add_full (G_PRIORITY_LOW, pid, thunar_application_volman_watch,
