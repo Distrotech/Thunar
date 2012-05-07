@@ -3296,8 +3296,8 @@ thunar_file_compare_by_name (const ThunarFile *file_a,
   const gchar *bp;
   const gchar *filename_a;
   const gchar *filename_b;
-  guchar       ac;
-  guchar       bc;
+  gunichar     ac;
+  gunichar     bc;
 
 #ifdef G_ENABLE_DEBUG
   /* probably too expensive to do the instance check every time
@@ -3322,8 +3322,8 @@ thunar_file_compare_by_name (const ThunarFile *file_a,
       for (;; ++ap, ++bp)
         {
           /* check if the characters differ or we have a non-ASCII char */
-          ac = *((const guchar *)ap);
-          bc = *((const guchar *)bp);
+          ac = *((const gunichar *)ap);
+          bc = *((const gunichar *)bp);
           if (ac != bc || ac == 0 || ac > 127)
             break;
         }
@@ -3347,8 +3347,8 @@ thunar_file_compare_by_name (const ThunarFile *file_a,
       for (;; ++ap, ++bp)
         {
           /* check if the characters differ or we have a non-ASCII char */
-          ac = *((const guchar *)ap);
-          bc = *((const guchar *)bp);
+          ac = *((const gunichar *)ap);
+          bc = *((const gunichar *)bp);
           if (g_ascii_tolower (ac) != g_ascii_tolower (bc) || ac == 0 || ac > 127)
             break;
         }

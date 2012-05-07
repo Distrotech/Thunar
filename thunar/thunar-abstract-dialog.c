@@ -46,8 +46,8 @@ thunar_abstract_dialog_class_init (ThunarAbstractDialogClass *klass)
 
   /* connect additional key bindings to the GtkDialog::close action signal */
   binding_set = gtk_binding_set_by_class (klass);
-  gtk_binding_entry_add_signal (binding_set, GDK_w, GDK_CONTROL_MASK, "close", 0);
-  gtk_binding_entry_add_signal (binding_set, GDK_W, GDK_CONTROL_MASK, "close", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_w, GDK_CONTROL_MASK, "close", 0);
+  gtk_binding_entry_add_signal (binding_set, GDK_KEY_W, GDK_CONTROL_MASK, "close", 0);
 }
 
 
@@ -65,12 +65,15 @@ thunar_abstract_dialog_close (GtkDialog *dialog)
   GdkEvent *event;
 
   /* verify that dialog is realized */
-  if (G_LIKELY (GTK_WIDGET_REALIZED (dialog)))
+  if (G_LIKELY (gtk_widget_get_realized (GTK_WIDGET (dialog))))
     {
       /* send a delete event to the dialog */
       event = gdk_event_new (GDK_DELETE);
-      event->any.window = g_object_ref (GTK_WIDGET (dialog)->window);
+      event->any.window = gtk_widget_get_window (GTK_WIDGET (dialog));
       event->any.send_event = TRUE;
+
+      g_object_ref (event->any.window);
+
       gtk_main_do_event (event);
       gdk_event_free (event);
     }

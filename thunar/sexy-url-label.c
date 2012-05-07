@@ -340,8 +340,7 @@ static void
 update_wrap_width(SexyUrlLabel *url_label, size_t wrap_width)
 {
 	SexyUrlLabelPrivate *priv = SEXY_URL_LABEL_GET_PRIVATE(url_label);
-	LabelWrapWidth *wrap_width_data;
-	GtkStyle *style;
+	LabelWrapWidth *wrap_width_data = NULL;
 
 	if (wrap_width == 0 || !gtk_label_get_line_wrap(GTK_LABEL(url_label)))
 		return;
@@ -350,17 +349,17 @@ update_wrap_width(SexyUrlLabel *url_label, size_t wrap_width)
 	pango_layout_set_width(gtk_label_get_layout(GTK_LABEL(url_label)),
 						   wrap_width * PANGO_SCALE);
 #endif
+/*
 	style = GTK_WIDGET(url_label)->style;
 	wrap_width_data = g_object_get_data(G_OBJECT(style),
 										"gtk-label-wrap-width");
+*/
 
 	if (wrap_width_data != NULL &&
 		(size_t) wrap_width_data->width != wrap_width * PANGO_SCALE)
 	{
 		wrap_width_data->width = wrap_width * PANGO_SCALE;
 		priv->wrap_width = wrap_width;
-		g_object_unref(GTK_LABEL(url_label)->layout);
-		GTK_LABEL(url_label)->layout = NULL;
 		gtk_label_get_layout(GTK_LABEL(url_label));
 		gtk_widget_queue_resize(GTK_WIDGET(url_label));
 	}
@@ -373,14 +372,17 @@ sexy_url_label_realize(GtkWidget *widget)
 	SexyUrlLabelPrivate *priv = SEXY_URL_LABEL_GET_PRIVATE(url_label);
 	GdkWindowAttr attributes;
 	gint attributes_mask;
+    GtkAllocation allocation;
+
+    gtk_widget_get_allocation (widget, &allocation);
 
 	GTK_WIDGET_CLASS(sexy_url_label_parent_class)->realize(widget);
 
 	attributes.window_type = GDK_WINDOW_CHILD;
-	attributes.x = widget->allocation.x;
-	attributes.y = widget->allocation.y;
-	attributes.width = widget->allocation.width;
-	attributes.height = widget->allocation.height;
+	attributes.x = allocation.x;
+	attributes.y = allocation.y;
+	attributes.width = allocation.width;
+	attributes.height = allocation.height;
 	attributes.window_type = GDK_WINDOW_CHILD;
 	attributes.wclass = GDK_INPUT_ONLY;
 	attributes.event_mask = gtk_widget_get_events(widget);
@@ -460,7 +462,7 @@ sexy_url_label_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 	pango_layout_set_width(gtk_label_get_layout(GTK_LABEL(url_label)),
 						   allocation->width * PANGO_SCALE);
 
-	if (GTK_WIDGET_REALIZED(widget))
+	if (gtk_widget_get_realized (widget))
 	{
 		gdk_window_move_resize(priv->event_window,
 							   allocation->x, allocation->y,
@@ -544,6 +546,9 @@ sexy_url_label_rescan_label(SexyUrlLabel *url_label)
 	PangoAttrList *list = pango_layout_get_attributes(layout);
 	PangoAttrIterator *iter;
 	GList *url_list;
+    GtkAllocation label_allocation;
+
+    gtk_widget_get_allocation (GTK_WIDGET (url_label), &label_allocation);
 
 	sexy_url_label_clear_links(url_label);
 
@@ -555,8 +560,8 @@ sexy_url_label_rescan_label(SexyUrlLabel *url_label)
 	gtk_label_get_layout_offsets(GTK_LABEL(url_label),
 								 &priv->layout_x, &priv->layout_y);
 
-	priv->layout_x -= GTK_WIDGET(url_label)->allocation.x;
-	priv->layout_y -= GTK_WIDGET(url_label)->allocation.y;
+	priv->layout_x -= label_allocation.x;
+	priv->layout_y -= label_allocation.y;
 
 	url_list = priv->urls;
 

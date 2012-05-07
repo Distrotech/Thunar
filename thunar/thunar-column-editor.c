@@ -117,20 +117,19 @@ thunar_column_editor_init (ThunarColumnEditor *column_editor)
   /* setup the dialog */
   gtk_dialog_add_button (GTK_DIALOG (column_editor), GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
   gtk_dialog_set_default_response (GTK_DIALOG (column_editor), GTK_RESPONSE_CLOSE);
-  gtk_dialog_set_has_separator (GTK_DIALOG (column_editor), FALSE);
   gtk_window_set_resizable (GTK_WINDOW (column_editor), FALSE);
   gtk_window_set_title (GTK_WINDOW (column_editor), _("Configure Columns in the Detailed List View"));
 
   /* add the "Help" button */
   button = gtk_button_new_from_stock (GTK_STOCK_HELP);
   g_signal_connect (G_OBJECT (button), "clicked", G_CALLBACK (thunar_column_editor_help_clicked), column_editor);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (column_editor)->action_area), button, FALSE, FALSE, 0);
-  gtk_button_box_set_child_secondary (GTK_BUTTON_BOX (GTK_DIALOG (column_editor)->action_area), button, TRUE);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_action_area (GTK_DIALOG (column_editor))), button, FALSE, FALSE, 0);
+  gtk_button_box_set_child_secondary (GTK_BUTTON_BOX (gtk_dialog_get_action_area (GTK_DIALOG (column_editor))), button, TRUE);
   gtk_widget_show (button);
 
   vbox = gtk_vbox_new (FALSE, 6);
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 6);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (column_editor)->vbox), vbox, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (column_editor))), vbox, TRUE, TRUE, 0);
   gtk_widget_show (vbox);
 
   frame = g_object_new (GTK_TYPE_FRAME, "border-width", 0, "shadow-type", GTK_SHADOW_NONE, NULL);
@@ -572,7 +571,7 @@ thunar_show_column_editor (gpointer parent)
   dialog = thunar_column_editor_new ();
 
   /* check if we have a toplevel window */
-  if (G_LIKELY (window != NULL && GTK_WIDGET_TOPLEVEL (window)))
+  if (G_LIKELY (window != NULL && gtk_widget_is_toplevel (window)))
     {
       /* dialog is transient for toplevel window and modal */
       gtk_window_set_destroy_with_parent (GTK_WINDOW (dialog), TRUE);
