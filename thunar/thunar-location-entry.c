@@ -480,8 +480,8 @@ menu_position (GtkMenu  *menu,
 
   gtk_widget_translate_coordinates (GTK_WIDGET (entry), toplevel, 0, 0, &x0, &y0);
 
-  gtk_widget_size_request (GTK_WIDGET (entry), &entry_request);
-  gtk_widget_size_request (GTK_WIDGET (menu), &menu_request);
+  gtk_widget_get_preferred_size (GTK_WIDGET (entry), &entry_request, NULL);
+  gtk_widget_get_preferred_size (GTK_WIDGET (menu), &menu_request, NULL);
 
   gdk_window_get_position (GTK_WIDGET (entry)->window, x, y);
 

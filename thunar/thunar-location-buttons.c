@@ -73,8 +73,12 @@ static ThunarFile    *thunar_location_buttons_get_current_directory     (ThunarN
 static void           thunar_location_buttons_set_current_directory     (ThunarNavigator            *navigator,
                                                                          ThunarFile                 *current_directory);
 static void           thunar_location_buttons_unmap                     (GtkWidget                  *widget);
-static void           thunar_location_buttons_size_request              (GtkWidget                  *widget,
-                                                                         GtkRequisition             *requisition);
+static void           thunar_location_buttons_get_preferred_width       (GtkWidget                  *widget,
+                                                                         gint                       *normal_width,
+                                                                         gint                       *minimal_width);
+static void           thunar_location_buttons_get_preferred_height      (GtkWidget                  *widget,
+                                                                         gint                       *normal_height,
+                                                                         gint                       *minimal_height);
 static void           thunar_location_buttons_size_allocate             (GtkWidget                  *widget,
                                                                          GtkAllocation              *allocation);
 static void           thunar_location_buttons_state_changed             (GtkWidget                  *widget,
@@ -196,7 +200,8 @@ thunar_location_buttons_class_init (ThunarLocationButtonsClass *klass)
 
   gtkwidget_class = GTK_WIDGET_CLASS (klass);
   gtkwidget_class->unmap = thunar_location_buttons_unmap;
-  gtkwidget_class->size_request = thunar_location_buttons_size_request;
+  gtkwidget_class->get_preferred_width = thunar_location_buttons_get_preferred_width;
+  gtkwidget_class->get_preferred_height = thunar_location_buttons_get_preferred_height;
   gtkwidget_class->size_allocate = thunar_location_buttons_size_allocate;
   gtkwidget_class->state_changed = thunar_location_buttons_state_changed;
   gtkwidget_class->grab_notify = thunar_location_buttons_grab_notify;
@@ -538,6 +543,7 @@ thunar_location_buttons_size_request (GtkWidget      *widget,
   GtkRequisition         child_requisition;
   GList                 *lp;
   gint                   spacing;
+  gint                   border_width;
 
   gtk_widget_style_get (GTK_WIDGET (buttons),
                         "spacing", &spacing,
@@ -549,7 +555,7 @@ thunar_location_buttons_size_request (GtkWidget      *widget,
   /* calculate the size of the biggest button */
   for (lp = buttons->list; lp != NULL; lp = lp->next)
     {
-      gtk_widget_size_request (GTK_WIDGET (lp->data), &child_requisition);
+      gtk_widget_get_preferred_size (GTK_WIDGET (lp->data), &child_requisition, NULL);
       requisition->width = MAX (child_requisition.width, requisition->width);
       requisition->height = MAX (child_requisition.height, requisition->height);
     }
@@ -559,13 +565,40 @@ thunar_location_buttons_size_request (GtkWidget      *widget,
   if (buttons->list != NULL && buttons->list->next != NULL)
     requisition->width += (spacing + buttons->slider_width) * 2;
 
-  gtk_widget_size_request (buttons->left_slider, &child_requisition);
-  gtk_widget_size_request (buttons->right_slider, &child_requisition);
+  gtk_widget_get_preferred_size (buttons->left_slider, &child_requisition, NULL);
+  gtk_widget_get_preferred_size (buttons->right_slider, &child_requisition, NULL);
 
-  requisition->width += GTK_CONTAINER (widget)->border_width * 2;
-  requisition->height += GTK_CONTAINER (widget)->border_width * 2;
+  border_width = gtk_container_get_border_width (GTK_CONTAINER (widget)) * 2;
+  requisition->width += border_width;
+  requisition->height += border_width;
+}
 
-  widget->requisition = *requisition;
+
+
+static void           
+thunar_location_buttons_get_preferred_width (GtkWidget *widget,
+                                             gint      *normal_width,
+                                             gint      *minimal_width)
+{
+  GtkRequisition req;
+  
+  thunar_location_buttons_size_request (widget, &req);
+  
+  *normal_width = *minimal_width = req.width;
+}
+
+
+
+static void           
+thunar_location_buttons_get_preferred_height (GtkWidget *widget,
+                                              gint      *normal_height,
+                                              gint      *minimal_height)
+{
+  GtkRequisition req;
+  
+  thunar_location_buttons_size_request (widget, &req);
+  
+  *normal_height = *minimal_height = req.height;
 }
 
 
@@ -589,8 +622,9 @@ thunar_location_buttons_size_allocate (GtkWidget     *widget,
   gint                   slider_space;
   gint                   spacing;
   gint                   width;
+  GtkRequisition         req;
 
-  widget->allocation = *allocation;
+  gtk_widget_set_allocation (widget, allocation);
 
   /* if no path is set, we don't have to allocate anything */
   if (G_UNLIKELY (buttons->list == NULL))
@@ -599,7 +633,7 @@ thunar_location_buttons_size_allocate (GtkWidget     *widget,
   gtk_widget_style_get (GTK_WIDGET (buttons), "spacing", &spacing, NULL);
 
   direction = gtk_widget_get_direction (widget);
-  border_width = GTK_CONTAINER (buttons)->border_width;
+  border_width = gtk_container_get_border_width (GTK_CONTAINER (buttons));
   allocation_width = allocation->width - 2 * border_width;
 
   /* check if we need to display the sliders */
@@ -610,7 +644,9 @@ thunar_location_buttons_size_allocate (GtkWidget     *widget,
 
   for (lp = buttons->list; lp != NULL; lp = lp->next)
     {
-      width += GTK_WIDGET (lp->data)->requisition.width + spacing;
+      /* TODO: cache the width during allocation */
+      gtk_widget_get_preferred_size (widget, &req, NULL);
+      width += req.width + spacing;
       if (lp == buttons->fake_root_button)
         break;
     }
@@ -636,28 +672,34 @@ thunar_location_buttons_size_allocate (GtkWidget     *widget,
        * We start at the first button, count forward until hit the new
        * button, then count backwards.
        */
-      width = GTK_WIDGET (first_button->data)->requisition.width;
+      /* TODO: cache the width during allocation */
+      gtk_widget_get_preferred_size (GTK_WIDGET (first_button->data), &req, NULL);
+      width = req.width;
       for (lp = first_button->prev, reached_end = FALSE; lp != NULL && !reached_end; lp = lp->prev)
         {
           child = lp->data;
-          if (width + child->requisition.width + spacing + slider_space > allocation_width)
+          /* TODO: cache the width during allocation */
+          gtk_widget_get_preferred_size (GTK_WIDGET (child), &req, NULL);
+          if (width + req.width + spacing + slider_space > allocation_width)
             reached_end = TRUE;
           else if (lp == buttons->fake_root_button)
             break;
           else
-            width += child->requisition.width + spacing;
+            width += req.width + spacing;
         }
 
       while (first_button->next != NULL && !reached_end)
         {
           child = first_button->data;
-          if (width + child->requisition.width + spacing + slider_space > allocation_width)
+          /* TODO: cache the width during allocation */
+          gtk_widget_get_preferred_size (GTK_WIDGET (child), &req, NULL);
+          if (width + req.width + spacing + slider_space > allocation_width)
             {
               reached_end = TRUE;
             }
           else
             {
-              width += child->requisition.width + spacing;
+              width += req.width + spacing;
               if (first_button == buttons->fake_root_button)
                 break;
               first_button = first_button->next;
@@ -691,20 +733,21 @@ thunar_location_buttons_size_allocate (GtkWidget     *widget,
   for (lp = first_button; lp != NULL; lp = lp->prev)
     {
       child = lp->data;
-
-      child_allocation.width = child->requisition.width;
+      /* TODO: cache the width during allocation */
+      gtk_widget_get_preferred_size (GTK_WIDGET (child), &req, NULL);
+      child_allocation.width = req.width;
       if (G_UNLIKELY (direction == GTK_TEXT_DIR_RTL))
         child_allocation.x -= child_allocation.width;
 
       /* check to see if we don't have any more space to allocate buttons */
       if (need_sliders && direction == GTK_TEXT_DIR_RTL)
         {
-          if (child_allocation.x - spacing - buttons->slider_width < widget->allocation.x + border_width)
+          if (child_allocation.x - spacing - buttons->slider_width < allocation->x + border_width)
             break;
         }
       else if (need_sliders && direction == GTK_TEXT_DIR_LTR)
         {
-          if (child_allocation.x + child_allocation.width + spacing + buttons->slider_width > widget->allocation.x + border_width + allocation_width)
+          if (child_allocation.x + child_allocation.width + spacing + buttons->slider_width > allocation->x + border_width + allocation_width)
             break;
         }
 
@@ -766,7 +809,7 @@ static void
 thunar_location_buttons_state_changed (GtkWidget   *widget,
                                        GtkStateType previous_state)
 {
-  if (!GTK_WIDGET_IS_SENSITIVE (widget))
+  if (!gtk_widget_get_sensitive (widget))
     thunar_location_buttons_stop_scrolling (THUNAR_LOCATION_BUTTONS (widget));
 }
 
@@ -884,7 +927,7 @@ static void
 thunar_location_buttons_remove_1 (GtkContainer *container,
                                   GtkWidget    *widget)
 {
-  gboolean need_resize = GTK_WIDGET_VISIBLE (widget);
+  gboolean need_resize = gtk_widget_get_visible (widget);
   gtk_widget_unparent (widget);
   if (G_LIKELY (need_resize))
     gtk_widget_queue_resize (GTK_WIDGET (container));
@@ -1045,6 +1088,7 @@ thunar_location_buttons_scroll_right (GtkWidget             *button,
   gint             space_needed;
   gint             border_width;
   gint             spacing;
+  GtkAllocation    alloc1, alloc2;
 
   if (G_UNLIKELY (buttons->ignore_click))
     {
@@ -1058,7 +1102,7 @@ thunar_location_buttons_scroll_right (GtkWidget             *button,
 
   gtk_widget_queue_resize (GTK_WIDGET (buttons));
 
-  border_width = GTK_CONTAINER (buttons)->border_width;
+  border_width = gtk_container_get_border_width (GTK_CONTAINER (buttons));
   direction = gtk_widget_get_direction (GTK_WIDGET (buttons));
 
   /* find the button at the 'right' end that we have to make visible */
@@ -1077,15 +1121,20 @@ thunar_location_buttons_scroll_right (GtkWidget             *button,
         break;
       }
 
-  space_needed = GTK_WIDGET (right_button->data)->allocation.width + spacing;
+  gtk_widget_get_allocation (GTK_WIDGET (right_button->data), &alloc1);
+  space_needed = alloc1.width + spacing;
   if (direction == GTK_TEXT_DIR_RTL)
     {
-      space_available = buttons->right_slider->allocation.x - GTK_WIDGET (buttons)->allocation.x;
+      gtk_widget_get_allocation (buttons->right_slider, &alloc1);
+      gtk_widget_get_allocation (GTK_WIDGET (buttons), &alloc2);
+      space_available = alloc1.x - alloc2.x;
     }
   else
     {
-      space_available = (GTK_WIDGET (buttons)->allocation.x + GTK_WIDGET (buttons)->allocation.width - border_width)
-                      - (buttons->right_slider->allocation.x + buttons->right_slider->allocation.width);
+      gtk_widget_get_allocation (buttons->right_slider, &alloc1);
+      gtk_widget_get_allocation (GTK_WIDGET (buttons), &alloc2);
+      space_available = (alloc2.x + alloc2.width - border_width)
+                      - (alloc1.x + alloc1.width);
     }
 
   /* We have space_available extra space that's not being used.  We
@@ -1093,9 +1142,10 @@ thunar_location_buttons_scroll_right (GtkWidget             *button,
    * from the end, removing buttons until we get all the space we
    * need.
    */
+  gtk_widget_get_allocation (GTK_WIDGET (left_button->data), &alloc1);
   while (space_available < space_needed)
     {
-      space_available += GTK_WIDGET (left_button->data)->allocation.width + spacing;
+      space_available += alloc1.width + spacing;
       left_button = left_button->prev;
       buttons->first_scrolled_button = left_button;
     }

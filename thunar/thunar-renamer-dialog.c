@@ -337,7 +337,6 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
   g_list_free (providers);
 
   /* initialize the dialog */
-  gtk_dialog_set_has_separator (GTK_DIALOG (renamer_dialog), FALSE);
   gtk_window_set_default_size (GTK_WINDOW (renamer_dialog), 510, 490);
   gtk_window_set_title (GTK_WINDOW (renamer_dialog), _("Rename Multiple Files"));
 

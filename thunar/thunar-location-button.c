@@ -676,8 +676,9 @@ thunar_location_button_drag_data_received (GtkWidget            *button,
   if (G_LIKELY (!location_button->drop_data_ready))
     {
       /* extract the URI list from the selection data (if valid) */
-      if (selection_data->format == 8 && selection_data->length > 0)
-        location_button->drop_file_list = thunar_g_file_list_new_from_string ((const gchar *) selection_data->data);
+      if (gtk_selection_data_get_format (selection_data)
+          && gtk_selection_data_get_length (selection_data) > 0)
+        location_button->drop_file_list = thunar_g_file_list_new_from_string ((const gchar *) gtk_selection_data_get_data (selection_data));
 
       /* reset the state */
       location_button->drop_data_ready = TRUE;
@@ -694,9 +695,9 @@ thunar_location_button_drag_data_received (GtkWidget            *button,
       if (G_LIKELY ((actions & (GDK_ACTION_COPY | GDK_ACTION_MOVE | GDK_ACTION_LINK)) != 0))
         {
           /* as the user what to do with the drop data */
-          action = (context->action == GDK_ACTION_ASK)
+          action = (gdk_drag_context_get_actions (context) == GDK_ACTION_ASK)
                  ? thunar_dnd_ask (button, location_button->file, location_button->drop_file_list, timestamp, actions)
-                 : context->action;
+                 : gdk_drag_context_get_actions (context);
 
           /* perform the requested action */
           if (G_LIKELY (action != 0))
@@ -969,7 +970,7 @@ thunar_location_button_set_file (ThunarLocationButton *location_button,
       g_signal_connect_swapped (G_OBJECT (file), "destroy", G_CALLBACK (thunar_location_button_file_destroy), location_button);
 
       /* update our internal state for the new file (if realized) */
-      if (gtk_widget_get_realized (location_button))
+      if (gtk_widget_get_realized (GTK_WIDGET (location_button)))
         thunar_location_button_file_changed (location_button, file);
     }
 

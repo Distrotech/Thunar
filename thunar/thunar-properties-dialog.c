@@ -225,7 +225,6 @@ thunar_properties_dialog_init (ThunarPropertiesDialog *dialog)
                           GTK_STOCK_HELP, GTK_RESPONSE_HELP,
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                           NULL);
-  gtk_dialog_set_has_separator (GTK_DIALOG (dialog), FALSE);
   gtk_window_set_default_size (GTK_WINDOW (dialog), 400, 430);
 
   dialog->notebook = gtk_notebook_new ();

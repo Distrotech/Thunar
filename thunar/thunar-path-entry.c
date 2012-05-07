@@ -404,7 +404,7 @@ thunar_path_entry_size_allocate (GtkWidget     *widget,
                         "icon-size", &icon_size,
                         NULL);
 
-  widget->allocation = *allocation;
+  gtk_widget_set_allocation (widget, allocation);
 
   thunar_path_entry_get_text_area_size (path_entry, &xborder, &yborder, NULL, &text_height);
 
@@ -457,6 +457,8 @@ thunar_path_entry_realize (GtkWidget *widget)
   gint             text_height;
   gint             icon_size;
   gint             spacing;
+  GtkWidget        allocation;
+  GtkRequisition   requisition;
 
   /* query the proper icon factory */
   icon_theme = gtk_icon_theme_get_for_screen (gtk_widget_get_screen (widget));
@@ -471,6 +473,9 @@ thunar_path_entry_realize (GtkWidget *widget)
   thunar_path_entry_get_text_area_size (path_entry, NULL, NULL, NULL, &text_height);
   spacing = widget->requisition.height -text_height;
 
+  gtk_widget_get_allocation (widget, &allocation);
+  gtk_widget_get_preferred_size (widget, &requisition, NULL);
+
   attributes.window_type = GDK_WINDOW_CHILD;
   attributes.wclass = GDK_INPUT_OUTPUT;
   attributes.visual = gtk_widget_get_visual (widget);
@@ -482,10 +487,10 @@ thunar_path_entry_realize (GtkWidget *widget)
                         | GDK_EXPOSURE_MASK
                         | GDK_LEAVE_NOTIFY_MASK
                         | GDK_POINTER_MOTION_MASK;
-  attributes.x = widget->allocation.x + widget->allocation.width - icon_size - spacing;
-  attributes.y = widget->allocation.y + (widget->allocation.height - widget->requisition.height) / 2;
+  attributes.x = allocation.x + allocation.width - icon_size - spacing;
+  attributes.y = allocation.y + (allocation.height - requisition.height) / 2;
   attributes.width = icon_size + spacing;
-  attributes.height = widget->requisition.height;
+  attributes.height = requisition.height;
   attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
 
   path_entry->icon_area = gdk_window_new (widget->window, &attributes, attributes_mask);
