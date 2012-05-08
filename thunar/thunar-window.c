@@ -2184,7 +2184,7 @@ thunar_window_action_open_templates (GtkAction    *action,
 
       gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_OK);
 
-      hbox = gtk_hbox_new (FALSE, 6);
+      hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
       gtk_container_set_border_width (GTK_CONTAINER (hbox), 8);
       gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), hbox, TRUE, TRUE, 0);
       gtk_widget_show (hbox);
@@ -2684,7 +2684,7 @@ thunar_window_save_geometry_timer (gpointer user_data)
       if (gtk_widget_get_visible (window))
         {
           /* determine the current state of the window */
-          state = gdk_window_get_state (GTK_WIDGET (window)->window);
+          state = gdk_window_get_state (gtk_widget_get_window (GTK_WIDGET (window)));
 
           /* don't save geometry for maximized or fullscreen windows */
           if ((state & (GDK_WINDOW_STATE_MAXIMIZED | GDK_WINDOW_STATE_FULLSCREEN)) == 0)

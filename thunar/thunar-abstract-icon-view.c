@@ -75,8 +75,8 @@ static gboolean     thunar_abstract_icon_view_button_press_event    (ExoIconView
 static gboolean     thunar_abstract_icon_view_button_release_event  (ExoIconView                  *view,
                                                                      GdkEventButton               *event,
                                                                      ThunarAbstractIconView       *abstract_icon_view);
-static gboolean     thunar_abstract_icon_view_expose_event          (ExoIconView                  *view,
-                                                                     GdkEventExpose               *event,
+static gboolean     thunar_abstract_icon_view_draw                  (ExoIconView                  *view,
+                                                                     cairo_t                      *cr,
                                                                      ThunarAbstractIconView       *abstract_icon_view);
 static gboolean     thunar_abstract_icon_view_key_press_event       (ExoIconView                  *view,
                                                                      GdkEventKey                  *event,
@@ -548,8 +548,8 @@ thunar_abstract_icon_view_button_press_event (ExoIconView            *view,
         {
           abstract_icon_view->priv->gesture_start_x = abstract_icon_view->priv->gesture_current_x = event->x;
           abstract_icon_view->priv->gesture_start_y = abstract_icon_view->priv->gesture_current_y = event->y;
-          abstract_icon_view->priv->gesture_expose_id = g_signal_connect_after (G_OBJECT (view), "expose-event",
-                                                                                G_CALLBACK (thunar_abstract_icon_view_expose_event),
+          abstract_icon_view->priv->gesture_expose_id = g_signal_connect_after (G_OBJECT (view), "draw",
+                                                                                G_CALLBACK (thunar_abstract_icon_view_draw),
                                                                                 G_OBJECT (abstract_icon_view));
           abstract_icon_view->priv->gesture_motion_id = g_signal_connect (G_OBJECT (view), "motion-notify-event",
                                                                           G_CALLBACK (thunar_abstract_icon_view_motion_notify_event),
@@ -607,18 +607,14 @@ thunar_abstract_icon_view_button_release_event (ExoIconView            *view,
 
 
 static gboolean
-thunar_abstract_icon_view_expose_event (ExoIconView            *view,
-                                        GdkEventExpose         *event,
-                                        ThunarAbstractIconView *abstract_icon_view)
+thunar_abstract_icon_view_draw (ExoIconView            *view,
+                                cairo_t                *cr,
+                                ThunarAbstractIconView *abstract_icon_view)
 {
   GtkIconSet *stock_icon_set;
   GtkAction  *action = NULL;
-#if 0
-  GdkPixbuf  *stock_icon = NULL;
-#endif
   gchar      *stock_id;
   GdkColor    bg;
-  cairo_t    *cr;
 
   _thunar_return_val_if_fail (EXO_IS_ICON_VIEW (view), FALSE);
   _thunar_return_val_if_fail (THUNAR_IS_ABSTRACT_ICON_VIEW (abstract_icon_view), FALSE);
@@ -627,15 +623,10 @@ thunar_abstract_icon_view_expose_event (ExoIconView            *view,
   _thunar_return_val_if_fail (abstract_icon_view->priv->gesture_release_id > 0, FALSE);
 
   /* shade the abstract_icon view content while performing mouse gestures */
-  cr = gdk_cairo_create (event->window);
-#if 0
-  bg = GTK_WIDGET (view)->style->base[GTK_STATE_NORMAL];
-#endif
   cairo_set_source_rgba (cr, bg.red / 65535.0, bg.green / 65535.0, bg.blue / 65535.0, 0.7);
-  cairo_rectangle (cr, event->area.x, event->area.y, event->area.width, event->area.height);
+  /*TODO cairo_rectangle (cr, event->area.x, event->area.y, event->area.width, event->area.height); */
   cairo_clip (cr);
   cairo_paint (cr);
-  cairo_destroy (cr);
 
   /* determine the gesture action */
   action = thunar_abstract_icon_view_gesture_action (abstract_icon_view);

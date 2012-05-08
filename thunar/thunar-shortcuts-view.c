@@ -481,8 +481,10 @@ thunar_shortcuts_view_drag_data_received (GtkWidget        *widget,
   if (G_LIKELY (!view->drop_data_ready))
     {
       /* extract the URI list from the selection data (if valid) */
-      if (info == TEXT_URI_LIST && selection_data->format == 8 && selection_data->length > 0)
-        view->drop_file_list = thunar_g_file_list_new_from_string ((const gchar *) selection_data->data);
+      if (info == TEXT_URI_LIST
+          && gtk_selection_data_get_format (selection_data) == 8
+          && gtk_selection_data_get_length (selection_data) > 0)
+        view->drop_file_list = thunar_g_file_list_new_from_string ((const gchar *) gtk_selection_data_get_data (selection_data));
 
       /* reset the state */
       view->drop_data_ready = TRUE;

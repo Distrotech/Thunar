@@ -677,7 +677,7 @@ thunar_properties_dialog_activate (GtkWidget              *entry,
   gchar       *new_name;
 
   /* check if we still have a valid file and if the user is allowed to rename */
-  if (G_UNLIKELY (dialog->file == NULL || !GTK_WIDGET_SENSITIVE (dialog->name_entry)))
+  if (G_UNLIKELY (dialog->file == NULL || !gtk_widget_get_sensitive (dialog->name_entry)))
     return;
 
   /* determine new and old name */

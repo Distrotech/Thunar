@@ -766,8 +766,10 @@ thunar_tree_view_drag_data_received (GtkWidget        *widget,
   if (G_LIKELY (!view->drop_data_ready))
     {
       /* extract the URI list from the selection data (if valid) */
-      if (info == TARGET_TEXT_URI_LIST && selection_data->format == 8 && selection_data->length > 0)
-        view->drop_file_list = thunar_g_file_list_new_from_string ((const gchar *) selection_data->data);
+      if (info == TARGET_TEXT_URI_LIST
+          && gtk_selection_data_get_format (selection_data) == 8
+          && gtk_selection_data_get_length (selection_data)> 0)
+        view->drop_file_list = thunar_g_file_list_new_from_string ((const gchar *) gtk_selection_data_get_data (selection_data));
 
       /* reset the state */
       view->drop_data_ready = TRUE;
@@ -2349,8 +2351,8 @@ thunar_tree_view_drag_scroll_timer (gpointer user_data)
   if (gtk_widget_get_realized (view))
     {
       /* determine pointer location and window geometry */
-      gdk_window_get_pointer (GTK_WIDGET (view)->window, NULL, &y, NULL);
-      gdk_window_get_geometry (GTK_WIDGET (view)->window, NULL, NULL, NULL, &h, NULL);
+      gdk_window_get_pointer (gtk_widget_get_window (GTK_WIDGET (view)), NULL, &y, NULL);
+      gdk_window_get_geometry (gtk_widget_get_window (GTK_WIDGET (view)), NULL, NULL, NULL, &h, NULL);
 
       /* check if we are near the edge */
       offset = y - (2 * 20);

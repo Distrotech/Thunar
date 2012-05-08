@@ -60,7 +60,7 @@ enum
 
 
 
-static void     thunar_path_entry_editable_init                 (GtkEditableClass     *iface);
+static void     thunar_path_entry_editable_init                 (GtkEditableInterface *iface);
 static void     thunar_path_entry_finalize                      (GObject              *object);
 static void     thunar_path_entry_get_property                  (GObject              *object,  
                                                                  guint                 prop_id,
@@ -70,16 +70,20 @@ static void     thunar_path_entry_set_property                  (GObject        
                                                                  guint                 prop_id,
                                                                  const GValue         *value,
                                                                  GParamSpec           *pspec);
-static void     thunar_path_entry_size_request                  (GtkWidget            *widget,
-                                                                 GtkRequisition       *requisition);
+static void     thunar_path_entry_get_preferred_width           (GtkWidget            *widget,
+                                                                 gint                 *normal_width,
+                                                                 gint                 *minimal_width);
+static void     thunar_path_entry_get_preferred_height          (GtkWidget            *widget,
+                                                                 gint                 *normal_height,
+                                                                 gint                 *minimal_height);
 static void     thunar_path_entry_size_allocate                 (GtkWidget            *widget,
                                                                  GtkAllocation        *allocation);
 static void     thunar_path_entry_realize                       (GtkWidget            *widget);
 static void     thunar_path_entry_unrealize                     (GtkWidget            *widget);
 static gboolean thunar_path_entry_focus                         (GtkWidget            *widget,
                                                                  GtkDirectionType      direction);
-static gboolean thunar_path_entry_expose_event                  (GtkWidget            *widget,
-                                                                 GdkEventExpose       *event);
+static gboolean thunar_path_entry_draw                          (GtkWidget            *widget,
+                                                                 cairo_t              *cr);
 static gboolean thunar_path_entry_button_press_event            (GtkWidget            *widget,
                                                                  GdkEventButton       *event);
 static gboolean thunar_path_entry_button_release_event          (GtkWidget            *widget,
@@ -165,7 +169,7 @@ static const GtkTargetEntry drag_targets[] =
 
 
 
-static GtkEditableClass *thunar_path_entry_editable_parent_iface;
+static GtkEditableInterface *thunar_path_entry_editable_parent_iface;
 
 
 
@@ -187,12 +191,13 @@ thunar_path_entry_class_init (ThunarPathEntryClass *klass)
   gobject_class->set_property = thunar_path_entry_set_property;
 
   gtkwidget_class = GTK_WIDGET_CLASS (klass);
-  gtkwidget_class->size_request = thunar_path_entry_size_request;
+  gtkwidget_class->get_preferred_width = thunar_path_entry_get_preferred_width;
+  gtkwidget_class->get_preferred_height = thunar_path_entry_get_preferred_height;
   gtkwidget_class->size_allocate = thunar_path_entry_size_allocate;
   gtkwidget_class->realize = thunar_path_entry_realize;
   gtkwidget_class->unrealize = thunar_path_entry_unrealize;
   gtkwidget_class->focus = thunar_path_entry_focus;
-  gtkwidget_class->expose_event = thunar_path_entry_expose_event;
+  gtkwidget_class->draw = thunar_path_entry_draw;
   gtkwidget_class->button_press_event = thunar_path_entry_button_press_event;
   gtkwidget_class->button_release_event = thunar_path_entry_button_release_event;
   gtkwidget_class->motion_notify_event = thunar_path_entry_motion_notify_event;
@@ -229,9 +234,9 @@ thunar_path_entry_class_init (ThunarPathEntryClass *klass)
 
 
 static void
-thunar_path_entry_editable_init (GtkEditableClass *iface)
+thunar_path_entry_editable_init (GtkEditableInterface *iface)
 {
-  thunar_path_entry_editable_parent_iface = g_type_interface_peek_parent (iface);
+  thunar_path_entry_editable_parent_iface = iface;
 
   iface->changed = thunar_path_entry_changed;
   iface->do_insert_text = thunar_path_entry_do_insert_text;
@@ -364,26 +369,51 @@ thunar_path_entry_set_property (GObject      *object,
 
 
 
-static void
-thunar_path_entry_size_request (GtkWidget      *widget,
-                                GtkRequisition *requisition)
+static void     
+thunar_path_entry_get_preferred_width (GtkWidget *widget,
+                                       gint      *normal_width,
+                                       gint      *minimal_width)
+{
+  ThunarPathEntry *path_entry = THUNAR_PATH_ENTRY (widget);
+  gint             icon_size;
+  gint             xborder;
+  gint             extra;
+
+  gtk_widget_style_get (GTK_WIDGET (widget),
+                        "icon-size", &icon_size,
+                        NULL);
+
+  (*GTK_WIDGET_CLASS (thunar_path_entry_parent_class)->get_preferred_height) (widget, normal_width, minimal_width);
+
+  thunar_path_entry_get_text_area_size (path_entry, &xborder, NULL, NULL, NULL);
+
+  extra = icon_size + xborder + 2 * ICON_MARGIN;
+  
+  *normal_width += extra;
+  *minimal_width += extra;
+}
+
+
+
+static void     
+thunar_path_entry_get_preferred_height (GtkWidget *widget,
+                                        gint      *normal_height,
+                                        gint      *minimal_height)
 {
   ThunarPathEntry *path_entry = THUNAR_PATH_ENTRY (widget);
   gint             text_height;
   gint             icon_size;
-  gint             xborder;
   gint             yborder;
 
   gtk_widget_style_get (GTK_WIDGET (widget),
                         "icon-size", &icon_size,
                         NULL);
 
-  (*GTK_WIDGET_CLASS (thunar_path_entry_parent_class)->size_request) (widget, requisition);
+  (*GTK_WIDGET_CLASS (thunar_path_entry_parent_class)->get_preferred_height) (widget, normal_height, minimal_height);
 
-  thunar_path_entry_get_text_area_size (path_entry, &xborder, &yborder, NULL, &text_height);
+  thunar_path_entry_get_text_area_size (path_entry, NULL, &yborder, NULL, &text_height);
 
-  requisition->width += icon_size + xborder + 2 * ICON_MARGIN;
-  requisition->height = 2 * yborder + MAX (icon_size + 2 * ICON_MARGIN, text_height);
+  *normal_height = *minimal_height = 2 * yborder + MAX (icon_size + 2 * ICON_MARGIN, text_height);
 }
 
 
@@ -431,17 +461,17 @@ thunar_path_entry_size_allocate (GtkWidget     *widget,
 
   if (gtk_widget_get_realized (widget))
     {
-      gdk_window_move_resize (GTK_ENTRY (path_entry)->text_area,
+      /*gdk_window_move_resize (,
                               text_allocation.x,
                               text_allocation.y,
                               text_allocation.width,
                               text_allocation.height);
 
-      gdk_window_move_resize (path_entry->icon_area,
+      gdk_window_move_resize (,
                               icon_allocation.x,
                               icon_allocation.y,
                               icon_allocation.width,
-                              icon_allocation.height);
+                              icon_allocation.height);*/
     }
 }
 
@@ -457,7 +487,7 @@ thunar_path_entry_realize (GtkWidget *widget)
   gint             text_height;
   gint             icon_size;
   gint             spacing;
-  GtkWidget        allocation;
+  GtkAllocation    allocation;
   GtkRequisition   requisition;
 
   /* query the proper icon factory */
@@ -470,16 +500,15 @@ thunar_path_entry_realize (GtkWidget *widget)
 
   (*GTK_WIDGET_CLASS (thunar_path_entry_parent_class)->realize) (widget);
 
-  thunar_path_entry_get_text_area_size (path_entry, NULL, NULL, NULL, &text_height);
-  spacing = widget->requisition.height -text_height;
-
   gtk_widget_get_allocation (widget, &allocation);
   gtk_widget_get_preferred_size (widget, &requisition, NULL);
+
+  thunar_path_entry_get_text_area_size (path_entry, NULL, NULL, NULL, &text_height);
+  spacing = requisition.height -text_height;
 
   attributes.window_type = GDK_WINDOW_CHILD;
   attributes.wclass = GDK_INPUT_OUTPUT;
   attributes.visual = gtk_widget_get_visual (widget);
-  attributes.colormap = gtk_widget_get_colormap (widget);
   attributes.event_mask = gtk_widget_get_events (widget)
                         | GDK_BUTTON_PRESS_MASK
                         | GDK_BUTTON_RELEASE_MASK
@@ -491,11 +520,11 @@ thunar_path_entry_realize (GtkWidget *widget)
   attributes.y = allocation.y + (allocation.height - requisition.height) / 2;
   attributes.width = icon_size + spacing;
   attributes.height = requisition.height;
-  attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
+  attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL;
 
-  path_entry->icon_area = gdk_window_new (widget->window, &attributes, attributes_mask);
+  path_entry->icon_area = gdk_window_new (gtk_widget_get_window (widget), &attributes, attributes_mask);
   gdk_window_set_user_data (path_entry->icon_area, widget);
-  gdk_window_set_background (path_entry->icon_area, &widget->style->base[gtk_widget_get_state (widget)]);
+  /* TODO gdk_window_set_background (path_entry->icon_area, &widget->style->base[gtk_widget_get_state (widget)]); */
   gdk_window_show (path_entry->icon_area);
 
   gtk_widget_queue_resize (widget);
@@ -538,11 +567,11 @@ thunar_path_entry_focus (GtkWidget       *widget,
   if ((direction == GTK_DIR_TAB_FORWARD) && (gtk_widget_has_focus (widget)) && !control_pressed)
     {
       /* if we don't have a completion and the cursor is at the end of the line, we just insert the common prefix */
-      if (!path_entry->has_completion && gtk_editable_get_position (GTK_EDITABLE (path_entry)) == GTK_ENTRY (path_entry)->text_length)
+      if (!path_entry->has_completion && gtk_editable_get_position (GTK_EDITABLE (path_entry)) == gtk_entry_get_text_length (GTK_ENTRY (path_entry)))
         thunar_path_entry_common_prefix_append (path_entry, FALSE);
 
       /* place the cursor at the end */
-      gtk_editable_set_position (GTK_EDITABLE (path_entry), GTK_ENTRY (path_entry)->text_length);
+      gtk_editable_set_position (GTK_EDITABLE (path_entry), -1);
 
       return TRUE;
     }
@@ -553,29 +582,33 @@ thunar_path_entry_focus (GtkWidget       *widget,
 
 
 static gboolean
-thunar_path_entry_expose_event (GtkWidget      *widget,
-                                GdkEventExpose *event)
+thunar_path_entry_draw (GtkWidget *widget,
+                        cairo_t   *cr)
 {
   ThunarPathEntry *path_entry = THUNAR_PATH_ENTRY (widget);
   GdkPixbuf       *icon;
-  gint             icon_height;
-  gint             icon_width;
   gint             icon_size;
   gint             height;
   gint             width;
+  GtkStyleContext *style_context;
 
-  if (event->window == path_entry->icon_area)
+  if (gtk_cairo_should_draw_window (cr,path_entry->icon_area))
     {
+      style_context = gtk_widget_get_style_context (widget);
+      gtk_style_context_save (style_context);
+      
       gtk_widget_style_get (GTK_WIDGET (widget),
                             "icon-size", &icon_size,
                             NULL);
 
-      gdk_drawable_get_size (GDK_DRAWABLE (path_entry->icon_area), &width, &height);
+      width = gdk_window_get_width (GDK_WINDOW (path_entry->icon_area));
+      height = gdk_window_get_height (GDK_WINDOW (path_entry->icon_area));
+      
+      cairo_save (cr);
 
-      gtk_paint_flat_box (widget->style, path_entry->icon_area,
-                          gtk_widget_get_state (widget), GTK_SHADOW_NONE,
-                          NULL, widget, "entry_bg",
-                          0, 0, width, height);
+      gtk_render_background (style_context, cr, 0, 0, width, height);
+
+      cairo_restore (cr);
 
       if (G_UNLIKELY (path_entry->current_file != NULL))
         icon = thunar_icon_factory_load_file_icon (path_entry->icon_factory, path_entry->current_file, THUNAR_FILE_ICON_STATE_DEFAULT, icon_size);
@@ -586,23 +619,15 @@ thunar_path_entry_expose_event (GtkWidget      *widget,
 
       if (G_LIKELY (icon != NULL))
         {
-          icon_width = gdk_pixbuf_get_width (icon);
-          icon_height = gdk_pixbuf_get_height (icon);
-
-          gdk_draw_pixbuf (path_entry->icon_area,
-                           widget->style->black_gc,
-                           icon, 0, 0,
-                           (width - icon_width) / 2,
-                           (height - icon_height) / 2,
-                           icon_width, icon_height,
-                           GDK_RGB_DITHER_NORMAL, 0, 0);
-
+          gtk_render_icon (style_context, cr, icon, 0, 0);
           g_object_unref (G_OBJECT (icon));
         }
+
+      gtk_style_context_restore (style_context);
     }
   else
     {
-      return (*GTK_WIDGET_CLASS (thunar_path_entry_parent_class)->expose_event) (widget, event);
+      return (*GTK_WIDGET_CLASS (thunar_path_entry_parent_class)->draw) (widget, cr);
     }
 
   return TRUE;
@@ -693,14 +718,14 @@ thunar_path_entry_key_press_event (GtkWidget   *widget,
   ThunarPathEntry *path_entry = THUNAR_PATH_ENTRY (widget);
 
   /* check if we have a tab key press here and control is not pressed */
-  if (G_UNLIKELY (event->keyval == GDK_Tab && (event->state & GDK_CONTROL_MASK) == 0))
+  if (G_UNLIKELY (event->keyval == GDK_KEY_Tab && (event->state & GDK_CONTROL_MASK) == 0))
     {
       /* if we don't have a completion and the cursor is at the end of the line, we just insert the common prefix */
-      if (!path_entry->has_completion && gtk_editable_get_position (GTK_EDITABLE (path_entry)) == GTK_ENTRY (path_entry)->text_length)
+      if (!path_entry->has_completion && gtk_editable_get_position (GTK_EDITABLE (path_entry)) == gtk_entry_get_text_length (GTK_ENTRY (path_entry)))
         thunar_path_entry_common_prefix_append (path_entry, FALSE);
 
       /* place the cursor at the end */
-      gtk_editable_set_position (GTK_EDITABLE (path_entry), GTK_ENTRY (path_entry)->text_length);
+      gtk_editable_set_position (GTK_EDITABLE (path_entry), -1);
 
       /* emit "changed", so the completion window is popped up */
       g_signal_emit_by_name (G_OBJECT (path_entry), "changed", 0);
@@ -900,30 +925,30 @@ thunar_path_entry_get_borders (ThunarPathEntry *path_entry,
                                gint            *xborder,
                                gint            *yborder)
 {
-	gboolean interior_focus;
-	gint     focus_width;
+  gboolean interior_focus;
+  gint     focus_width;
 
-	gtk_widget_style_get (GTK_WIDGET (path_entry),
+  gtk_widget_style_get (GTK_WIDGET (path_entry),
                         "focus-line-width", &focus_width,
                         "interior-focus", &interior_focus,
                         NULL);
 
-	if (gtk_entry_get_has_frame (GTK_ENTRY (path_entry)))
+  if (gtk_entry_get_has_frame (GTK_ENTRY (path_entry)))
     {
-		  *xborder = GTK_WIDGET (path_entry)->style->xthickness;
-  		*yborder = GTK_WIDGET (path_entry)->style->ythickness;
-	  }
-	else
-	  {
-  		*xborder = 0;
-	  	*yborder = 0;
-  	}
+      *xborder = 2; /* TODO GTK_WIDGET (path_entry)->style->xthickness; */
+      *yborder = 2; /* TODO GTK_WIDGET (path_entry)->style->ythickness; */
+    }
+  else
+    {
+      *xborder = 0;
+      *yborder = 0;
+    }
 
-	if (!interior_focus)
-	  {
-  		*xborder += focus_width;
-	  	*yborder += focus_width;
-  	}
+  if (!interior_focus)
+    {
+      *xborder += focus_width;
+      *yborder += focus_width;
+    }
 }
 
 
@@ -935,19 +960,19 @@ thunar_path_entry_get_text_area_size (ThunarPathEntry *path_entry,
                                       gint            *width,
                                       gint            *height)
 {
-	GtkRequisition requisition;
-	GtkWidget     *widget = GTK_WIDGET (path_entry);
-	gint           xborder;
+  GtkRequisition requisition;
+  GtkWidget     *widget = GTK_WIDGET (path_entry);
+  gint           xborder;
   gint           yborder;
 
-	gtk_widget_get_child_requisition (widget, &requisition);
+  gtk_widget_get_preferred_size (widget, &requisition, NULL);
 
   thunar_path_entry_get_borders (path_entry, &xborder, &yborder);
 
-	if (x != NULL) *x = xborder;
-	if (y != NULL) *y = yborder;
-	if (width  != NULL) *width  = widget->allocation.width - xborder * 2;
-	if (height != NULL) *height = requisition.height - yborder * 2;
+  if (x != NULL) *x = xborder;
+  if (y != NULL) *y = yborder;
+  if (width  != NULL) *width  = gtk_widget_get_allocated_width (widget) - xborder * 2;
+  if (height != NULL) *height = requisition.height - yborder * 2;
 }
 
 

@@ -483,7 +483,7 @@ menu_position (GtkMenu  *menu,
   gtk_widget_get_preferred_size (GTK_WIDGET (entry), &entry_request, NULL);
   gtk_widget_get_preferred_size (GTK_WIDGET (menu), &menu_request, NULL);
 
-  gdk_window_get_position (GTK_WIDGET (entry)->window, x, y);
+  gdk_window_get_position (gtk_widget_get_window (GTK_WIDGET (entry)), x, y);
 
   *x += x0 + gtk_container_get_border_width (GTK_CONTAINER (entry));
   *y += y0 + (entry_request.height - gtk_container_get_border_width (GTK_CONTAINER (entry)));
@@ -521,6 +521,7 @@ thunar_location_entry_button_clicked (GtkWidget           *button,
   gchar                *volume_name;
   gint                  icon_size;
   gint                  width;
+  GtkAllocation         alloc;
 
   _thunar_return_if_fail (THUNAR_IS_LOCATION_ENTRY (location_entry));
   _thunar_return_if_fail (GTK_IS_TOGGLE_BUTTON (button));
@@ -593,8 +594,10 @@ thunar_location_entry_button_clicked (GtkWidget           *button,
     }
 
   /* make sure the menu has atleast the same width as the location entry */
-  width = GTK_WIDGET (location_entry)->allocation.width - 2 * gtk_container_get_border_width (GTK_CONTAINER (location_entry));
-  if (G_LIKELY (menu->allocation.width < width))
+  gtk_widget_get_allocation (GTK_WIDGET (location_entry), &alloc);
+  width = alloc.width - 2 * gtk_container_get_border_width (GTK_CONTAINER (location_entry));
+  gtk_widget_get_allocation (menu, &alloc);
+  if (G_LIKELY (alloc.width < width))
     gtk_widget_set_size_request (menu, width, -1);
 
   /* select the first visible or selectable item in the menu */

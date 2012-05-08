@@ -446,7 +446,7 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
   gtk_widget_show (vbox);
 
   /* create the hbox for the renamer selection */
-  rbox = gtk_hbox_new (FALSE, 3);
+  rbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 3);
   gtk_box_pack_start (GTK_BOX (vbox), rbox, FALSE, FALSE, 0);
   gtk_widget_show (rbox);
 
@@ -481,9 +481,9 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
       xfce_rc_set_group (rc, "Configuration");
 
       /* create the renamer combo box for the renamer selection */
-      rcombo = gtk_combo_box_new_text ();
+      rcombo = gtk_combo_box_text_new ();
       for (lp = renamers; lp != NULL; lp = lp->next)
-        gtk_combo_box_append_text (GTK_COMBO_BOX (rcombo), thunarx_renamer_get_name (lp->data));
+        gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (rcombo), NULL, thunarx_renamer_get_name (lp->data));
       gtk_box_pack_start (GTK_BOX (rbox), rcombo, FALSE, FALSE, 0);
       gtk_widget_show (rcombo);
 
@@ -499,14 +499,14 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
       gtk_widget_show (image);
 
       /* create the name/suffix/both combo box */
-      mcombo = gtk_combo_box_new_text ();
+      mcombo = gtk_combo_box_text_new ();
       klass = g_type_class_ref (THUNAR_TYPE_RENAMER_MODE);
       active_str = xfce_rc_read_entry_untranslated (rc, "LastActiveMode", "");
       for (active = 0, n = 0; n < klass->n_values; ++n)
         {
           if (exo_str_is_equal (active_str, klass->values[n].value_name))
             active = n;
-          gtk_combo_box_append_text (GTK_COMBO_BOX (mcombo), _(klass->values[n].value_nick));
+          gtk_combo_box_text_append (GTK_COMBO_BOX_TEXT (mcombo), NULL, _(klass->values[n].value_nick));
         }
       exo_mutual_binding_new (G_OBJECT (renamer_dialog->model), "mode", G_OBJECT (mcombo), "active");
       gtk_box_pack_end (GTK_BOX (rbox), mcombo, FALSE, FALSE, 0);
@@ -587,7 +587,7 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
       gtk_widget_set_sensitive (swin, FALSE);
 
       /* display an error to the user */
-      hbox = gtk_hbox_new (FALSE, 12);
+      hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 12);
       gtk_container_set_border_width (GTK_CONTAINER (hbox), 12);
       gtk_container_add (GTK_CONTAINER (frame), hbox);
       gtk_widget_show (hbox);
@@ -1310,7 +1310,9 @@ thunar_renamer_dialog_drag_data_received (GtkWidget           *tree_view,
   _thunar_return_if_fail (GTK_IS_TREE_VIEW (tree_view));
 
   /* we only accept text/uri-list drops with format 8 and atleast one byte of data */
-  if (info == TARGET_TEXT_URI_LIST && selection_data->format == 8 && selection_data->length > 0)
+  if (info == TARGET_TEXT_URI_LIST
+      && gtk_selection_data_get_format (selection_data) == 8
+      && gtk_selection_data_get_length (selection_data) > 0)
     {
       /* determine the renamer model */
       model = gtk_tree_view_get_model (GTK_TREE_VIEW (tree_view));
@@ -1332,7 +1334,7 @@ thunar_renamer_dialog_drag_data_received (GtkWidget           *tree_view,
         }
 
       /* determine the file list from the selection_data */
-      file_list = thunar_g_file_list_new_from_string ((const gchar *) selection_data->data);
+      file_list = thunar_g_file_list_new_from_string ((const gchar *) gtk_selection_data_get_data (selection_data));
 
       /* add all paths to the model */
       for (lp = file_list; lp != NULL; lp = lp->next)
@@ -1384,7 +1386,7 @@ thunar_renamer_dialog_drag_leave (GtkWidget           *tree_view,
       /* we use the tree view parent (the scrolled window),
        * as the drag_highlight doesn't work for tree views.
        */
-      gtk_drag_unhighlight (tree_view->parent);
+      gtk_drag_unhighlight (gtk_widget_get_parent (tree_view));
       renamer_dialog->drag_highlighted = FALSE;
     }
 }
@@ -1428,7 +1430,7 @@ thunar_renamer_dialog_drag_motion (GtkWidget           *tree_view,
           /* we use the tree view parent (the scrolled window),
            * as the drag_highlight doesn't work for tree views.
            */
-          gtk_drag_unhighlight (tree_view->parent);
+          gtk_drag_unhighlight (gtk_widget_get_parent (tree_view));
           renamer_dialog->drag_highlighted = FALSE;
         }
 
@@ -1468,7 +1470,7 @@ thunar_renamer_dialog_drag_motion (GtkWidget           *tree_view,
   else if (!renamer_dialog->drag_highlighted)
     {
       /* highlight the parent */
-      gtk_drag_highlight (tree_view->parent);
+      gtk_drag_highlight (gtk_widget_get_parent (tree_view));
       renamer_dialog->drag_highlighted = TRUE;
     }
 

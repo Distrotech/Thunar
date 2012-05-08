@@ -110,8 +110,7 @@ static void
 thunar_shortcuts_icon_renderer_init (ThunarShortcutsIconRenderer *shortcuts_icon_renderer)
 {
   /* no padding please */
-  GTK_CELL_RENDERER (shortcuts_icon_renderer)->xpad = 0;
-  GTK_CELL_RENDERER (shortcuts_icon_renderer)->ypad = 0;
+  gtk_cell_renderer_get_padding (GTK_CELL_RENDERER (shortcuts_icon_renderer), 0, 0);
 }
 
 
@@ -193,6 +192,7 @@ thunar_shortcuts_icon_renderer_render (GtkCellRenderer     *renderer,
   GdkPixbuf                   *icon = NULL;
   GdkPixbuf                   *temp;
   GIcon                       *gicon;
+  GtkStyleContext             *style_context;
 
   /* check if we have a volume set */
   if (G_UNLIKELY (shortcuts_icon_renderer->volume != NULL))
@@ -205,6 +205,8 @@ thunar_shortcuts_icon_renderer_render (GtkCellRenderer     *renderer,
       icon_info = gtk_icon_theme_lookup_by_gicon (icon_theme, gicon, cell_area->width, 
                                                   GTK_ICON_LOOKUP_USE_BUILTIN);
       g_object_unref (gicon);
+
+      style_context = gtk_widget_get_style_context (widget);
 
       /* try to load the icon */
       if (G_LIKELY (icon_info != NULL))
@@ -248,10 +250,7 @@ thunar_shortcuts_icon_renderer_render (GtkCellRenderer     *renderer,
           if (gdk_rectangle_intersect (expose_area, &icon_area, &draw_area))
             {
               /* render the invalid parts of the icon */
-              gdk_draw_pixbuf (window, widget->style->black_gc, icon,
-                               draw_area.x - icon_area.x, draw_area.y - icon_area.y,
-                               draw_area.x, draw_area.y, draw_area.width, draw_area.height,
-                               GDK_RGB_DITHER_NORMAL, 0, 0);
+              gtk_render_icon (style_context, cr, icon, icon_area.x, icon_area.y);
             }
 
           /* cleanup */

@@ -548,7 +548,7 @@ thunar_text_renderer_render (GtkCellRenderer     *renderer,
       cairo_curve_to (cr, x0 + 5, y1, x0, y1, x0, y1 - 5);
       cairo_line_to (cr, x0, y0 + 5);
       cairo_curve_to (cr, x0, y0 + 5, x0, y0, x0 + 5, y0);
-      gdk_cairo_set_source_color (cr, &widget->style->base[state]);
+      /* TODO gdk_cairo_set_source_color (cr, &widget->style->base[state]); */
       cairo_fill (cr);
       cairo_destroy (cr);
     }

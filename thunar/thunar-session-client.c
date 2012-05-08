@@ -36,6 +36,8 @@
 #include <X11/SM/SMlib.h>
 #endif
 
+#include <gdk/gdkx.h>
+
 #include <thunar/thunar-application.h>
 #include <thunar/thunar-ice.h>
 #include <thunar/thunar-private.h>
@@ -166,7 +168,7 @@ thunar_session_client_connect (ThunarSessionClient *session_client,
     return FALSE;
 
   /* tell GDK about our new session id */
-  gdk_set_sm_client_id (id);
+  gdk_x11_set_sm_client_id (id);
 
   /* remember the returned client id */
   if (g_mem_is_system_malloc ())

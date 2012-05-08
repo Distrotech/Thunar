@@ -2709,8 +2709,10 @@ thunar_standard_view_drag_data_received (GtkWidget          *view,
   if (G_LIKELY (!standard_view->priv->drop_data_ready))
     {
       /* extract the URI list from the selection data (if valid) */
-      if (info == TARGET_TEXT_URI_LIST && selection_data->format == 8 && selection_data->length > 0)
-        standard_view->priv->drop_file_list = thunar_g_file_list_new_from_string ((gchar *) selection_data->data);
+      if (info == TARGET_TEXT_URI_LIST
+          && gtk_selection_data_get_format (selection_data) == 8
+          && gtk_selection_data_get_length (selection_data) > 0)
+        standard_view->priv->drop_file_list = thunar_g_file_list_new_from_string ((gchar *) gtk_selection_data_get_data (selection_data));
 
       /* reset the state */
       standard_view->priv->drop_data_ready = TRUE;
@@ -2726,7 +2728,9 @@ thunar_standard_view_drag_data_received (GtkWidget          *view,
       if (G_UNLIKELY (info == TARGET_XDND_DIRECT_SAVE0))
         {
           /* we don't handle XdndDirectSave stage (3), result "F" yet */
-          if (G_UNLIKELY (selection_data->format == 8 && selection_data->length == 1 && selection_data->data[0] == 'F'))
+          if (G_UNLIKELY (gtk_selection_data_get_format (selection_data) == 8
+              && gtk_selection_data_get_length (selection_data) == 1
+              && gtk_selection_data_get_data (selection_data)[0] == 'F'))
             {
               /* indicate that we don't provide "F" fallback */
               gdk_property_change (GDK_DRAWABLE (context->source_window),
@@ -2734,7 +2738,9 @@ thunar_standard_view_drag_data_received (GtkWidget          *view,
                                    gdk_atom_intern_static_string ("text/plain"), 8,
                                    GDK_PROP_MODE_REPLACE, (const guchar *) "", 0);
             }
-          else if (G_LIKELY (selection_data->format == 8 && selection_data->length == 1 && selection_data->data[0] == 'S'))
+          else if (G_LIKELY (gtk_selection_data_get_format (selection_data) == 8
+                   && gtk_selection_data_get_length (selection_data)
+                   && gtk_selection_data_get_data (selection_data)[0] == 'S'))
             {
               /* XDS was successfull, so determine the file for the drop position */
               file = thunar_standard_view_get_drop_file (standard_view, x, y, NULL);
@@ -2760,10 +2766,11 @@ thunar_standard_view_drag_data_received (GtkWidget          *view,
       else if (G_UNLIKELY (info == TARGET_NETSCAPE_URL))
         {
           /* check if the format is valid and we have any data */
-          if (G_LIKELY (selection_data->format == 8 && selection_data->length > 0))
+          if (G_LIKELY (gtk_selection_data_get_format (selection_data) == 8
+              && gtk_selection_data_get_length (selection_data) > 0))
             {
               /* _NETSCAPE_URL looks like this: "$URL\n$TITLE" */
-              bits = g_strsplit ((const gchar *) selection_data->data, "\n", -1);
+              bits = g_strsplit ((const gchar *) gtk_selection_data_get_data (selection_data), "\n", -1);
               if (G_LIKELY (g_strv_length (bits) == 2))
                 {
                   /* determine the file for the drop position */

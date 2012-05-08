@@ -39,23 +39,27 @@ enum
 
 
 
-static void     thunar_throbber_dispose       (GObject              *object);
-static void     thunar_throbber_get_property  (GObject              *object,
-                                               guint                 prop_id,
-                                               GValue               *value,
-                                               GParamSpec           *pspec);
-static void     thunar_throbber_set_property  (GObject              *object,
-                                               guint                 prop_id,
-                                               const GValue         *value,
-                                               GParamSpec           *pspec);
-static void     thunar_throbber_realize       (GtkWidget            *widget);
-static void     thunar_throbber_unrealize     (GtkWidget            *widget);
-static void     thunar_throbber_size_request  (GtkWidget            *widget,
-                                               GtkRequisition       *requisition);
-static gboolean thunar_throbber_expose_event  (GtkWidget            *widget,
-                                               GdkEventExpose       *event);
-static gboolean thunar_throbber_timer         (gpointer              user_data);
-static void     thunar_throbber_timer_destroy (gpointer              user_data);
+static void     thunar_throbber_dispose             (GObject              *object);
+static void     thunar_throbber_get_property        (GObject              *object,
+                                                     guint                 prop_id,
+                                                     GValue               *value,
+                                                     GParamSpec           *pspec);
+static void     thunar_throbber_set_property        (GObject              *object,
+                                                     guint                 prop_id,
+                                                     const GValue         *value,
+                                                     GParamSpec           *pspec);
+static void     thunar_throbber_realize             (GtkWidget            *widget);
+static void     thunar_throbber_unrealize           (GtkWidget            *widget);
+static void     thunar_throbber_get_preferred_width (GtkWidget            *widget,
+                                                     gint                 *normal_width,
+                                                     gint                 *minimal_width);
+static void     thunar_throbber_get_preferred_heigh (GtkWidget            *widget,
+                                                     gint                 *normal_height,
+                                                     gint                 *minimal_height);
+static gboolean thunar_throbber_draw                (GtkWidget            *widget,
+                                                     cairo_t              *cr);
+static gboolean thunar_throbber_timer               (gpointer              user_data);
+static void     thunar_throbber_timer_destroy       (gpointer              user_data);
 
 
 
@@ -97,7 +101,7 @@ thunar_throbber_class_init (ThunarThrobberClass *klass)
   gtkwidget_class->realize = thunar_throbber_realize;
   gtkwidget_class->unrealize = thunar_throbber_unrealize;
   gtkwidget_class->size_request = thunar_throbber_size_request;
-  gtkwidget_class->expose_event = thunar_throbber_expose_event;
+  gtkwidget_class->draw = thunar_throbber_draw;
 
   /**
    * ThunarThrobber:animated:
@@ -223,19 +227,29 @@ thunar_throbber_unrealize (GtkWidget *widget)
 
 
 
-static void
-thunar_throbber_size_request (GtkWidget      *widget,
-                              GtkRequisition *requisition)
+static void     
+thunar_throbber_get_preferred_width (GtkWidget *widget,
+                                     gint      *normal_width,
+                                     gint      *minimal_width)
 {
-  requisition->width = 16;
-  requisition->height = 16;
+ *normal_width = *minimal_width = 16;
+}
+
+
+
+static void                                    
+thunar_throbber_get_preferred_height (GtkWidget *widget,
+                                      gint      *normal_height,
+                                      gint      *minimal_height)
+{
+  *normal_height = *minimal_height = 16;
 }
 
 
 
 static gboolean
-thunar_throbber_expose_event (GtkWidget      *widget,
-                              GdkEventExpose *event)
+thunar_throbber_draw (GtkWidget *widget,
+                      cairo_t   *cr)
 {
   ThunarThrobber *throbber = THUNAR_THROBBER (widget);
   gint            icon_index;
@@ -266,9 +280,8 @@ thunar_throbber_expose_event (GtkWidget      *widget,
           icon_y = (icon_index / icon_cols) * 16;
 
           /* render the given part of the icon */
-          gdk_draw_pixbuf (event->window, NULL, throbber->icon, icon_x, icon_y,
-                           widget->allocation.x, widget->allocation.y,
-                           16, 16, GDK_RGB_DITHER_NONE, 0, 0);
+          gtk_render_icon_pixbuf (gtk_widget_get_style_context (widget),
+                                  cr, throbber->icon, icon_x, icon_y);
         }
     }
 
