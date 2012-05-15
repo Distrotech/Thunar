@@ -825,6 +825,5 @@ thunar_folder_destroy (ThunarFolder *folder)
    * emitted once there. there we can use g_object_unref on
    * folders */
   g_signal_emit (G_OBJECT (folder), folder_signals[DESTROY], 0);
-  
   g_object_unref (G_OBJECT (folder));
 }

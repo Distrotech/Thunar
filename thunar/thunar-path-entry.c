@@ -869,7 +869,7 @@ thunar_path_entry_changed (GtkEditable *editable)
 
       /* cleanup */
       if (G_LIKELY (folder != NULL))
-        thunar_folder_destroy (folder);
+        g_object_unref (G_OBJECT (folder));
     }
 
   /* update the current file if required */

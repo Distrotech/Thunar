@@ -1210,7 +1210,7 @@ thunar_standard_view_set_current_directory (ThunarNavigator *navigator,
 
   /* apply the new folder */
   thunar_list_model_set_folder (standard_view->model, folder);
-  thunar_folder_destroy (folder);
+  g_object_unref (G_OBJECT (folder));
 
   /* reconnect our model to the view */
   g_object_set (G_OBJECT (child), "model", standard_view->model, NULL);
@@ -2747,7 +2747,7 @@ thunar_standard_view_drag_data_received (GtkWidget          *view,
                       /* reload the folder corresponding to the file */
                       folder = thunar_folder_get_for_file (file);
                       thunar_folder_reload (folder);
-                      thunar_folder_destroy (folder);
+                      g_object_unref (G_OBJECT (folder));
                     }
 
                   /* cleanup */
