@@ -239,7 +239,7 @@ thunar_path_entry_editable_init (GtkEditableInterface *iface)
   thunar_path_entry_editable_parent_iface = iface;
 
   iface->changed = thunar_path_entry_changed;
-  iface->do_insert_text = thunar_path_entry_do_insert_text;
+  if(0)iface->do_insert_text = thunar_path_entry_do_insert_text;
 }
 
 
@@ -869,7 +869,7 @@ thunar_path_entry_changed (GtkEditable *editable)
 
       /* cleanup */
       if (G_LIKELY (folder != NULL))
-        g_object_unref (G_OBJECT (folder));
+        thunar_folder_destroy (folder);
     }
 
   /* update the current file if required */
@@ -960,19 +960,16 @@ thunar_path_entry_get_text_area_size (ThunarPathEntry *path_entry,
                                       gint            *width,
                                       gint            *height)
 {
-  GtkRequisition requisition;
-  GtkWidget     *widget = GTK_WIDGET (path_entry);
-  gint           xborder;
-  gint           yborder;
-
-  gtk_widget_get_preferred_size (widget, &requisition, NULL);
+  GtkWidget *widget = GTK_WIDGET (path_entry);
+  gint       xborder;
+  gint       yborder;
 
   thunar_path_entry_get_borders (path_entry, &xborder, &yborder);
 
   if (x != NULL) *x = xborder;
   if (y != NULL) *y = yborder;
   if (width  != NULL) *width  = gtk_widget_get_allocated_width (widget) - xborder * 2;
-  if (height != NULL) *height = requisition.height - yborder * 2;
+  if (height != NULL) *height = gtk_widget_get_allocated_height (widget) - yborder * 2;
 }
 
 

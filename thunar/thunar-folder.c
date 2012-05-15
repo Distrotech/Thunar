@@ -44,6 +44,7 @@ enum
 /* signal identifiers */
 enum
 {
+  DESTROY,
   ERROR,
   FILES_ADDED,
   FILES_REMOVED,
@@ -88,6 +89,7 @@ struct _ThunarFolderClass
   GObjectClass __parent__;
 
   /* signals */
+  void (*destroy)       (ThunarFolder *folder);
   void (*error)         (ThunarFolder *folder,
                          const GError *error);
   void (*files_added)   (ThunarFolder *folder,
@@ -160,6 +162,20 @@ thunar_folder_class_init (ThunarFolderClass *klass)
                                                          "loading",
                                                          FALSE,
                                                          EXO_PARAM_READABLE));
+  /**
+   * ThunarFolder::destroy:
+   * @folder : a #ThunarFolder.
+   *
+   * Emitted when the #ThunarFolder is destroyed.
+   **/
+  folder_signals[DESTROY] =
+    g_signal_new (I_("destroy"),
+                  G_TYPE_FROM_CLASS (gobject_class),
+                  G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (ThunarFolderClass, destroy),
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
 
   /**
    * ThunarFolder::error:
@@ -491,7 +507,7 @@ thunar_folder_file_destroyed (ThunarFileMonitor *file_monitor,
   if (G_UNLIKELY (folder->corresponding_file == file))
     {
       /* the folder is useless now */
-      g_object_unref (G_OBJECT (folder));
+      thunar_folder_destroy (folder);
     }
   else
     {
@@ -792,4 +808,18 @@ thunar_folder_reload (ThunarFolder *folder)
 
 
 
-
+/**
+ * thunar_folder_destroy:
+ * @folder : a #ThunarFolder instance.
+ *
+ * Destroy the @folder, this is a replacement for
+ * the old GtkObject:destroy signal which was been
+ * removed in gtk3.
+ **/
+void
+thunar_folder_destroy (ThunarFolder *folder)
+{
+  _thunar_return_if_fail (THUNAR_IS_FOLDER (folder));
+  g_signal_emit (G_OBJECT (folder), folder_signals[DESTROY], 0);
+  g_object_unref (G_OBJECT (folder));
+}
