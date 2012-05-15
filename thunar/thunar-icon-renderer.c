@@ -273,9 +273,10 @@ thunar_icon_renderer_get_size (GtkCellRenderer    *renderer,
   gint                xpad, ypad;
   gfloat              xalign, yalign;
 
+  gtk_cell_renderer_get_padding (renderer, &xpad, &ypad);
+
   if (rectangle != NULL)
     {
-      gtk_cell_renderer_get_padding (renderer, &xpad, &ypad);
       gtk_cell_renderer_get_alignment (renderer, &xalign, &yalign);
       
       if (x_offset != NULL)

@@ -109,7 +109,7 @@ static void
 thunar_shortcuts_icon_renderer_init (ThunarShortcutsIconRenderer *shortcuts_icon_renderer)
 {
   /* no padding please */
-  gtk_cell_renderer_get_padding (GTK_CELL_RENDERER (shortcuts_icon_renderer), 0, 0);
+  gtk_cell_renderer_set_padding (GTK_CELL_RENDERER (shortcuts_icon_renderer), 0, 0);
 }
 
 
