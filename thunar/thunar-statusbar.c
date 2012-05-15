@@ -89,11 +89,11 @@ thunar_statusbar_class_init (ThunarStatusbarClass *klass)
 
   if (!style_initialized)
     {
-      gtk_rc_parse_string ("style \"thunar-statusbar-internal\" {\n"
+      /* TODO gtk_rc_parse_string ("style \"thunar-statusbar-internal\" {\n"
                            "  GtkStatusbar::shadow-type = GTK_SHADOW_NONE\n"
                            "}\n"
                            "class \"ThunarStatusbar\" "
-                           "style \"thunar-statusbar-internal\"\n");
+                           "style \"thunar-statusbar-internal\"\n"); */
     }
 }
 
@@ -103,7 +103,6 @@ static void
 thunar_statusbar_init (ThunarStatusbar *statusbar)
 {
   statusbar->context_id = gtk_statusbar_get_context_id (GTK_STATUSBAR (statusbar), "Main text");
-  gtk_statusbar_set_has_resize_grip (GTK_STATUSBAR (statusbar), TRUE);
 }
 
 

@@ -28,7 +28,6 @@
 #include <thunar/thunar-details-view-ui.h>
 #include <thunar/thunar-gtk-extensions.h>
 #include <thunar/thunar-private.h>
-#include <thunar/thunar-text-renderer.h>
 
 
 
@@ -225,11 +224,11 @@ thunar_details_view_init (ThunarDetailsView *details_view)
   g_signal_connect (G_OBJECT (details_view->column_model), "columns-changed", G_CALLBACK (thunar_details_view_columns_changed), details_view);
 
   /* allocate the shared right-aligned text renderer */
-  right_aligned_renderer = g_object_new (THUNAR_TYPE_TEXT_RENDERER, "xalign", 1.0f, NULL);
+  right_aligned_renderer = g_object_new (GTK_TYPE_CELL_RENDERER_TEXT, "xalign", 1.0f, NULL);
   g_object_ref_sink (G_OBJECT (right_aligned_renderer));
 
   /* allocate the shared left-aligned text renderer */
-  left_aligned_renderer = g_object_new (THUNAR_TYPE_TEXT_RENDERER, "xalign", 0.0f, NULL);
+  left_aligned_renderer = g_object_new (GTK_TYPE_CELL_RENDERER_TEXT, "xalign", 0.0f, NULL);
   g_object_ref_sink (G_OBJECT (left_aligned_renderer));
 
   /* allocate the tree view columns */

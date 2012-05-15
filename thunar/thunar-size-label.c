@@ -32,7 +32,6 @@
 #include <thunar/thunar-gtk-extensions.h>
 #include <thunar/thunar-private.h>
 #include <thunar/thunar-size-label.h>
-#include <thunar/thunar-throbber.h>
 #include <thunar/thunar-deep-count-job.h>
 
 
@@ -148,7 +147,7 @@ thunar_size_label_init (ThunarSizeLabel *size_label)
   gtk_widget_show (ebox);
 
   /* add the throbber widget */
-  size_label->throbber = thunar_throbber_new ();
+  size_label->throbber = gtk_spinner_new ();
   exo_binding_new (G_OBJECT (size_label->throbber), "visible", G_OBJECT (ebox), "visible");
   gtk_container_add (GTK_CONTAINER (ebox), size_label->throbber);
   gtk_widget_show (size_label->throbber);
@@ -260,7 +259,7 @@ thunar_size_label_button_press_event (GtkWidget       *ebox,
         }
 
       /* be sure to stop and hide the throbber */
-      thunar_throbber_set_animated (THUNAR_THROBBER (size_label->throbber), FALSE);
+      gtk_spinner_stop (GTK_SPINNER (size_label->throbber));
       gtk_widget_hide (size_label->throbber);
 
       /* tell the user that the operation was canceled */
@@ -348,7 +347,7 @@ thunar_size_label_file_changed (ThunarFile      *file,
     }
 
   /* be sure to stop and hide the throbber */
-  thunar_throbber_set_animated (THUNAR_THROBBER (size_label->throbber), FALSE);
+  gtk_spinner_stop (GTK_SPINNER (size_label->throbber));
   gtk_widget_hide (size_label->throbber);
 
   /* check if the file is a directory */
@@ -429,7 +428,7 @@ thunar_size_label_finished (ExoJob          *job,
     g_source_remove (size_label->animate_timer_id);
 
   /* stop and hide the throbber */
-  thunar_throbber_set_animated (THUNAR_THROBBER (size_label->throbber), FALSE);
+  gtk_spinner_stop (GTK_SPINNER (size_label->throbber));
   gtk_widget_hide (size_label->throbber);
 
   /* disconnect from the job */
@@ -489,7 +488,7 @@ thunar_size_label_animate_timer (gpointer user_data)
   GDK_THREADS_ENTER ();
 
   /* animate and display the throbber */
-  thunar_throbber_set_animated (THUNAR_THROBBER (size_label->throbber), TRUE);
+  gtk_spinner_start (GTK_SPINNER (size_label->throbber));
   gtk_widget_show (size_label->throbber);
 
   GDK_THREADS_LEAVE ();

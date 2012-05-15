@@ -49,7 +49,6 @@
 #include <thunar/thunar-standard-view.h>
 #include <thunar/thunar-standard-view-ui.h>
 #include <thunar/thunar-templates-action.h>
-#include <thunar/thunar-text-renderer.h>
 #include <thunar/thunar-thumbnailer.h>
 
 #if defined(GDK_WINDOWING_X11)
@@ -112,8 +111,8 @@ static void                 thunar_standard_view_set_property               (GOb
 static void                 thunar_standard_view_realize                    (GtkWidget                *widget);
 static void                 thunar_standard_view_unrealize                  (GtkWidget                *widget);
 static void                 thunar_standard_view_grab_focus                 (GtkWidget                *widget);
-static gboolean             thunar_standard_view_expose_event               (GtkWidget                *widget,
-                                                                             GdkEventExpose           *event);
+static gboolean             thunar_standard_view_draw                       (GtkWidget                *widget,
+                                                                             cairo_t                  *cr);
 static GList               *thunar_standard_view_get_selected_files         (ThunarComponent          *component);
 static void                 thunar_standard_view_set_selected_files         (ThunarComponent          *component,
                                                                              GList                    *selected_files);
@@ -418,7 +417,7 @@ thunar_standard_view_class_init (ThunarStandardViewClass *klass)
   gtkwidget_class->realize = thunar_standard_view_realize;
   gtkwidget_class->unrealize = thunar_standard_view_unrealize;
   gtkwidget_class->grab_focus = thunar_standard_view_grab_focus;
-  gtkwidget_class->expose_event = thunar_standard_view_expose_event;
+  gtkwidget_class->draw = thunar_standard_view_draw;
 
   klass->delete_selected_files = thunar_standard_view_delete_selected_files;
   klass->connect_ui_manager = (gpointer) exo_noop;
@@ -608,9 +607,9 @@ thunar_standard_view_init (ThunarStandardView *standard_view)
   exo_binding_new (G_OBJECT (standard_view), "zoom-level", G_OBJECT (standard_view->icon_renderer), "size");
 
   /* setup the name renderer */
-  standard_view->name_renderer = thunar_text_renderer_new ();
+  standard_view->name_renderer = gtk_cell_renderer_text_new ();
   g_object_ref_sink (G_OBJECT (standard_view->name_renderer));
-  exo_binding_new (G_OBJECT (standard_view->preferences), "misc-single-click", G_OBJECT (standard_view->name_renderer), "follow-prelit");
+  /* TODO exo_binding_new (G_OBJECT (standard_view->preferences), "misc-single-click", G_OBJECT (standard_view->name_renderer), "follow-prelit");*/
 
   /* be sure to update the selection whenever the folder changes */
   g_signal_connect_swapped (G_OBJECT (standard_view->model), "notify::folder", G_CALLBACK (thunar_standard_view_selection_changed), standard_view);
@@ -954,36 +953,30 @@ thunar_standard_view_grab_focus (GtkWidget *widget)
 
 
 static gboolean
-thunar_standard_view_expose_event (GtkWidget      *widget,
-                                   GdkEventExpose *event)
+thunar_standard_view_draw (GtkWidget *widget,
+                           cairo_t   *cr)
 {
-  gboolean result = FALSE;
-  cairo_t *cr;
-  gint     x, y, width, height;
+  gboolean         result;
+  GtkAllocation    alloc;
+  GtkStyleContext *style_context;
 
   /* let the scrolled window do it's work */
-  result = (*GTK_WIDGET_CLASS (thunar_standard_view_parent_class)->expose_event) (widget, event);
+  result = (*GTK_WIDGET_CLASS (thunar_standard_view_parent_class)->draw) (widget, cr);
 
   /* render the folder drop shadow */
   if (G_UNLIKELY (THUNAR_STANDARD_VIEW (widget)->priv->drop_highlight))
     {
-      x = widget->allocation.x;
-      y = widget->allocation.y;
-      width = widget->allocation.width;
-      height = widget->allocation.height;
+      gtk_widget_get_allocation (widget, &alloc);
 
-      gtk_paint_shadow (widget->style, widget->window,
-                        GTK_STATE_NORMAL, GTK_SHADOW_OUT,
-                        NULL, widget, "dnd",
-                        x, y, width, height);
-
-      /* the cairo version looks better here, so we use it if possible */
-      cr = gdk_cairo_create (widget->window);
-      cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
-      cairo_set_line_width (cr, 1.0);
-      cairo_rectangle (cr, x + 0.5, y + 0.5, width - 1, height - 1);
-      cairo_stroke (cr);
-      cairo_destroy (cr);
+      style_context = gtk_widget_get_style_context (widget);
+      gtk_style_context_save (style_context);
+      gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_DND);
+      
+      gtk_render_frame (style_context, cr,
+                        alloc.x + 0.5, alloc.y + 0.5,
+                        alloc.width - 1, alloc.height - 1);
+      
+      gtk_style_context_restore (style_context);
     }
 
   return result;
@@ -2446,7 +2439,7 @@ thunar_standard_view_motion_notify_event (GtkWidget          *view,
                                           GdkEventMotion     *event,
                                           ThunarStandardView *standard_view)
 {
-  GdkDragContext *context;
+  //GdkDragContext *context;
   GtkTargetList  *target_list;
 
   _thunar_return_val_if_fail (THUNAR_IS_STANDARD_VIEW (standard_view), FALSE);
@@ -2460,8 +2453,8 @@ thunar_standard_view_motion_notify_event (GtkWidget          *view,
 
       /* allocate the drag context (preferred action is to ask the user) */
       target_list = gtk_target_list_new (drag_targets, G_N_ELEMENTS (drag_targets));
-      context = gtk_drag_begin (view, target_list, GDK_ACTION_COPY | GDK_ACTION_MOVE | GDK_ACTION_LINK | GDK_ACTION_ASK, 3, (GdkEvent *) event);
-      context->suggested_action = GDK_ACTION_ASK;
+      /*context = */gtk_drag_begin (view, target_list, GDK_ACTION_COPY | GDK_ACTION_MOVE | GDK_ACTION_LINK | GDK_ACTION_ASK, 3, (GdkEvent *) event);
+      /*TODO no way to set suggested action context->suggested_action = GDK_ACTION_ASK; */
       gtk_target_list_unref (target_list);
 
       return TRUE;
@@ -2550,7 +2543,8 @@ thunar_standard_view_key_press_event (GtkWidget          *view,
   _thunar_return_val_if_fail (THUNAR_IS_STANDARD_VIEW (standard_view), FALSE);
 
   /* need to catch "/" and "~" first, as the views would otherwise start interactive search */
-  if ((event->keyval == GDK_slash || event->keyval == GDK_asciitilde || event->keyval == GDK_dead_tilde) && !(event->state & (~GDK_SHIFT_MASK & gtk_accelerator_get_default_mod_mask ())))
+  if ((event->keyval == GDK_KEY_slash || event->keyval == GDK_KEY_asciitilde || event->keyval == GDK_KEY_dead_tilde)
+      && !(event->state & (~GDK_SHIFT_MASK & gtk_accelerator_get_default_mod_mask ())))
     {
       /* popup the location selector (in whatever way) */
       if (event->keyval == GDK_KEY_dead_tilde)
@@ -2594,7 +2588,8 @@ thunar_standard_view_drag_drop (GtkWidget          *view,
       if (G_LIKELY (file != NULL))
         {
           /* determine the file name from the DnD source window */
-          if (gdk_property_get (context->source_window, gdk_atom_intern_static_string ("XdndDirectSave0"),
+          if (gdk_property_get (gdk_drag_context_get_source_window (context),
+                                gdk_atom_intern_static_string ("XdndDirectSave0"),
                                 gdk_atom_intern_static_string ("text/plain"), 0, 1024, FALSE, NULL, NULL,
                                 &prop_len, &prop_text) && prop_text != NULL)
             {
@@ -2607,13 +2602,13 @@ thunar_standard_view_drag_drop (GtkWidget          *view,
                 {
                   /* allocate the relative path for the target */
                   path = g_file_resolve_relative_path (thunar_file_get_file (file), 
-                                                       (const gchar *)prop_text);
+                                                       (const gchar *) prop_text);
 
                   /* determine the new URI */
                   uri = g_file_get_uri (path);
 
                   /* setup the property */
-                  gdk_property_change (GDK_DRAWABLE (context->source_window),
+                  gdk_property_change (gdk_drag_context_get_source_window (context),
                                        gdk_atom_intern_static_string ("XdndDirectSave0"),
                                        gdk_atom_intern_static_string ("text/plain"), 8,
                                        GDK_PROP_MODE_REPLACE, (const guchar *) uri,
@@ -2733,7 +2728,7 @@ thunar_standard_view_drag_data_received (GtkWidget          *view,
               && gtk_selection_data_get_data (selection_data)[0] == 'F'))
             {
               /* indicate that we don't provide "F" fallback */
-              gdk_property_change (GDK_DRAWABLE (context->source_window),
+              gdk_property_change (gdk_drag_context_get_source_window (context),
                                    gdk_atom_intern_static_string ("XdndDirectSave0"),
                                    gdk_atom_intern_static_string ("text/plain"), 8,
                                    GDK_PROP_MODE_REPLACE, (const guchar *) "", 0);
@@ -2790,13 +2785,14 @@ thunar_standard_view_drag_data_received (GtkWidget          *view,
 
                       /* determine the toplevel window */
                       toplevel = gtk_widget_get_toplevel (view);
-                      if (toplevel != NULL && gtk_widget_get_toplevel (toplevel))
+                      if (toplevel != NULL)
                         {
 #if defined(GDK_WINDOWING_X11)
                           /* on X11, we can supply the parent window id here */
                           argv[n++] = "--xid";
                           argv[n++] = g_newa (gchar, 32);
-                          g_snprintf (argv[n - 1], 32, "%ld", (glong) GDK_WINDOW_XID (toplevel->window));
+                          g_snprintf (argv[n - 1], 32, "%ld",
+                                      (glong) GDK_WINDOW_XID (gtk_widget_get_window (toplevel)));
 #endif
                         }
 
@@ -2839,9 +2835,9 @@ thunar_standard_view_drag_data_received (GtkWidget          *view,
           if (G_LIKELY ((actions & (GDK_ACTION_COPY | GDK_ACTION_MOVE | GDK_ACTION_LINK)) != 0))
             {
               /* ask the user what to do with the drop data */
-              action = (context->action == GDK_ACTION_ASK)
+              action = (gdk_drag_context_get_actions (context) == GDK_ACTION_ASK)
                      ? thunar_dnd_ask (GTK_WIDGET (standard_view), file, standard_view->priv->drop_file_list, timestamp, actions)
-                     : context->action;
+                     : gdk_drag_context_get_actions (context);
 
               /* perform the requested action */
               if (G_LIKELY (action != 0))
@@ -2930,7 +2926,7 @@ thunar_standard_view_drag_motion (GtkWidget          *view,
                         && thunar_file_is_directory (file) 
                         && thunar_file_is_writable (file)))
             {
-              action = context->suggested_action;
+              action = gdk_drag_context_get_suggested_action (context);
             }
 
           /* reset path if we cannot drop */
@@ -3221,16 +3217,20 @@ thunar_standard_view_drag_scroll_timer (gpointer user_data)
   gint                y, x;
   gint                w, h;
   GtkWidget          *child;
+  GdkDevice          *device;
+  GdkDeviceManager   *device_manager;
 
   GDK_THREADS_ENTER ();
 
   /* verify that we are realized */
-  if (G_LIKELY (gtk_widget_get_realized (standard_view)))
+  if (G_LIKELY (gtk_widget_get_realized (GTK_WIDGET (standard_view))))
     {
       /* determine pointer location and window geometry */
       child = gtk_bin_get_child (GTK_BIN (standard_view));
-      gdk_window_get_pointer (gtk_widget_get_window (child), &x, &y, NULL);
-      gdk_window_get_geometry (gtk_widget_get_window (child), NULL, NULL, &w, &h, NULL);
+      device_manager = gdk_display_get_device_manager (gtk_widget_get_display (child));
+      device = gdk_device_manager_get_client_pointer (device_manager);
+      gdk_window_get_device_position (gtk_widget_get_window (child), device, &x, &y, NULL);
+      gdk_window_get_geometry (gtk_widget_get_window (child), NULL, NULL, &w, &h);
 
       /* check if we are near the edge (vertical) */
       offset = y - (2 * 20);
@@ -3244,7 +3244,9 @@ thunar_standard_view_drag_scroll_timer (gpointer user_data)
           adjustment = gtk_scrolled_window_get_vadjustment (GTK_SCROLLED_WINDOW (standard_view));
 
           /* determine the new value */
-          value = CLAMP (adjustment->value + 2 * offset, adjustment->lower, adjustment->upper - adjustment->page_size);
+          value = CLAMP (gtk_adjustment_get_value (adjustment) + 2 * offset,
+                         gtk_adjustment_get_lower (adjustment),
+                         gtk_adjustment_get_upper (adjustment) - gtk_adjustment_get_page_size (adjustment));
 
           /* apply the new value */
           gtk_adjustment_set_value (adjustment, value);
@@ -3262,7 +3264,9 @@ thunar_standard_view_drag_scroll_timer (gpointer user_data)
           adjustment = gtk_scrolled_window_get_hadjustment (GTK_SCROLLED_WINDOW (standard_view));
 
           /* determine the new value */
-          value = CLAMP (adjustment->value + 2 * offset, adjustment->lower, adjustment->upper - adjustment->page_size);
+          value = CLAMP (gtk_adjustment_get_value (adjustment) + 2 * offset,
+                         gtk_adjustment_get_lower (adjustment),
+                         gtk_adjustment_get_upper (adjustment) - gtk_adjustment_get_page_size (adjustment));
 
           /* apply the new value */
           gtk_adjustment_set_value (adjustment, value);

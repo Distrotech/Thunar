@@ -56,7 +56,6 @@
 #include <thunar/thunar-private.h>
 #include <thunar/thunar-statusbar.h>
 #include <thunar/thunar-stock.h>
-#include <thunar/thunar-throbber.h>
 #include <thunar/thunar-trash-action.h>
 #include <thunar/thunar-tree-pane.h>
 #include <thunar/thunar-window.h>
@@ -788,12 +787,13 @@ thunar_window_init (ThunarWindow *window)
   /* append the menu item for the throbber */
   item = gtk_menu_item_new ();
   gtk_widget_set_sensitive (GTK_WIDGET (item), FALSE);
-  gtk_menu_item_set_right_justified (GTK_MENU_ITEM (item), TRUE);
+  gtk_widget_set_hexpand (GTK_WIDGET (item), TRUE);
+  gtk_widget_set_halign (GTK_WIDGET (item), GTK_ALIGN_END);
   gtk_menu_shell_append (GTK_MENU_SHELL (menubar), item);
   gtk_widget_show (item);
 
   /* place the throbber into the menu item */
-  window->throbber = thunar_throbber_new ();
+  window->throbber = gtk_spinner_new ();
   gtk_container_add (GTK_CONTAINER (item), window->throbber);
   gtk_widget_show (window->throbber);
 
@@ -801,9 +801,9 @@ thunar_window_init (ThunarWindow *window)
   if (G_UNLIKELY (geteuid () == 0))
     {
       /* install default settings for the root warning text box */
-      gtk_rc_parse_string ("style\"thunar-window-root-style\"{bg[NORMAL]=\"#b4254b\"\nfg[NORMAL]=\"#fefefe\"}\n"
+      /* TODO gtk_rc_parse_string ("style\"thunar-window-root-style\"{bg[NORMAL]=\"#b4254b\"\nfg[NORMAL]=\"#fefefe\"}\n"
                            "widget\"ThunarWindow.*.root-warning\"style\"thunar-window-root-style\"\n"
-                           "widget\"ThunarWindow.*.root-warning.GtkLabel\"style\"thunar-window-root-style\"\n");
+                           "widget\"ThunarWindow.*.root-warning.GtkLabel\"style\"thunar-window-root-style\"\n"); */
 
       /* add the box for the root warning */
       ebox = gtk_event_box_new ();
@@ -822,7 +822,7 @@ thunar_window_init (ThunarWindow *window)
       gtk_widget_show (separator);
     }
 
-  window->paned = gtk_hpaned_new ();
+  window->paned = gtk_paned_new (GTK_ORIENTATION_HORIZONTAL);
   gtk_container_set_border_width (GTK_CONTAINER (window->paned), 0);
   gtk_table_attach (GTK_TABLE (window->table), window->paned, 0, 1, 4, 5, GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
   gtk_widget_show (window->paned);
@@ -1204,10 +1204,12 @@ static gboolean
 thunar_window_configure_event (GtkWidget         *widget,
                                GdkEventConfigure *event)
 {
-  ThunarWindow *window = THUNAR_WINDOW (widget);
+  ThunarWindow  *window = THUNAR_WINDOW (widget);
+  GtkAllocation  alloc;
 
   /* check if we have a new dimension here */
-  if (widget->allocation.width != event->width || widget->allocation.height != event->height)
+  gtk_widget_get_allocation (widget, &alloc);
+  if (alloc.width != event->width || alloc.height != event->height)
     {
       /* drop any previous timer source */
       if (window->save_geometry_timer_id > 0)
@@ -1902,7 +1904,7 @@ thunar_window_action_view_changed (GtkRadioAction *action,
       g_signal_connect_swapped (G_OBJECT (window->view), "change-directory", G_CALLBACK (thunar_window_set_current_directory), window);
       exo_binding_new (G_OBJECT (window), "current-directory", G_OBJECT (window->view), "current-directory");
       exo_binding_new (G_OBJECT (window), "show-hidden", G_OBJECT (window->view), "show-hidden");
-      exo_binding_new (G_OBJECT (window->view), "loading", G_OBJECT (window->throbber), "animated");
+      exo_binding_new (G_OBJECT (window->view), "loading", G_OBJECT (window->throbber), "active");
       exo_binding_new (G_OBJECT (window->view), "selected-files", G_OBJECT (window->launcher), "selected-files");
       exo_mutual_binding_new (G_OBJECT (window->view), "zoom-level", G_OBJECT (window), "zoom-level");
       gtk_table_attach (GTK_TABLE (window->view_box), window->view, 0, 1, 1, 2, GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
@@ -2580,23 +2582,26 @@ thunar_window_notify_loading (ThunarView   *view,
                               ThunarWindow *window)
 {
   GdkCursor *cursor;
+  GdkWindow *gdkwindow;
 
   _thunar_return_if_fail (THUNAR_IS_VIEW (view));
   _thunar_return_if_fail (THUNAR_IS_WINDOW (window));
   _thunar_return_if_fail (THUNAR_VIEW (window->view) == view);
 
-  if (gtk_widget_get_realized (window))
+  if (gtk_widget_get_realized (GTK_WIDGET (window)))
     {
+      gdkwindow = gtk_widget_get_window (GTK_WIDGET (window));
+
       /* setup the proper cursor */
       if (thunar_view_get_loading (view))
         {
           cursor = gdk_cursor_new (GDK_WATCH);
-          gdk_window_set_cursor (GTK_WIDGET (window)->window, cursor);
-          gdk_cursor_unref (cursor);
+          gdk_window_set_cursor (gdkwindow, cursor);
+          g_object_unref (G_OBJECT (cursor));
         }
       else
         {
-          gdk_window_set_cursor (GTK_WIDGET (window)->window, NULL);
+          gdk_window_set_cursor (gdkwindow, NULL);
         }
     }
 }
@@ -2681,7 +2686,7 @@ thunar_window_save_geometry_timer (gpointer user_data)
   if (G_LIKELY (remember_geometry))
     {
       /* check if the window is still visible */
-      if (gtk_widget_get_visible (window))
+      if (gtk_widget_get_visible (GTK_WIDGET (window)))
         {
           /* determine the current state of the window */
           state = gdk_window_get_state (gtk_widget_get_window (GTK_WIDGET (window)));

@@ -323,6 +323,7 @@ thunar_templates_action_files_ready (ThunarJob             *job,
   GList             *pp;
   gchar             *label;
   gchar             *dot;
+  GList             *children;
 
   /* determine the menu to add the items and submenus to */
   menu = g_object_get_data (G_OBJECT (job), "menu");
@@ -402,8 +403,9 @@ thunar_templates_action_files_ready (ThunarJob             *job,
     {
       /* determine the submenu for this directory item */
       submenu = gtk_menu_item_get_submenu (GTK_MENU_ITEM (lp->data));
+      children = gtk_container_get_children (GTK_CONTAINER (submenu));
 
-      if (GTK_MENU_SHELL (submenu)->children == NULL)
+      if (children == NULL)
         {
           /* the directory submenu is empty, destroy it */
           gtk_widget_destroy (lp->data);
@@ -413,6 +415,7 @@ thunar_templates_action_files_ready (ThunarJob             *job,
           /* the directory has template files, so add it to its parent menu */
           gtk_menu_shell_prepend (GTK_MENU_SHELL (pp->data), lp->data);
           gtk_widget_show (lp->data);
+          g_list_free (children);
         }
     }
 
@@ -437,6 +440,7 @@ thunar_templates_action_load_error (ThunarJob             *job,
 {
   GtkWidget *item;
   GtkWidget *menu;
+  GList     *children;
 
   _thunar_return_if_fail (THUNAR_IS_JOB (job));
   _thunar_return_if_fail (error != NULL);
@@ -446,13 +450,21 @@ thunar_templates_action_load_error (ThunarJob             *job,
   menu = g_object_get_data (G_OBJECT (job), "menu");
 
   /* check if any items were added to the menu */
-  if (G_LIKELY (menu != NULL && GTK_MENU_SHELL (menu)->children == NULL))
+  if (G_LIKELY (menu != NULL))
     {
-      /* tell the user that no templates were found */
-      item = gtk_menu_item_new_with_label (error->message);
-      gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
-      gtk_widget_set_sensitive (item, FALSE);
-      gtk_widget_show (item);
+      children = gtk_container_get_children (GTK_CONTAINER (menu));
+      if (children == NULL)
+        {
+          /* tell the user that no templates were found */
+          item = gtk_menu_item_new_with_label (error->message);
+          gtk_menu_shell_append (GTK_MENU_SHELL (menu), item);
+          gtk_widget_set_sensitive (item, FALSE);
+          gtk_widget_show (item);
+        }
+      else
+        {
+          g_list_free (children);
+        }
     }
 }
 

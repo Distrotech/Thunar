@@ -107,13 +107,12 @@ thunar_uca_editor_init (ThunarUcaEditor *uca_editor)
   gtk_dialog_add_button (GTK_DIALOG (uca_editor), GTK_STOCK_OK, GTK_RESPONSE_OK);
   gtk_dialog_set_alternative_button_order (GTK_DIALOG (uca_editor), GTK_RESPONSE_OK, GTK_RESPONSE_CANCEL, -1);
   gtk_dialog_set_default_response (GTK_DIALOG (uca_editor), GTK_RESPONSE_OK);
-  gtk_dialog_set_has_separator (GTK_DIALOG (uca_editor), FALSE);
   gtk_window_set_destroy_with_parent (GTK_WINDOW (uca_editor), TRUE);
   gtk_window_set_resizable (GTK_WINDOW (uca_editor), FALSE);
 
   notebook = gtk_notebook_new ();
   gtk_container_set_border_width (GTK_CONTAINER (notebook), 6);
-  gtk_box_pack_start (GTK_BOX (GTK_DIALOG (uca_editor)->vbox), notebook, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (uca_editor))), notebook, TRUE, TRUE, 0);
   gtk_widget_show (notebook);
 
   /*
@@ -168,7 +167,7 @@ thunar_uca_editor_init (ThunarUcaEditor *uca_editor)
   gtk_table_attach (GTK_TABLE (table), label, 0, 1, 2, 3, GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (label);
 
-  hbox = gtk_hbox_new (FALSE, 2);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 2);
   gtk_table_attach (GTK_TABLE (table), hbox, 1, 2, 2, 3, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (hbox);
 
@@ -234,7 +233,7 @@ thunar_uca_editor_init (ThunarUcaEditor *uca_editor)
   gtk_table_attach (GTK_TABLE (table), align, 0, 2, 5, 6, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (align);
 
-  hbox = gtk_hbox_new (FALSE, 6);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   gtk_table_attach (GTK_TABLE (table), hbox, 0, 2, 6, 7, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (hbox);
 
@@ -243,7 +242,7 @@ thunar_uca_editor_init (ThunarUcaEditor *uca_editor)
   gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, FALSE, 0);
   gtk_widget_show (image);
 
-  vbox = gtk_vbox_new (FALSE, 6);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
   gtk_box_pack_start (GTK_BOX (hbox), vbox, TRUE, TRUE, 0);
   gtk_widget_show (vbox);
 
@@ -433,7 +432,7 @@ thunar_uca_editor_init (ThunarUcaEditor *uca_editor)
   gtk_table_attach (GTK_TABLE (table), align, 0, 2, 4, 5, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (align);
 
-  hbox = gtk_hbox_new (FALSE, 6);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   gtk_table_attach (GTK_TABLE (table), hbox, 0, 2, 5, 6, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (hbox);
 
@@ -652,12 +651,14 @@ thunar_uca_editor_set_icon_name (ThunarUcaEditor *uca_editor,
   GdkPixbuf    *icon = NULL;
   GtkWidget    *image;
   GtkWidget    *label;
+  GtkWidget    *child;
 
   g_return_if_fail (THUNAR_UCA_IS_EDITOR (uca_editor));
 
   /* drop the previous button child */
-  if (GTK_BIN (uca_editor->icon_button)->child != NULL)
-    gtk_widget_destroy (GTK_BIN (uca_editor->icon_button)->child);
+  child = gtk_bin_get_child (GTK_BIN (uca_editor->icon_button));
+  if (child != NULL)
+    gtk_widget_destroy (child);
 
   /* try to load the icon */
   if (G_LIKELY (icon_name != NULL && g_path_is_absolute (icon_name)))

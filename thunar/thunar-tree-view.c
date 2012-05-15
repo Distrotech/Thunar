@@ -786,9 +786,10 @@ thunar_tree_view_drag_data_received (GtkWidget        *widget,
       if (G_LIKELY ((actions & (GDK_ACTION_COPY | GDK_ACTION_MOVE | GDK_ACTION_LINK)) != 0))
         {
           /* ask the user what to do with the drop data */
-          action = (context->action == GDK_ACTION_ASK)
+          actions = gdk_drag_context_get_actions (context);
+          action = (actions == GDK_ACTION_ASK)
                  ? thunar_dnd_ask (GTK_WIDGET (view), file, view->drop_file_list, timestamp, actions)
-                 : context->action;
+                 : actions;
 
           /* perform the requested action */
           if (G_LIKELY (action != 0))
@@ -2336,23 +2337,27 @@ thunar_tree_view_cursor_idle_destroy (gpointer user_data)
 static gboolean
 thunar_tree_view_drag_scroll_timer (gpointer user_data)
 {
-  ThunarTreeView *view = THUNAR_TREE_VIEW (user_data);
-  GtkAdjustment  *vadjustment;
-  GtkTreePath    *start_path;
-  GtkTreePath    *end_path;
-  GtkTreePath    *path;
-  gfloat          value;
-  gint            offset;
-  gint            y, h;
+  ThunarTreeView   *view = THUNAR_TREE_VIEW (user_data);
+  GtkAdjustment    *vadjustment;
+  GtkTreePath      *start_path;
+  GtkTreePath      *end_path;
+  GtkTreePath      *path;
+  gfloat            value;
+  gint              offset;
+  gint              y, h;
+  GdkDevice        *device;
+  GdkDeviceManager *device_manager;
 
   GDK_THREADS_ENTER ();
 
   /* verify that we are realized */
-  if (gtk_widget_get_realized (view))
+  if (gtk_widget_get_realized (GTK_WIDGET (view)))
     {
       /* determine pointer location and window geometry */
-      gdk_window_get_pointer (gtk_widget_get_window (GTK_WIDGET (view)), NULL, &y, NULL);
-      gdk_window_get_geometry (gtk_widget_get_window (GTK_WIDGET (view)), NULL, NULL, NULL, &h, NULL);
+      device_manager = gdk_display_get_device_manager (gtk_widget_get_display (GTK_WIDGET (view)));
+      device = gdk_device_manager_get_client_pointer (device_manager);
+      gdk_window_get_device_position (gtk_widget_get_window (GTK_WIDGET (view)), device, NULL, &y, NULL);
+      gdk_window_get_geometry (gtk_widget_get_window (GTK_WIDGET (view)), NULL, NULL, NULL, &h);
 
       /* check if we are near the edge */
       offset = y - (2 * 20);
@@ -2363,13 +2368,15 @@ thunar_tree_view_drag_scroll_timer (gpointer user_data)
       if (G_UNLIKELY (offset != 0))
         {
           /* determine the vertical adjustment */
-          vadjustment = gtk_tree_view_get_vadjustment (GTK_TREE_VIEW (view));
+          vadjustment = gtk_scrollable_get_vadjustment (GTK_SCROLLABLE (view));
 
           /* determine the new value */
-          value = CLAMP (vadjustment->value + 2 * offset, vadjustment->lower, vadjustment->upper - vadjustment->page_size);
+          value = CLAMP (gtk_adjustment_get_value (vadjustment) + 2 * offset,
+                         gtk_adjustment_get_lower (vadjustment),
+                         gtk_adjustment_get_upper (vadjustment) - gtk_adjustment_get_page_size (vadjustment));
 
           /* check if we have a new value */
-          if (G_UNLIKELY (vadjustment->value != value))
+          if (G_UNLIKELY (gtk_adjustment_get_value (vadjustment) != value))
             {
               /* apply the new value */
               gtk_adjustment_set_value (vadjustment, value);
