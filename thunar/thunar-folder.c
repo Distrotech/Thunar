@@ -53,6 +53,7 @@ enum
 
 
 
+static void     thunar_folder_dispose                     (GObject                *object);
 static void     thunar_folder_finalize                    (GObject                *object);
 static void     thunar_folder_get_property                (GObject                *object,
                                                            guint                   prop_id,
@@ -62,6 +63,7 @@ static void     thunar_folder_set_property                (GObject              
                                                            guint                   prop_uid,
                                                            const GValue           *value,
                                                            GParamSpec             *pspec);
+static void     thunar_folder_real_destroy                (ThunarFolder           *folder);
 static void     thunar_folder_error                       (ExoJob                 *job,
                                                            GError                 *error,
                                                            ThunarFolder           *folder);
@@ -108,6 +110,8 @@ struct _ThunarFolder
   GList             *new_files;
   GList             *files;
 
+  guint              in_destruction : 1;
+
   ThunarFileMonitor *file_monitor;
 
   GFileMonitor      *monitor;
@@ -130,9 +134,12 @@ thunar_folder_class_init (ThunarFolderClass *klass)
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->dispose = thunar_folder_dispose;
   gobject_class->finalize = thunar_folder_finalize;
   gobject_class->get_property = thunar_folder_get_property;
   gobject_class->set_property = thunar_folder_set_property;
+
+  klass->destroy = thunar_folder_real_destroy;
 
   /**
    * ThunarFolder::corresponding-file:
@@ -145,7 +152,7 @@ thunar_folder_class_init (ThunarFolderClass *klass)
                                                         "corresponding-file",
                                                         "corresponding-file",
                                                         THUNAR_TYPE_FILE,
-                                                        G_PARAM_READABLE 
+                                                        G_PARAM_READABLE
                                                         | G_PARAM_WRITABLE
                                                         | G_PARAM_CONSTRUCT_ONLY));
 
@@ -171,7 +178,7 @@ thunar_folder_class_init (ThunarFolderClass *klass)
   folder_signals[DESTROY] =
     g_signal_new (I_("destroy"),
                   G_TYPE_FROM_CLASS (gobject_class),
-                  G_SIGNAL_RUN_LAST,
+                  G_SIGNAL_RUN_CLEANUP | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
                   G_STRUCT_OFFSET (ThunarFolderClass, destroy),
                   NULL, NULL,
                   g_cclosure_marshal_VOID__VOID,
@@ -238,6 +245,23 @@ thunar_folder_init (ThunarFolder *folder)
   g_signal_connect (G_OBJECT (folder->file_monitor), "file-destroyed", G_CALLBACK (thunar_folder_file_destroyed), folder);
 
   folder->monitor = NULL;
+}
+
+
+
+static void
+thunar_folder_dispose (GObject *object)
+{
+  ThunarFolder *folder = THUNAR_FOLDER (object);
+
+  if (!folder->in_destruction)
+    {
+      folder->in_destruction = TRUE;
+      g_signal_emit (G_OBJECT (folder), folder_signals[DESTROY], 0);
+      folder->in_destruction = TRUE;
+    }
+
+  (*G_OBJECT_CLASS (thunar_folder_parent_class)->dispose) (object);
 }
 
 
@@ -334,6 +358,14 @@ thunar_folder_set_property (GObject      *object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     }
+}
+
+
+
+static void
+thunar_folder_real_destroy (ThunarFolder *folder)
+{
+  g_signal_handlers_destroy (G_OBJECT (folder));
 }
 
 
@@ -461,7 +493,7 @@ thunar_folder_finished (ExoJob       *job,
   folder->job = NULL;
 
   /* add us to the file alteration monitor */
-  folder->monitor = g_file_monitor_directory (thunar_file_get_file (folder->corresponding_file), 
+  folder->monitor = g_file_monitor_directory (thunar_file_get_file (folder->corresponding_file),
                                               G_FILE_MONITOR_NONE, NULL, NULL);
   if (G_LIKELY (folder->monitor != NULL))
     g_signal_connect (folder->monitor, "changed", G_CALLBACK (thunar_folder_monitor), folder);
@@ -690,9 +722,6 @@ thunar_folder_get_for_file (ThunarFile *file)
       /* allocate the new instance */
       folder = g_object_new (THUNAR_TYPE_FOLDER, "corresponding-file", file, NULL);
 
-      /* drop the floating reference */
-      g_object_ref_sink (G_OBJECT (folder));
-
       /* connect the folder to the file */
       g_object_set_qdata (G_OBJECT (file), thunar_folder_quark, folder);
 
@@ -813,17 +842,14 @@ thunar_folder_reload (ThunarFolder *folder)
  * @folder : a #ThunarFolder instance.
  *
  * Destroy the @folder, this is a replacement for
- * the old GtkObject:destroy signal which was been
- * removed in gtk3.
+ * the old gtk_object_destroy function which has been
+ * removed from gtk3.
  **/
 void
 thunar_folder_destroy (ThunarFolder *folder)
 {
   _thunar_return_if_fail (THUNAR_IS_FOLDER (folder));
-  
-  /* TODO maybe this can be moved to the dispose signal and
-   * emitted once there. there we can use g_object_unref on
-   * folders */
-  g_signal_emit (G_OBJECT (folder), folder_signals[DESTROY], 0);
-  g_object_unref (G_OBJECT (folder));
+
+  if (!folder->in_destruction)
+    g_object_run_dispose (G_OBJECT (folder));
 }
