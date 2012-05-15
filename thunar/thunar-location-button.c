@@ -77,9 +77,9 @@ static void           thunar_location_button_file_changed           (ThunarLocat
                                                                      ThunarFile                 *file);
 static void           thunar_location_button_file_destroy           (ThunarLocationButton       *location_button,
                                                                      ThunarFile                 *file);
-static void           thunar_location_button_align_size_request     (GtkWidget                  *align,
-                                                                     GtkRequisition             *requisition,
-                                                                     ThunarLocationButton       *location_button);
+static void           thunar_location_button_align_size_request     (GtkWidget                  *label,
+                                                                     GParamSpec                 *pspec,
+                                                                     GtkWidget                  *align);
 static gboolean       thunar_location_button_button_press_event     (GtkWidget                  *button,
                                                                      GdkEventButton             *event,
                                                                      ThunarLocationButton       *location_button);
@@ -293,13 +293,13 @@ thunar_location_button_init (ThunarLocationButton *location_button)
 
   /* create the button label alignment */
   align = gtk_alignment_new (0.5f, 0.5f, 1.0f, 1.0f);
-  g_signal_connect (G_OBJECT (align), "size-request", G_CALLBACK (thunar_location_button_align_size_request), location_button);
   gtk_box_pack_start (GTK_BOX (hbox), align, TRUE, TRUE, 0);
   gtk_widget_show (align);
 
   /* create the button label */
   location_button->label = g_object_new (GTK_TYPE_LABEL, NULL);
   gtk_container_add (GTK_CONTAINER (align), location_button->label);
+  g_signal_connect (G_OBJECT (location_button->label), "notify::label", G_CALLBACK (thunar_location_button_align_size_request), align);
   gtk_widget_show (location_button->label);
 }
 
@@ -506,9 +506,9 @@ thunar_location_button_file_destroy (ThunarLocationButton *location_button,
 
 
 static void
-thunar_location_button_align_size_request (GtkWidget            *align,
-                                           GtkRequisition       *requisition,
-                                           ThunarLocationButton *location_button)
+thunar_location_button_align_size_request (GtkWidget  *label,
+                                           GParamSpec *pspec,
+                                           GtkWidget  *align)
 {
   PangoLayout *layout;
   gint         normal_height;
@@ -517,7 +517,7 @@ thunar_location_button_align_size_request (GtkWidget            *align,
   gint         bold_width;
 
   /* allocate a pango layout for the label text */
-  layout = gtk_widget_create_pango_layout (location_button->label, gtk_label_get_text (GTK_LABEL (location_button->label)));
+  layout = gtk_widget_create_pango_layout (label, gtk_label_get_text (GTK_LABEL (label)));
 
   /* determine the normal pixel size */
   pango_layout_get_pixel_size (layout, &normal_width, &normal_height);
@@ -530,8 +530,9 @@ thunar_location_button_align_size_request (GtkWidget            *align,
    * the button always requests the same size, no matter if
    * the label is bold or not.
    */
-  requisition->width = MAX (bold_width, normal_width);
-  requisition->height = MAX (bold_height, normal_height);
+  gtk_widget_set_size_request (align,
+                               MAX (bold_width, normal_width),
+                               MAX (bold_height, normal_height));
 
   /* cleanup */
   g_object_unref (G_OBJECT (layout));
