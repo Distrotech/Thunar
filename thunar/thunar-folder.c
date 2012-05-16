@@ -258,7 +258,6 @@ thunar_folder_dispose (GObject *object)
     {
       folder->in_destruction = TRUE;
       g_signal_emit (G_OBJECT (folder), folder_signals[DESTROY], 0);
-      folder->in_destruction = TRUE;
     }
 
   (*G_OBJECT_CLASS (thunar_folder_parent_class)->dispose) (object);
