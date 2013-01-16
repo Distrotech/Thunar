@@ -27,6 +27,10 @@ G_BEGIN_DECLS;
 typedef struct _ThunarListModelClass ThunarListModelClass;
 typedef struct _ThunarListModel      ThunarListModel;
 
+/* filter for removing files before they are added into the model */
+typedef gboolean (*ThunarListModelVisibleFunc) (ThunarFile *file,
+                                                gpointer    data);
+
 #define THUNAR_TYPE_LIST_MODEL            (thunar_list_model_get_type ())
 #define THUNAR_LIST_MODEL(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), THUNAR_TYPE_LIST_MODEL, ThunarListModel))
 #define THUNAR_LIST_MODEL_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), THUNAR_TYPE_LIST_MODEL, ThunarListModelClass))
@@ -41,6 +45,10 @@ ThunarListModel *thunar_list_model_new                    (void);
 ThunarFolder    *thunar_list_model_get_folder             (ThunarListModel  *store);
 void             thunar_list_model_set_folder             (ThunarListModel  *store,
                                                            ThunarFolder     *folder);
+
+void             thunar_list_model_set_visible_func       (ThunarListModel            *store,
+                                                           ThunarListModelVisibleFunc  func,
+                                                           gpointer                    data);
 
 void             thunar_list_model_set_folders_first      (ThunarListModel  *store,
                                                            gboolean          folders_first);

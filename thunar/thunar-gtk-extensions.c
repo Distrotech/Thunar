@@ -199,8 +199,11 @@ thunar_gtk_ui_manager_get_action_by_name (GtkUIManager *ui_manager,
   GtkAction *action;
   GList     *lp;
 
-  _thunar_return_val_if_fail (GTK_IS_UI_MANAGER (ui_manager), NULL);
+  _thunar_return_val_if_fail (ui_manager == NULL || GTK_IS_UI_MANAGER (ui_manager), NULL);
   _thunar_return_val_if_fail (action_name != NULL, NULL);
+  
+  if (ui_manager == NULL)
+    return NULL;
 
   /* check all action groups associated with the ui manager */
   for (lp = gtk_ui_manager_get_action_groups (ui_manager); lp != NULL; lp = lp->next)

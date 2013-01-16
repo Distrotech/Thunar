@@ -98,7 +98,7 @@ static void         thunar_abstract_icon_view_zoom_level_changed    (ThunarAbstr
 struct _ThunarAbstractIconViewPrivate
 {
   /* the UI manager merge id for the abstract icon view */
-  gint ui_merge_id;
+  guint  ui_merge_id;
 
   /* mouse gesture support */
   gint   gesture_start_x;

@@ -44,11 +44,13 @@
 #include <thunar/thunar-session-client.h>
 #include <thunar/thunar-stock.h>
 #include <thunar/thunar-preferences.h>
+#include <thunar/thunar-desktop-window.h>
 
 
 
 /* --- globals --- */
 static gboolean opt_bulk_rename = FALSE;
+static gboolean opt_desktop = FALSE;
 static gboolean opt_daemon = FALSE;
 static gchar   *opt_sm_client_id = NULL;
 static gboolean opt_quit = FALSE;
@@ -60,6 +62,7 @@ static gboolean opt_version = FALSE;
 static GOptionEntry option_entries[] =
 {
   { "bulk-rename", 'B', 0, G_OPTION_ARG_NONE, &opt_bulk_rename, N_ ("Open the bulk rename dialog"), NULL, },
+  { "desktop", 0, 0, G_OPTION_ARG_NONE, &opt_desktop, N_ ("Let Thunar manage the desktop"), NULL, },
 #ifdef HAVE_DBUS
   { "daemon", 0, 0, G_OPTION_ARG_NONE, &opt_daemon, N_ ("Run in daemon mode"), NULL, },
 #else
@@ -120,6 +123,7 @@ main (int argc, char **argv)
   gchar               *working_directory;
   gchar              **filenames = NULL;
   const gchar         *startup_id;
+  GtkWidget           *window;
 
   /* setup translation domain */
   xfce_textdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR, "UTF-8");
@@ -207,6 +211,14 @@ main (int argc, char **argv)
       return EXIT_SUCCESS;
     }
 #endif
+
+  if (G_UNLIKELY (opt_desktop))
+    {
+      window = thunar_desktop_window_new ();
+      gtk_widget_show (window);
+      gtk_main ();
+      return 0;
+    }
 
   /* determine the current working directory */
   working_directory = g_get_current_dir ();

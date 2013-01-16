@@ -59,6 +59,14 @@ thunar_SOURCES =							\
 	thunar-create-dialog.h						\
 	thunar-deep-count-job.h						\
 	thunar-deep-count-job.c						\
+	thunar-desktop-background.c					\
+	thunar-desktop-background.h					\
+	thunar-desktop-background-icon-view.c				\
+	thunar-desktop-background-icon-view.h				\
+	thunar-desktop-preferences-dialog.c				\
+	thunar-desktop-preferences-dialog.h				\
+	thunar-desktop-window.c						\
+	thunar-desktop-window.h						\
 	thunar-details-view-ui.h					\
 	thunar-details-view.c						\
 	thunar-details-view.h						\
@@ -243,7 +251,8 @@ thunar_LDADD =								\
 	$(LIBSM_LIBS)							\
 	$(LIBSTARTUP_NOTIFICATION_LIBS)					\
 	$(LIBXFCE4UI_LIBS)						\
-	$(XFCONF_LIBS)
+	$(XFCONF_LIBS)							\
+	-lm
 
 thunar_DEPENDENCIES =							\
 	$(top_builddir)/thunarx/libthunarx-$(THUNARX_VERSION_API).la

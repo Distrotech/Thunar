@@ -227,6 +227,9 @@ struct _ThunarListModel
   gboolean       sort_folders_first : 1;
   gint           sort_sign;   /* 1 = ascending, -1 descending */
   ThunarSortFunc sort_func;
+  
+  ThunarListModelVisibleFunc visible_func;
+  gpointer                   visible_data;
 };
 
 
@@ -1222,9 +1225,15 @@ thunar_list_model_files_added (ThunarFolder    *folder,
   /* process all added files */
   for (lp = files; lp != NULL; lp = lp->next)
     {
+      _thunar_return_if_fail (THUNAR_IS_FILE (lp->data));
+
+      /* skip files that do not pass the visible function */
+      if (store->visible_func != NULL
+          && !store->visible_func (lp->data, store->visible_data))
+        continue;
+
       /* take a reference on that file */
       file = g_object_ref (G_OBJECT (lp->data));
-      _thunar_return_if_fail (THUNAR_IS_FILE (file));
 
       /* check if the file should be hidden */
       if (!store->show_hidden && thunar_file_is_hidden (file))
@@ -1816,6 +1825,24 @@ thunar_list_model_set_folder (ThunarListModel *store,
   g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_FOLDER]);
   g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_NUM_FILES]);
   g_object_thaw_notify (G_OBJECT (store));
+}
+
+
+
+/**
+ * thunar_list_model_set_visible_func:
+ * @store: a #ThunarListModel.
+ * @func : filter function.
+ * @data: user data.
+ **/
+void
+thunar_list_model_set_visible_func (ThunarListModel            *store,
+                                    ThunarListModelVisibleFunc  func,
+                                    gpointer                    data)
+{
+  _thunar_return_if_fail (THUNAR_IS_LIST_MODEL (store));
+  store->visible_func = func;
+  store->visible_data = data;
 }
 
 
