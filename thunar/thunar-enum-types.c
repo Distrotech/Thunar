@@ -252,26 +252,26 @@ thunar_icon_size_from_zoom_level (const GValue *src_value,
 GType
 thunar_job_response_get_type (void)
 {
-	static GType type = G_TYPE_INVALID;
+  static GType type = G_TYPE_INVALID;
 
   if (G_UNLIKELY (type == G_TYPE_INVALID))
     {
-	    static const GFlagsValue values[] = 
+      static const GFlagsValue values[] =
       {
-	      { THUNAR_JOB_RESPONSE_YES,     "THUNAR_JOB_RESPONSE_YES",     "yes"     },
-	      { THUNAR_JOB_RESPONSE_YES_ALL, "THUNAR_JOB_RESPONSE_YES_ALL", "yes-all" },
-	      { THUNAR_JOB_RESPONSE_NO,      "THUNAR_JOB_RESPONSE_NO",      "no"      },
-	      { THUNAR_JOB_RESPONSE_CANCEL,  "THUNAR_JOB_RESPONSE_CANCEL",  "cancel"  },
-	      { THUNAR_JOB_RESPONSE_NO_ALL,  "THUNAR_JOB_RESPONSE_NO_ALL",  "no-all"  },
-	      { THUNAR_JOB_RESPONSE_RETRY,   "THUNAR_JOB_RESPONSE_RETRY",   "retry"   },
-	      { THUNAR_JOB_RESPONSE_FORCE,   "THUNAR_JOB_RESPONSE_FORCE",   "force"   },
-	      { 0,                           NULL,                          NULL      }
-	    };
+        { THUNAR_JOB_RESPONSE_YES,     "THUNAR_JOB_RESPONSE_YES",     "yes"     },
+        { THUNAR_JOB_RESPONSE_YES_ALL, "THUNAR_JOB_RESPONSE_YES_ALL", "yes-all" },
+        { THUNAR_JOB_RESPONSE_NO,      "THUNAR_JOB_RESPONSE_NO",      "no"      },
+        { THUNAR_JOB_RESPONSE_CANCEL,  "THUNAR_JOB_RESPONSE_CANCEL",  "cancel"  },
+        { THUNAR_JOB_RESPONSE_NO_ALL,  "THUNAR_JOB_RESPONSE_NO_ALL",  "no-all"  },
+        { THUNAR_JOB_RESPONSE_RETRY,   "THUNAR_JOB_RESPONSE_RETRY",   "retry"   },
+        { THUNAR_JOB_RESPONSE_FORCE,   "THUNAR_JOB_RESPONSE_FORCE",   "force"   },
+        { 0,                           NULL,                          NULL      }
+      };
 
-	    type = g_flags_register_static (I_("ThunarJobResponse"), values);
+      type = g_flags_register_static (I_("ThunarJobResponse"), values);
     }
 
-	return type;
+  return type;
 }
 
 
@@ -279,31 +279,80 @@ thunar_job_response_get_type (void)
 GType
 thunar_file_mode_get_type (void)
 {
-	static GType type = G_TYPE_INVALID;
+  static GType type = G_TYPE_INVALID;
 
-	if (type == G_TYPE_INVALID) 
+  if (type == G_TYPE_INVALID)
     {
-	    static const GFlagsValue values[] = 
+      static const GFlagsValue values[] =
       {
-	      { THUNAR_FILE_MODE_SUID,      "THUNAR_FILE_MODE_SUID",      "suid"      },
-	      { THUNAR_FILE_MODE_SGID,      "THUNAR_FILE_MODE_SGID",      "sgid"      },
-	      { THUNAR_FILE_MODE_STICKY,    "THUNAR_FILE_MODE_STICKY",    "sticky"    },
-	      { THUNAR_FILE_MODE_USR_ALL,   "THUNAR_FILE_MODE_USR_ALL",   "usr-all"   },
-	      { THUNAR_FILE_MODE_USR_READ,  "THUNAR_FILE_MODE_USR_READ",  "usr-read"  },
-	      { THUNAR_FILE_MODE_USR_WRITE, "THUNAR_FILE_MODE_USR_WRITE", "usr-write" },
-	      { THUNAR_FILE_MODE_USR_EXEC,  "THUNAR_FILE_MODE_USR_EXEC",  "usr-exec"  },
-	      { THUNAR_FILE_MODE_GRP_ALL,   "THUNAR_FILE_MODE_GRP_ALL",   "grp-all"   },
-	      { THUNAR_FILE_MODE_GRP_READ,  "THUNAR_FILE_MODE_GRP_READ",  "grp-read"  },
-	      { THUNAR_FILE_MODE_GRP_WRITE, "THUNAR_FILE_MODE_GRP_WRITE", "grp-write" },
-	      { THUNAR_FILE_MODE_GRP_EXEC,  "THUNAR_FILE_MODE_GRP_EXEC",  "grp-exec"  },
-	      { THUNAR_FILE_MODE_OTH_ALL,   "THUNAR_FILE_MODE_OTH_ALL",   "oth-all"   },
-	      { THUNAR_FILE_MODE_OTH_READ,  "THUNAR_FILE_MODE_OTH_READ",  "oth-read"  },
-	      { THUNAR_FILE_MODE_OTH_WRITE, "THUNAR_FILE_MODE_OTH_WRITE", "oth-write" },
-	      { THUNAR_FILE_MODE_OTH_EXEC,  "THUNAR_FILE_MODE_OTH_EXEC",  "oth-exec"  },
-	      { 0,                          NULL,                         NULL        }
-	    };
-	    
+        { THUNAR_FILE_MODE_SUID,      "THUNAR_FILE_MODE_SUID",      "suid"      },
+        { THUNAR_FILE_MODE_SGID,      "THUNAR_FILE_MODE_SGID",      "sgid"      },
+        { THUNAR_FILE_MODE_STICKY,    "THUNAR_FILE_MODE_STICKY",    "sticky"    },
+        { THUNAR_FILE_MODE_USR_ALL,   "THUNAR_FILE_MODE_USR_ALL",   "usr-all"   },
+        { THUNAR_FILE_MODE_USR_READ,  "THUNAR_FILE_MODE_USR_READ",  "usr-read"  },
+        { THUNAR_FILE_MODE_USR_WRITE, "THUNAR_FILE_MODE_USR_WRITE", "usr-write" },
+        { THUNAR_FILE_MODE_USR_EXEC,  "THUNAR_FILE_MODE_USR_EXEC",  "usr-exec"  },
+        { THUNAR_FILE_MODE_GRP_ALL,   "THUNAR_FILE_MODE_GRP_ALL",   "grp-all"   },
+        { THUNAR_FILE_MODE_GRP_READ,  "THUNAR_FILE_MODE_GRP_READ",  "grp-read"  },
+        { THUNAR_FILE_MODE_GRP_WRITE, "THUNAR_FILE_MODE_GRP_WRITE", "grp-write" },
+        { THUNAR_FILE_MODE_GRP_EXEC,  "THUNAR_FILE_MODE_GRP_EXEC",  "grp-exec"  },
+        { THUNAR_FILE_MODE_OTH_ALL,   "THUNAR_FILE_MODE_OTH_ALL",   "oth-all"   },
+        { THUNAR_FILE_MODE_OTH_READ,  "THUNAR_FILE_MODE_OTH_READ",  "oth-read"  },
+        { THUNAR_FILE_MODE_OTH_WRITE, "THUNAR_FILE_MODE_OTH_WRITE", "oth-write" },
+        { THUNAR_FILE_MODE_OTH_EXEC,  "THUNAR_FILE_MODE_OTH_EXEC",  "oth-exec"  },
+        { 0,                          NULL,                         NULL        }
+      };
+
       type = g_flags_register_static ("ThunarFileMode", values);
     }
-	return type;
+  return type;
+}
+
+
+
+GType
+thunar_background_style_get_type (void)
+{
+  static GType type = G_TYPE_INVALID;
+
+  if (type == G_TYPE_INVALID)
+    {
+      static const GEnumValue values[] =
+      {
+        { THUNAR_BACKGROUND_STYLE_NONE,      "THUNAR_BACKGROUND_STYLE_NONE",      N_ ("None")      },
+        { THUNAR_BACKGROUND_STYLE_TILED,     "THUNAR_BACKGROUND_STYLE_TILED",     N_ ("Titled")    },
+        { THUNAR_BACKGROUND_STYLE_CENTERED,  "THUNAR_BACKGROUND_STYLE_CENTERED",  N_ ("Centered")  },
+        { THUNAR_BACKGROUND_STYLE_STRETCHED, "THUNAR_BACKGROUND_STYLE_STRETCHED", N_ ("Stretched") },
+        { THUNAR_BACKGROUND_STYLE_SCALED,    "THUNAR_BACKGROUND_STYLE_SCALED",    N_ ("Scaled")    },
+        { THUNAR_BACKGROUND_STYLE_ZOOMED,    "THUNAR_BACKGROUND_STYLE_ZOOMED",    N_ ("Zoomed")    },
+        { THUNAR_BACKGROUND_STYLE_SPANNED,   "THUNAR_BACKGROUND_STYLE_SPANNED",   N_ ("Spanned")   },
+        { 0,                                 NULL,                                NULL           }
+      };
+
+      type = g_enum_register_static ("ThunarBackgroundStyle", values);
+    }
+  return type;
+}
+
+
+
+GType
+thunar_background_color_style_get_type (void)
+{
+  static GType type = G_TYPE_INVALID;
+
+  if (type == G_TYPE_INVALID)
+    {
+      static const GEnumValue values[] =
+      {
+        { THUNAR_BACKGROUND_COLOR_STYLE_SOLID,      "THUNAR_BACKGROUND_COLOR_STYLE_SOLID",      N_ ("Solid")      },
+        { THUNAR_BACKGROUND_COLOR_STYLE_HORIZONTAL, "THUNAR_BACKGROUND_COLOR_STYLE_HORIZONTAL", N_ ("Horizontal") },
+        { THUNAR_BACKGROUND_COLOR_STYLE_VERTICAL,   "THUNAR_BACKGROUND_COLOR_STYLE_VERTICAL",   N_ ("Vertical")   },
+        { THUNAR_BACKGROUND_COLOR_STYLE_RADIAL,     "THUNAR_BACKGROUND_COLOR_STYLE_RADIAL",     N_ ("Radial")     },
+        { 0,                                       NULL,                                        NULL              }
+      };
+
+      type = g_enum_register_static ("ThunarBackgroundColorStyle", values);
+    }
+  return type;
 }

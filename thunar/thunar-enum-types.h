@@ -270,6 +270,45 @@ typedef enum /*< flags >*/
 
 GType thunar_file_mode_get_type (void) G_GNUC_CONST;
 
+
+#define THUNAR_TYPE_BACKGROUND_STYLE (thunar_background_style_get_type ())
+
+/**
+ * ThunarBackgroundStyle:
+ *
+ * Transformations of the background image on the background
+ **/
+typedef enum /*< flags >*/
+{
+  THUNAR_BACKGROUND_STYLE_NONE,
+  THUNAR_BACKGROUND_STYLE_TILED,     /* no scaling, fill screen from 0,0 */
+  THUNAR_BACKGROUND_STYLE_CENTERED,  /* center on monitor once, no resizing */
+  THUNAR_BACKGROUND_STYLE_STRETCHED, /* scale to fill screen */
+  THUNAR_BACKGROUND_STYLE_SCALED,    /* scale to monitor, center */
+  THUNAR_BACKGROUND_STYLE_ZOOMED,    /* scale to monitor, crop + center */
+  THUNAR_BACKGROUND_STYLE_SPANNED,   /* scale to fit screen */
+} ThunarBackgroundStyle;
+
+GType thunar_background_style_get_type (void) G_GNUC_CONST;
+
+
+#define THUNAR_TYPE_BACKGROUND_COLOR_STYLE (thunar_background_color_style_get_type ())
+
+/**
+ * ThunarBackgroundColorStyle:
+ *
+ * Fill of the background color
+ **/
+typedef enum /*< flags >*/
+{
+  THUNAR_BACKGROUND_COLOR_STYLE_SOLID,
+  THUNAR_BACKGROUND_COLOR_STYLE_HORIZONTAL,
+  THUNAR_BACKGROUND_COLOR_STYLE_VERTICAL,
+  THUNAR_BACKGROUND_COLOR_STYLE_RADIAL,
+} ThunarBackgroundColorStyle;
+
+GType thunar_background_color_style_get_type (void) G_GNUC_CONST;
+
 G_END_DECLS;
 
 #endif /* !__THUNAR_ENUM_TYPES_H__ */

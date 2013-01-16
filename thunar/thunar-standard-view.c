@@ -731,6 +731,7 @@ thunar_standard_view_constructor (GType                  type,
   GtkSortType         sort_order;
   GtkWidget          *view;
   GObject            *object;
+  const gchar        *zoom_level_property_name;
 
   /* let the GObject constructor create the instance */
   object = G_OBJECT_CLASS (thunar_standard_view_parent_class)->constructor (type,
@@ -741,11 +742,15 @@ thunar_standard_view_constructor (GType                  type,
   standard_view = THUNAR_STANDARD_VIEW (object);
 
   /* setup the default zoom-level, determined from the "last-<view>-zoom-level" preference */
-  g_object_get (G_OBJECT (standard_view->preferences), THUNAR_STANDARD_VIEW_GET_CLASS (standard_view)->zoom_level_property_name, &zoom_level, NULL);
-  thunar_view_set_zoom_level (THUNAR_VIEW (standard_view), zoom_level);
+  zoom_level_property_name = THUNAR_STANDARD_VIEW_GET_CLASS (standard_view)->zoom_level_property_name;
+  if (G_LIKELY (zoom_level_property_name != NULL))
+    {
+      g_object_get (G_OBJECT (standard_view->preferences), zoom_level_property_name, &zoom_level, NULL);
+      thunar_view_set_zoom_level (THUNAR_VIEW (standard_view), zoom_level);
 
-  /* save the "zoom-level" as "last-<view>-zoom-level" whenever the user changes the zoom level */
-  g_object_bind_property (object, "zoom-level", G_OBJECT (standard_view->preferences), THUNAR_STANDARD_VIEW_GET_CLASS (standard_view)->zoom_level_property_name, G_BINDING_DEFAULT);
+      /* save the "zoom-level" as "last-<view>-zoom-level" whenever the user changes the zoom level */
+      g_object_bind_property (object, "zoom-level", G_OBJECT (standard_view->preferences), zoom_level_property_name, G_BINDING_DEFAULT);
+    }
 
   /* determine the real view widget (treeview or iconview) */
   view = GTK_BIN (object)->child;
@@ -1690,6 +1695,9 @@ thunar_standard_view_reset_zoom_level (ThunarView *view)
 
   /* determine the default zoom level from the preferences */
   property_name = THUNAR_STANDARD_VIEW_GET_CLASS (standard_view)->zoom_level_property_name;
+  if (property_name == NULL)
+    return;
+
   pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (standard_view->preferences), property_name);
   g_value_init (&value, THUNAR_TYPE_ZOOM_LEVEL);
   g_param_value_set_default (pspec, &value);
@@ -4127,6 +4135,9 @@ thunar_standard_view_context_menu (ThunarStandardView *standard_view,
   GList     *selected_items;
 
   _thunar_return_if_fail (THUNAR_IS_STANDARD_VIEW (standard_view));
+
+  if (standard_view->ui_manager == NULL)
+    return;
 
   /* merge the custom menu actions for the selected items */
   selected_items = (*THUNAR_STANDARD_VIEW_GET_CLASS (standard_view)->get_selected_items) (standard_view);
