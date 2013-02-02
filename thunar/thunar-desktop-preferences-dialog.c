@@ -36,8 +36,12 @@ static void thunar_desktop_preferences_dialog_screen_changed            (GtkWidg
                                                                          GdkScreen                      *old_screen);
 static void thunar_desktop_preferences_dialog_response                  (GtkDialog                      *dialog,
                                                                          gint                            response);
-static void thunar_desktop_preferences_dialog_background_changed        (ThunarDesktopPreferencesDialog *dialog);
+static void thunar_desktop_preferences_dialog_style_changed             (GtkWidget                      *combo,
+                                                                         ThunarDesktopPreferencesDialog *dialog);
+static void thunar_desktop_preferences_dialog_background_uri_changed    (ThunarDesktopPreferencesDialog *dialog);
 static void thunar_desktop_preferences_dialog_background_prop           (ThunarDesktopPreferencesDialog *dialog);
+static void thunar_desktop_preferences_dialog_color_changed             (GtkWidget                      *combo,
+                                                                         ThunarDesktopPreferencesDialog *dialog);
 static void thunar_desktop_preferences_dialog_update                    (ThunarDesktopPreferencesDialog *dialog);
 static void thunar_desktop_preferences_dialog_folder_changed            (ThunarDesktopPreferencesDialog *dialog);
 
@@ -57,6 +61,9 @@ struct _ThunarDesktopPreferencesDialog
 
   GtkWidget     *view;
   GtkWidget     *folder_chooser;
+  GtkWidget     *style_combo;
+  GtkWidget     *color_start;
+  GtkWidget     *color_end;
 };
 
 
@@ -128,7 +135,7 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
 
   dialog->view = g_object_new (THUNAR_TYPE_DESKTOP_BACKGROUND_ICON_VIEW, NULL);
   g_signal_connect_swapped (G_OBJECT (dialog->view), "notify::selected-files",
-      G_CALLBACK (thunar_desktop_preferences_dialog_background_changed), dialog);
+      G_CALLBACK (thunar_desktop_preferences_dialog_background_uri_changed), dialog);
   gtk_box_pack_start (GTK_BOX (vbox), dialog->view, TRUE, TRUE, 0);
   gtk_widget_show (dialog->view);
 
@@ -160,9 +167,11 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
   gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, TRUE, 0);
   gtk_widget_show (label);
 
-  combo = gtk_combo_box_text_new ();
+  combo = dialog->style_combo = gtk_combo_box_text_new ();
   gtk_box_pack_start (GTK_BOX (hbox), combo, FALSE, TRUE, 0);
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), combo);
+  g_signal_connect (G_OBJECT (combo), "changed",
+    G_CALLBACK (thunar_desktop_preferences_dialog_style_changed), dialog);
   gtk_widget_show (combo);
 
   klass = g_type_class_ref (THUNAR_TYPE_BACKGROUND_STYLE);
@@ -184,6 +193,8 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
   combo = gtk_combo_box_text_new ();
   gtk_box_pack_start (GTK_BOX (hbox), combo, FALSE, TRUE, 0);
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), combo);
+  g_signal_connect (G_OBJECT (combo), "changed",
+    G_CALLBACK (thunar_desktop_preferences_dialog_style_changed), dialog);
   gtk_widget_show (combo);
 
   klass = g_type_class_ref (THUNAR_TYPE_BACKGROUND_COLOR_STYLE);
@@ -191,12 +202,16 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
     gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _(klass->values[n].value_nick));
   g_type_class_unref (klass);
 
-  button = gtk_color_button_new ();
+  button = dialog->color_start = gtk_color_button_new ();
   gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, TRUE, 0);
+  g_signal_connect (G_OBJECT (button), "color-set",
+    G_CALLBACK (thunar_desktop_preferences_dialog_color_changed), dialog);
   gtk_widget_show (button);
 
-  button = gtk_color_button_new ();
+  button = dialog->color_end = gtk_color_button_new ();
   gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, TRUE, 0);
+  g_signal_connect (G_OBJECT (button), "color-set",
+    G_CALLBACK (thunar_desktop_preferences_dialog_color_changed), dialog);
   g_object_bind_property (combo, "active", button, "sensitive", G_BINDING_SYNC_CREATE);
   gtk_widget_show (button);
 
@@ -327,7 +342,7 @@ thunar_desktop_preferences_dialog_update (ThunarDesktopPreferencesDialog *dialog
 
 
 static void
-thunar_desktop_preferences_dialog_background_changed (ThunarDesktopPreferencesDialog *dialog)
+thunar_desktop_preferences_dialog_background_uri_changed (ThunarDesktopPreferencesDialog *dialog)
 {
   GList      *files;
   ThunarFile *file;
@@ -348,6 +363,71 @@ thunar_desktop_preferences_dialog_background_changed (ThunarDesktopPreferencesDi
       g_free (uri);
       g_free (prop);
     }
+}
+
+
+
+static void
+thunar_desktop_preferences_dialog_style_changed (GtkWidget                      *combo,
+                                                 ThunarDesktopPreferencesDialog *dialog)
+{
+  guint        active;
+  GEnumClass  *klass;
+  const gchar *str;
+  gchar       *prop;
+  const gchar *prop_name;
+  GType        prop_type;
+
+  active = gtk_combo_box_get_active (GTK_COMBO_BOX (combo));
+
+  if (combo == dialog->style_combo)
+    {
+      prop_type = THUNAR_TYPE_BACKGROUND_STYLE;
+      prop_name = "style";
+    }
+  else
+    {
+      prop_type = THUNAR_TYPE_BACKGROUND_COLOR_STYLE;
+      prop_name = "color-style";
+    }
+
+  /* get the string value from the enum class */
+  klass = g_type_class_ref (prop_type);
+  _thunar_assert (G_IS_ENUM_CLASS (klass));
+  str = klass->values[MIN (active, klass->n_values)].value_name;
+
+  prop = g_strdup_printf ("%s/%s", dialog->background_prop, prop_name);
+  xfconf_channel_set_string (dialog->settings, prop, str);
+  g_free (prop);
+
+  g_type_class_unref (klass);
+}
+
+
+
+
+static void
+thunar_desktop_preferences_dialog_color_changed (GtkWidget                      *button,
+                                                 ThunarDesktopPreferencesDialog *dialog)
+{
+  const gchar *prop_name;
+  GdkColor     color;
+  gchar       *str;
+  gchar       *prop;
+
+  if (button == dialog->color_start)
+    prop_name = "color-start";
+  else
+    prop_name = "color-end";
+
+  gtk_color_button_get_color (GTK_COLOR_BUTTON (button), &color);
+  str = gdk_color_to_string (&color);
+
+  prop = g_strdup_printf ("%s/%s", dialog->background_prop, prop_name);
+  xfconf_channel_set_string (dialog->settings, prop, str);
+  g_free (prop);
+
+  g_free (str);
 }
 
 

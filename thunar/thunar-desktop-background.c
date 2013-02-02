@@ -649,7 +649,7 @@ thunar_desktop_background_paint (ThunarDesktopBackground *background,
           /* get area of the monitor */
           gdk_screen_get_monitor_geometry (screen, n, &area);
         }
-        
+
       pixbuf = NULL;
 
       if (bg_style != THUNAR_BACKGROUND_STYLE_NONE)
