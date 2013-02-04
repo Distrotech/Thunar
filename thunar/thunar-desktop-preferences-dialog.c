@@ -66,6 +66,26 @@ struct _ThunarDesktopPreferencesDialog
   GtkWidget     *color_end;
 };
 
+typedef struct
+{
+  guint        seconds;
+  const gchar *name;
+}
+Autochange;
+
+static const Autochange auto_change_options[] =
+{
+  { 0,         N_("Disabled")         },
+  { 1,         N_("During Log In")    },
+  { 10       , N_("Every 10 seconds") },
+  { 60       , N_("Every minute")     },
+  { 60 * 5   , N_("Every 5 minutes")  },
+  { 60 * 15  , N_("Every 15 minutes") },
+  { 60 * 30  , N_("Every 30 minutes") },
+  { 3600     , N_("Every hour")       },
+  { 3600 * 24, N_("Every day")        },
+};
+
 
 
 G_DEFINE_TYPE (ThunarDesktopPreferencesDialog, thunar_desktop_preferences_dialog, XFCE_TYPE_TITLED_DIALOG)
@@ -101,7 +121,6 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
   GtkWidget    *hbox;
   GtkWidget    *combo;
   GtkWidget    *button;
-  GtkWidget    *button2;
   GEnumClass   *klass;
   guint         n;
   GtkSizeGroup *size_group;
@@ -111,7 +130,7 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
   /* configure the dialog properties */
   gtk_window_set_icon_name (GTK_WINDOW (dialog), "preferences-desktop-wallpaper");
   gtk_window_set_title (GTK_WINDOW (dialog), _("Desktop Preferences"));
-  gtk_window_set_default_size (GTK_WINDOW (dialog), 900, 700);
+  gtk_window_set_default_size (GTK_WINDOW (dialog), 700, 500);
 
   /* add "Help" and "Close" buttons */
   gtk_dialog_add_buttons (GTK_DIALOG (dialog),
@@ -188,8 +207,6 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
   gtk_size_group_add_widget (size_group, label);
   gtk_widget_show (label);
 
-  g_object_unref (size_group);
-
   combo = gtk_combo_box_text_new ();
   gtk_box_pack_start (GTK_BOX (hbox), combo, FALSE, TRUE, 0);
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), combo);
@@ -219,27 +236,24 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
   gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, TRUE, 0);
   gtk_widget_show (hbox);
 
-  button = gtk_check_button_new_with_mnemonic (_("Ch_ange picture"));
+  label = gtk_label_new_with_mnemonic (_("Automatically ch_ange background:"));
+  gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, TRUE, 0);
+  //gtk_size_group_add_widget (size_group, label);
+  gtk_widget_show (label);
+
+  combo = gtk_combo_box_text_new ();
+  gtk_label_set_mnemonic_widget (GTK_LABEL (label), combo);
+  gtk_box_pack_start (GTK_BOX (hbox), combo, FALSE, TRUE, 0);
+  for (n = 0; n < G_N_ELEMENTS (auto_change_options); n++)
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _(auto_change_options[n].name));
+  gtk_widget_show (combo);
+
+  button = gtk_check_button_new_with_mnemonic (_("_Random order"));
+  g_object_bind_property (combo, "active", button, "sensitive", G_BINDING_SYNC_CREATE);
   gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, TRUE, 0);
   gtk_widget_show (button);
 
-  combo = gtk_combo_box_text_new ();
-  g_object_bind_property (button, "active", combo, "sensitive", G_BINDING_SYNC_CREATE);
-  gtk_box_pack_start (GTK_BOX (hbox), combo, FALSE, TRUE, 0);
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("During login"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Every 10 seconds"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Every minute"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Every 5 minutes"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Every 15 minutes"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Every 30 minutes"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Every hour"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Every day"));
-  gtk_widget_show (combo);
-
-  button2 = gtk_check_button_new_with_mnemonic (_("_Random order"));
-  g_object_bind_property (button, "active", button2, "sensitive", G_BINDING_SYNC_CREATE);
-  gtk_box_pack_start (GTK_BOX (hbox), button2, FALSE, TRUE, 0);
-  gtk_widget_show (button2);
+  g_object_unref (size_group);
 }
 
 

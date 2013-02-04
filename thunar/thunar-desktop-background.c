@@ -425,7 +425,7 @@ thunar_desktop_background_paint_color_fill (cairo_t                    *cr,
       y1 = area->y + area->height / 2;
       radius = MAX (area->width, area->height) / 2;
 
-      pattern = cairo_pattern_create_radial (x1, y1, radius, x1, y1, 0);
+      pattern = cairo_pattern_create_radial (x1, y1, 0, x1, y1, radius);
       goto paint_gradient;
       break;
     }
