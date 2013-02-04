@@ -227,7 +227,7 @@ struct _ThunarListModel
   gboolean       sort_folders_first : 1;
   gint           sort_sign;   /* 1 = ascending, -1 descending */
   ThunarSortFunc sort_func;
-  
+
   ThunarListModelVisibleFunc visible_func;
   gpointer                   visible_data;
 };

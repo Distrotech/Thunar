@@ -201,7 +201,7 @@ thunar_gtk_ui_manager_get_action_by_name (GtkUIManager *ui_manager,
 
   _thunar_return_val_if_fail (ui_manager == NULL || GTK_IS_UI_MANAGER (ui_manager), NULL);
   _thunar_return_val_if_fail (action_name != NULL, NULL);
-  
+
   if (ui_manager == NULL)
     return NULL;
 

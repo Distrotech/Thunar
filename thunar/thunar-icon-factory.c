@@ -3,18 +3,18 @@
  * Copyright (c) 2005-2006 Benedikt Meurer <benny@xfce.org>
  * Copyright (c) 2009-2011 Jannis Pohlmann <jannis@xfce.org>
  *
- * This program is free software; you can redistribute it and/or 
+ * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of 
+ * published by the Free Software Foundation; either version 2 of
  * the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public 
- * License along with this program; if not, write to the Free 
+ * You should have received a copy of the GNU General Public
+ * License along with this program; if not, write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
@@ -670,8 +670,9 @@ thunar_icon_factory_get_for_icon_theme (GtkIconTheme *icon_theme)
 
       /* connect the "show-thumbnails" property to the global preference */
       factory->preferences = thunar_preferences_get ();
-      exo_binding_new (G_OBJECT (factory->preferences), "misc-thumbnail-mode",
-                       G_OBJECT (factory), "thumbnail-mode");
+      g_object_bind_property (G_OBJECT (factory->preferences), "misc-thumbnail-mode",
+                              G_OBJECT (factory), "thumbnail-mode",
+                              G_BINDING_SYNC_CREATE);
     }
   else
     {
@@ -749,7 +750,7 @@ thunar_icon_factory_load_icon (ThunarIconFactory        *factory,
 {
   _thunar_return_val_if_fail (THUNAR_IS_ICON_FACTORY (factory), NULL);
   _thunar_return_val_if_fail (size > 0, NULL);
-  
+
   /* cannot happen unless there's no XSETTINGS manager
    * for the default screen, but just in case...
    */
@@ -833,9 +834,9 @@ thunar_icon_factory_load_file_icon (ThunarIconFactory  *factory,
           if (G_IS_THEMED_ICON (gicon))
             {
               /* we have a themed preview icon, look it up using the icon theme */
-              icon_info = 
-                gtk_icon_theme_lookup_by_gicon (factory->icon_theme, 
-                                                gicon, icon_size, 
+              icon_info =
+                gtk_icon_theme_lookup_by_gicon (factory->icon_theme,
+                                                gicon, icon_size,
                                                 GTK_ICON_LOOKUP_USE_BUILTIN
                                                 | GTK_ICON_LOOKUP_FORCE_SIZE);
 

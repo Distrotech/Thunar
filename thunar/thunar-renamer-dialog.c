@@ -358,7 +358,9 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
 
   /* add the "Rename Files" button */
   button = gtk_dialog_add_button (GTK_DIALOG (renamer_dialog), _("_Rename Files"), GTK_RESPONSE_ACCEPT);
-  exo_binding_new (G_OBJECT (renamer_dialog->model), "can-rename", G_OBJECT (button), "sensitive");
+  g_object_bind_property (G_OBJECT (renamer_dialog->model), "can-rename",
+                          G_OBJECT (button), "sensitive",
+                          G_BINDING_SYNC_CREATE);
   gtk_dialog_set_default_response (GTK_DIALOG (renamer_dialog), GTK_RESPONSE_ACCEPT);
   gtk_widget_set_tooltip_text (button, _("Click here to actually rename the files listed above to their new names."));
 
@@ -380,11 +382,15 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
   renamer_dialog->launcher = thunar_launcher_new ();
   thunar_launcher_set_widget (renamer_dialog->launcher, GTK_WIDGET (renamer_dialog));
   thunar_component_set_ui_manager (THUNAR_COMPONENT (renamer_dialog->launcher), renamer_dialog->ui_manager);
-  exo_binding_new (G_OBJECT (renamer_dialog), "selected-files", G_OBJECT (renamer_dialog->launcher), "selected-files");
+  g_object_bind_property (G_OBJECT (renamer_dialog), "selected-files",
+                          G_OBJECT (renamer_dialog->launcher), "selected-files",
+                          G_BINDING_SYNC_CREATE);
 
   /* add the toolbar to the dialog */
   toolbar = gtk_ui_manager_get_widget (renamer_dialog->ui_manager, "/toolbar");
-  exo_binding_new (G_OBJECT (renamer_dialog), "standalone", G_OBJECT (toolbar), "visible");
+  g_object_bind_property (G_OBJECT (renamer_dialog), "standalone",
+                          G_OBJECT (toolbar), "visible",
+                          G_BINDING_SYNC_CREATE);
   gtk_box_pack_start (GTK_BOX (GTK_DIALOG (renamer_dialog)->vbox), toolbar, FALSE, FALSE, 0);
 
   /* create the main vbox */
@@ -462,10 +468,18 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
   /* create the rename progress bar */
   renamer_dialog->progress = thunar_renamer_progress_new ();
   gtk_box_pack_start (GTK_BOX (vbox), renamer_dialog->progress, FALSE, FALSE, 0);
-  exo_binding_new_with_negation (G_OBJECT (renamer_dialog->progress), "visible", G_OBJECT (rbox), "visible");
-  exo_binding_new_with_negation (G_OBJECT (renamer_dialog->progress), "visible", G_OBJECT (swin), "sensitive");
-  exo_binding_new_with_negation (G_OBJECT (renamer_dialog->progress), "visible", G_OBJECT (toolbar), "sensitive");
-  exo_binding_new (G_OBJECT (renamer_dialog->progress), "visible", G_OBJECT (renamer_dialog->model), "frozen");
+  g_object_bind_property (G_OBJECT (renamer_dialog->progress), "visible",
+                          G_OBJECT (rbox), "visible",
+                          G_BINDING_INVERT_BOOLEAN | G_BINDING_SYNC_CREATE);
+  g_object_bind_property (G_OBJECT (renamer_dialog->progress), "visible",
+                          G_OBJECT (swin), "sensitive",
+                          G_BINDING_INVERT_BOOLEAN | G_BINDING_SYNC_CREATE);
+  g_object_bind_property (G_OBJECT (renamer_dialog->progress), "visible",
+                          G_OBJECT (toolbar), "sensitive",
+                          G_BINDING_INVERT_BOOLEAN | G_BINDING_SYNC_CREATE);
+  g_object_bind_property (G_OBJECT (renamer_dialog->progress), "visible",
+                          G_OBJECT (renamer_dialog->model), "frozen",
+                          G_BINDING_SYNC_CREATE);
 
   /* synchronize the height of the progress bar and the rbox with the combos */
   size_group = gtk_size_group_new (GTK_SIZE_GROUP_VERTICAL);
@@ -517,7 +531,10 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
             active = n;
           gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (mcombo), _(klass->values[n].value_nick));
         }
-      exo_mutual_binding_new (G_OBJECT (renamer_dialog->model), "mode", G_OBJECT (mcombo), "active");
+      g_object_bind_property (G_OBJECT (renamer_dialog->model), "mode",
+                              G_OBJECT (mcombo), "active",
+                              G_BINDING_BIDIRECTIONAL
+                              | G_BINDING_SYNC_CREATE);
       gtk_box_pack_end (GTK_BOX (rbox), mcombo, FALSE, FALSE, 0);
       gtk_combo_box_set_active (GTK_COMBO_BOX (mcombo), active);
       g_type_class_unref (klass);
@@ -570,7 +587,9 @@ thunar_renamer_dialog_init (ThunarRenamerDialog *renamer_dialog)
       gtk_combo_box_set_active (GTK_COMBO_BOX (rcombo), active);
 
       /* connect the combo box to the notebook */
-      exo_binding_new (G_OBJECT (rcombo), "active", G_OBJECT (notebook), "page");
+      g_object_bind_property (G_OBJECT (rcombo), "active",
+                              G_OBJECT (notebook), "page",
+                              G_BINDING_SYNC_CREATE);
 
       /* close the config handle */
       xfce_rc_close (rc);
@@ -1474,7 +1493,7 @@ thunar_renamer_dialog_drag_motion (GtkWidget           *tree_view,
       /* we cannot handle the drop */
       return FALSE;
     }
-      
+
   /* compute the drop position */
   if (gtk_tree_view_get_dest_row_at_pos (GTK_TREE_VIEW (tree_view), x, y, &path, &position))
     {
@@ -1533,10 +1552,10 @@ thunar_renamer_dialog_drag_drop (GtkWidget           *tree_view,
   GtkTreeViewDropPosition  drop_pos;
   gint                     position = -1;
   GList                   *rows;
-  
+
   _thunar_return_val_if_fail (THUNAR_IS_RENAMER_DIALOG (renamer_dialog), FALSE);
   _thunar_return_val_if_fail (GTK_IS_TREE_VIEW (tree_view), FALSE);
-  
+
   /* determine the drop target */
   target = gtk_drag_dest_find_target (tree_view, context, NULL);
   if (G_LIKELY (target == gdk_atom_intern_static_string ("text/uri-list")))
@@ -1584,7 +1603,7 @@ thunar_renamer_dialog_drag_drop (GtkWidget           *tree_view,
 
   return TRUE;
 }
-                                  
+
 
 
 static void

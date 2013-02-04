@@ -106,8 +106,8 @@ thunar_create_dialog_class_init (ThunarCreateDialogClass *klass)
    **/
   g_object_class_install_property (gobject_class,
                                    PROP_FILENAME,
-                                   g_param_spec_string ("filename", 
-                                                        "filename", 
+                                   g_param_spec_string ("filename",
+                                                        "filename",
                                                         "filename",
                                                         NULL,
                                                         EXO_PARAM_READWRITE));
@@ -119,8 +119,8 @@ thunar_create_dialog_class_init (ThunarCreateDialogClass *klass)
    **/
   g_object_class_install_property (gobject_class,
                                    PROP_CONTENT_TYPE,
-                                   g_param_spec_string ("content-type", 
-                                                        "content-type", 
+                                   g_param_spec_string ("content-type",
+                                                        "content-type",
                                                         "content-type",
                                                        NULL,
                                                        EXO_PARAM_READWRITE));
@@ -150,7 +150,7 @@ thunar_create_dialog_init (ThunarCreateDialog *dialog)
   gtk_widget_show (table);
 
   dialog->image = g_object_new (GTK_TYPE_IMAGE, "xpad", 6, "ypad", 6, NULL);
-  gtk_table_attach (GTK_TABLE (table), dialog->image, 0, 1, 0, 2, GTK_FILL, GTK_FILL, 0, 0); 
+  gtk_table_attach (GTK_TABLE (table), dialog->image, 0, 1, 0, 2, GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (dialog->image);
 
   label = g_object_new (GTK_TYPE_LABEL, "label", _("Enter the new name:"), "xalign", 0.0f, NULL);
@@ -324,7 +324,7 @@ thunar_create_dialog_set_filename (ThunarCreateDialog *dialog,
 
   _thunar_return_if_fail (THUNAR_IS_CREATE_DIALOG (dialog));
   _thunar_return_if_fail (filename != NULL);
-      
+
   /* setup the new filename */
   gtk_entry_set_text (GTK_ENTRY (dialog->entry), filename);
 
@@ -361,7 +361,7 @@ thunar_create_dialog_set_filename (ThunarCreateDialog *dialog,
  * thunar_create_dialog_set_content_type:
  * @dialog       : a #ThunarCreateDialog.
  * @content_type : the new content type.
- * 
+ *
  * Set the content type for @dialog to @content_type.
  **/
 void

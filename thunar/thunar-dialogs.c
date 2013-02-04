@@ -176,7 +176,7 @@ thunar_dialogs_show_rename_file (gpointer    parent,
     {
       /* hide the dialog */
       gtk_widget_hide (dialog);
-      
+
       /* determine the new filename */
       text = gtk_entry_get_text (GTK_ENTRY (entry));
 
@@ -224,7 +224,7 @@ thunar_dialogs_show_about (GtkWindow   *parent,
     "Nick Schermer <nick@xfce.org>",
     NULL,
   };
-  
+
   static const gchar *documenters[] =
   {
     "Benedikt Meurer <benny@xfce.org>",
@@ -244,7 +244,7 @@ thunar_dialogs_show_about (GtkWindow   *parent,
   comments = g_strdup_vprintf (format, args);
   va_end (args);
 
-  
+
   /* try to load the about logo */
   logo = gdk_pixbuf_new_from_file (DATADIR "/pixmaps/Thunar/Thunar-about-logo.png", NULL);
 
@@ -572,7 +572,7 @@ thunar_dialogs_show_job_ask_replace (GtkWindow  *parent,
 
   if (thunar_file_is_symlink (dst_file))
     {
-      text = g_strdup_printf (_("This folder already contains a symbolic link \"%s\"."), 
+      text = g_strdup_printf (_("This folder already contains a symbolic link \"%s\"."),
                               thunar_file_get_display_name (dst_file));
     }
   else if (thunar_file_is_directory (dst_file))
@@ -581,8 +581,8 @@ thunar_dialogs_show_job_ask_replace (GtkWindow  *parent,
                               thunar_file_get_display_name (dst_file));
     }
   else
-    { 
-      text = g_strdup_printf (_("This folder already contains a file \"%s\"."), 
+    {
+      text = g_strdup_printf (_("This folder already contains a file \"%s\"."),
                               thunar_file_get_display_name (dst_file));
     }
 

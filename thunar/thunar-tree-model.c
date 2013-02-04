@@ -1802,7 +1802,9 @@ thunar_tree_model_get_default (void)
       /* synchronize the the global "misc-case-sensitive" preference */
       preferences = thunar_preferences_get ();
       g_object_set_data_full (G_OBJECT (model), I_("thunar-preferences"), preferences, g_object_unref);
-      exo_binding_new (G_OBJECT (preferences), "misc-case-sensitive", G_OBJECT (model), "case-sensitive");
+      g_object_bind_property (G_OBJECT (preferences), "misc-case-sensitive",
+                              G_OBJECT (model), "case-sensitive",
+                              G_BINDING_SYNC_CREATE);
     }
   else
     {

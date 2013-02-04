@@ -31,7 +31,7 @@
 
 
 
-static const gchar *duplicate_names[4][2] = 
+static const gchar *duplicate_names[4][2] =
 {
   /* Copy/link name for n <= 3 */
   { N_("copy of %s"),         N_("link to %s"),         },
@@ -61,7 +61,7 @@ static const gchar *duplicate_names[4][2] =
  *   n >= 4: "@n<!---->th copy of X"
  *
  * Links follow the same naming scheme, except that they use
- * "link to X" instead of "copy of X". 
+ * "link to X" instead of "copy of X".
  *
  * If there are errors or the job was cancelled, the return value
  * will be %NULL and @error will be set.
@@ -83,7 +83,7 @@ thunar_io_jobs_util_next_duplicate_file (ThunarJob *job,
   gchar     *display_name;
   gint       type_index;
   gint       name_index;
-  
+
   _thunar_return_val_if_fail (THUNAR_IS_JOB (job), NULL);
   _thunar_return_val_if_fail (G_IS_FILE (file), NULL);
   _thunar_return_val_if_fail (0 < n, NULL);
@@ -95,7 +95,7 @@ thunar_io_jobs_util_next_duplicate_file (ThunarJob *job,
     return NULL;
 
   /* query the source file info / display name */
-  info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME, 
+  info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME,
                             G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
                             exo_job_get_cancellable (EXO_JOB (job)), &err);
 
@@ -111,7 +111,7 @@ thunar_io_jobs_util_next_duplicate_file (ThunarJob *job,
 
   /* make sure the name index is not out of bounds */
   name_index = MIN (n-1, G_N_ELEMENTS (duplicate_names)-1);
-  
+
   /* generate the display name for the nth copy/link of the source file */
   if (name_index < (gint) G_N_ELEMENTS (duplicate_names)-1)
     {

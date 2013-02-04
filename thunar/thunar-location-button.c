@@ -136,7 +136,7 @@ struct _ThunarLocationButton
 
   /* the current icon state (i.e. accepting drops) */
   ThunarFileIconState file_icon_state;
-  
+
   /* enter folders using DnD */
   guint               enter_timeout_id;
 
@@ -267,7 +267,10 @@ thunar_location_button_init (ThunarLocationButton *location_button)
   button = gtk_toggle_button_new ();
   gtk_widget_set_can_focus (button, FALSE);
   g_signal_connect_swapped (G_OBJECT (button), "clicked", G_CALLBACK (thunar_location_button_clicked), location_button);
-  exo_mutual_binding_new (G_OBJECT (location_button), "active", G_OBJECT (button), "active");
+  g_object_bind_property (G_OBJECT (location_button), "active",
+                          G_OBJECT (button), "active",
+                          G_BINDING_BIDIRECTIONAL
+                          | G_BINDING_SYNC_CREATE);
   gtk_container_add (GTK_CONTAINER (location_button), button);
   gtk_widget_show (button);
 
@@ -440,7 +443,7 @@ thunar_location_button_file_changed (ThunarLocationButton *location_button,
   icon_theme = gtk_icon_theme_get_for_screen (gtk_widget_get_screen (GTK_WIDGET (location_button)));
 
   /* update and show the label widget (hide for the local root folder) */
-  if (thunar_file_is_local (file) && thunar_file_is_root (file)) 
+  if (thunar_file_is_local (file) && thunar_file_is_root (file))
     {
       /* hide the alignment in which the label would otherwise show up */
       gtk_widget_hide (gtk_widget_get_parent (location_button->label));

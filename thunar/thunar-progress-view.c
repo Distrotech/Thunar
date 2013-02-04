@@ -189,7 +189,9 @@ thunar_progress_view_init (ThunarProgressView *view)
 
   image = g_object_new (GTK_TYPE_IMAGE, "icon-size", GTK_ICON_SIZE_BUTTON, NULL);
   gtk_box_pack_start (GTK_BOX (hbox), image, FALSE, TRUE, 0);
-  exo_binding_new (G_OBJECT (view), "icon-name", G_OBJECT (image), "icon-name");
+  g_object_bind_property (G_OBJECT (view), "icon-name",
+                          G_OBJECT (image), "icon-name",
+                          G_BINDING_SYNC_CREATE);
   gtk_widget_show (image);
 
   vbox2 = gtk_vbox_new (FALSE, 6);
@@ -236,7 +238,9 @@ thunar_progress_view_init (ThunarProgressView *view)
   gtk_widget_show (image);
 
   /* connect the view title to the action label */
-  exo_binding_new (G_OBJECT (view), "title", G_OBJECT (label), "label");
+  g_object_bind_property (G_OBJECT (view), "title",
+                          G_OBJECT (label), "label",
+                          G_BINDING_SYNC_CREATE);
 }
 
 

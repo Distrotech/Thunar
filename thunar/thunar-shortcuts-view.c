@@ -331,8 +331,12 @@ thunar_shortcuts_view_init (ThunarShortcutsView *view)
   /* sync the "emblems" property of the icon renderer with the "shortcuts-icon-emblems" preference
    * and the "size" property of the renderer with the "shortcuts-icon-size" preference.
    */
-  exo_binding_new (G_OBJECT (view->preferences), "shortcuts-icon-size", G_OBJECT (view->icon_renderer), "size");
-  exo_binding_new (G_OBJECT (view->preferences), "shortcuts-icon-emblems", G_OBJECT (view->icon_renderer), "emblems");
+  g_object_bind_property (G_OBJECT (view->preferences), "shortcuts-icon-size",
+                          G_OBJECT (view->icon_renderer), "size",
+                          G_BINDING_SYNC_CREATE);
+  g_object_bind_property (G_OBJECT (view->preferences), "shortcuts-icon-emblems",
+                          G_OBJECT (view->icon_renderer), "emblems",
+                          G_BINDING_SYNC_CREATE);
 
   /* allocate the text renderer (ellipsizing as required, but "File System" must fit) */
   renderer = g_object_new (GTK_TYPE_CELL_RENDERER_TEXT,
@@ -1092,7 +1096,7 @@ thunar_shortcuts_view_context_menu (ThunarShortcutsView *view,
   /* set the stock icon */
   image = gtk_image_new_from_stock (GTK_STOCK_OPEN, GTK_ICON_SIZE_MENU);
   gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item), image);
-  
+
   /* append the "Open in New Tab" menu action */
   item = gtk_image_menu_item_new_with_mnemonic (_("Open in New Tab"));
   g_signal_connect_swapped (G_OBJECT (item), "activate", G_CALLBACK (thunar_shortcuts_view_open_in_new_tab_clicked), view);

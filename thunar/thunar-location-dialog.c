@@ -3,18 +3,18 @@
  * Copyright (c) 2005-2006 Benedikt Meurer <benny@xfce.org>
  * Copyright (c) 2010 Jannis Pohlmann <jannis@xfce.org>
  *
- * This program is free software; you can redistribute it and/or 
+ * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of 
+ * published by the Free Software Foundation; either version 2 of
  * the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public 
- * License along with this program; if not, write to the Free 
+ * You should have received a copy of the GNU General Public
+ * License along with this program; if not, write to the Free
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
@@ -35,7 +35,8 @@ G_DEFINE_TYPE (ThunarLocationDialog, thunar_location_dialog, THUNAR_TYPE_ABSTRAC
 
 
 static gboolean
-transform_object_to_boolean (const GValue *src_value,
+transform_object_to_boolean (GBinding     *binding,
+                             const GValue *src_value,
                              GValue       *dst_value,
                              gpointer      user_data)
 {
@@ -88,16 +89,18 @@ thunar_location_dialog_init (ThunarLocationDialog *location_dialog)
   gtk_widget_show (location_dialog->entry);
 
   /* the "Open" button is only sensitive if a valid file is entered */
-  exo_binding_new_full (G_OBJECT (location_dialog->entry), "current-file",
-                        G_OBJECT (open_button), "sensitive",
-                        transform_object_to_boolean, NULL, NULL);
+  g_object_bind_property_full (G_OBJECT (location_dialog->entry), "current-file",
+                               G_OBJECT (open_button), "sensitive",
+                               G_BINDING_SYNC_CREATE,
+                               transform_object_to_boolean, NULL,
+                               NULL, NULL);
 }
 
 
 
 /**
  * thunar_location_dialog_new:
- * 
+ *
  * Allocates a new #ThunarLocationDialog instance.
  *
  * Return value: the newly allocated #ThunarLocationDialog.
@@ -143,7 +146,7 @@ thunar_location_dialog_set_selected_file (ThunarLocationDialog *location_dialog,
   _thunar_return_if_fail (THUNAR_IS_LOCATION_DIALOG (location_dialog));
   _thunar_return_if_fail (selected_file == NULL || THUNAR_IS_FILE (selected_file));
 
-  thunar_path_entry_set_current_file (THUNAR_PATH_ENTRY (location_dialog->entry), 
+  thunar_path_entry_set_current_file (THUNAR_PATH_ENTRY (location_dialog->entry),
                                       selected_file);
 }
 

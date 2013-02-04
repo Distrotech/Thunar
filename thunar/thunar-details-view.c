@@ -295,10 +295,10 @@ thunar_details_view_init (ThunarDetailsView *details_view)
   thunar_details_view_columns_changed (details_view->column_model, details_view);
 
   /* synchronize the "fixed-columns" property */
-  exo_binding_new (G_OBJECT (THUNAR_STANDARD_VIEW (details_view)->preferences),
-                   "last-details-view-fixed-columns",
-                   G_OBJECT (details_view),
-                   "fixed-columns");
+  g_object_bind_property (G_OBJECT (THUNAR_STANDARD_VIEW (details_view)->preferences),
+                          "last-details-view-fixed-columns",
+                          G_OBJECT (details_view), "fixed-columns",
+                          G_BINDING_SYNC_CREATE);
 
   /* apply fixed column widths if we start in fixed column mode */
   if (G_UNLIKELY (details_view->fixed_columns))
@@ -743,7 +743,7 @@ thunar_details_view_button_press_event (GtkTreeView       *tree_view,
                     }
 
                   action = thunar_gtk_ui_manager_get_action_by_name (THUNAR_STANDARD_VIEW (details_view)->ui_manager, action_name);
-      
+
                   /* emit the action */
                   if (G_LIKELY (action != NULL))
                     gtk_action_activate (action);

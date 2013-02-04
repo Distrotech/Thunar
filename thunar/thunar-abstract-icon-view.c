@@ -508,7 +508,7 @@ thunar_abstract_icon_view_button_press_event (ExoIconView            *view,
            * to make sure that the folder context menu is opened.
            */
           exo_icon_view_unselect_all (view);
-      
+
           /* open the context menu */
           thunar_standard_view_context_menu (THUNAR_STANDARD_VIEW (abstract_icon_view), event->button, event->time);
         }

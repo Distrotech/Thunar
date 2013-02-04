@@ -237,7 +237,7 @@ thunar_shortcuts_icon_renderer_render (GtkCellRenderer     *renderer,
       else
         gicon = thunar_device_get_icon (shortcuts_icon_renderer->device);
 
-      icon_info = gtk_icon_theme_lookup_by_gicon (icon_theme, gicon, cell_area->width, 
+      icon_info = gtk_icon_theme_lookup_by_gicon (icon_theme, gicon, cell_area->width,
                                                   GTK_ICON_LOOKUP_USE_BUILTIN);
       g_object_unref (gicon);
 

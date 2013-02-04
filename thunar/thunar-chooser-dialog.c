@@ -257,7 +257,9 @@ thunar_chooser_dialog_init (ThunarChooserDialog *dialog)
   dialog->custom_expander = gtk_expander_new_with_mnemonic (_("Use a _custom command:"));
   gtk_widget_set_tooltip_text (dialog->custom_expander, _("Use a custom command for an application that is not "
                                                           "available from the above application list."));
-  exo_binding_new_with_negation (G_OBJECT (dialog->custom_expander), "expanded", G_OBJECT (dialog->tree_view), "sensitive");
+  g_object_bind_property (G_OBJECT (dialog->custom_expander), "expanded",
+                          G_OBJECT (dialog->tree_view), "sensitive",
+                          G_BINDING_INVERT_BOOLEAN | G_BINDING_SYNC_CREATE);
   g_signal_connect (G_OBJECT (dialog->custom_expander), "notify::expanded", G_CALLBACK (thunar_chooser_dialog_notify_expanded), dialog);
   gtk_box_pack_start (GTK_BOX (box), dialog->custom_expander, FALSE, FALSE, 0);
   gtk_widget_show (dialog->custom_expander);
@@ -282,7 +284,9 @@ thunar_chooser_dialog_init (ThunarChooserDialog *dialog)
   /* create the "Use as default for this kind of file" button */
   dialog->default_button = gtk_check_button_new_with_mnemonic (_("Use as _default for this kind of file"));
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (dialog->default_button), TRUE);
-  exo_binding_new (G_OBJECT (dialog), "open", G_OBJECT (dialog->default_button), "visible");
+  g_object_bind_property (G_OBJECT (dialog), "open",
+                          G_OBJECT (dialog->default_button), "visible",
+                          G_BINDING_SYNC_CREATE);
   gtk_box_pack_start (GTK_BOX (box), dialog->default_button, FALSE, FALSE, 0);
   gtk_widget_show (dialog->default_button);
 
@@ -460,8 +464,8 @@ thunar_chooser_dialog_response (GtkDialog *widget,
       if (G_UNLIKELY (!succeed))
         {
           /* display an error to the user */
-          thunar_dialogs_show_error (GTK_WIDGET (dialog), 
-                                     error, 
+          thunar_dialogs_show_error (GTK_WIDGET (dialog),
+                                     error,
                                      _("Failed to set default application for \"%s\""),
                                      thunar_file_get_display_name (dialog->file));
 
@@ -488,9 +492,9 @@ thunar_chooser_dialog_response (GtkDialog *widget,
       if (!g_app_info_launch (app_info, &list, G_APP_LAUNCH_CONTEXT (context), &error))
         {
           /* display an error to the user */
-          thunar_dialogs_show_error (GTK_WIDGET (dialog), 
-                                     error, 
-                                     _("Failed to execute application \"%s\""), 
+          thunar_dialogs_show_error (GTK_WIDGET (dialog),
+                                     error,
+                                     _("Failed to execute application \"%s\""),
                                      g_app_info_get_name (app_info));
 
           /* release the error */

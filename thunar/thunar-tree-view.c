@@ -416,8 +416,12 @@ thunar_tree_view_init (ThunarTreeView *view)
   /* sync the "emblems" property of the icon renderer with the "tree-icon-emblems" preference
    * and the "size" property of the renderer with the "tree-icon-size" preference.
    */
-  exo_binding_new (G_OBJECT (view->preferences), "tree-icon-size", G_OBJECT (view->icon_renderer), "size");
-  exo_binding_new (G_OBJECT (view->preferences), "tree-icon-emblems", G_OBJECT (view->icon_renderer), "emblems");
+  g_object_bind_property (G_OBJECT (view->preferences), "tree-icon-size",
+                          G_OBJECT (view->icon_renderer), "size",
+                          G_BINDING_SYNC_CREATE);
+  g_object_bind_property (G_OBJECT (view->preferences), "tree-icon-emblems",
+                          G_OBJECT (view->icon_renderer), "emblems",
+                          G_BINDING_SYNC_CREATE);
 
   /* allocate the text renderer */
   renderer = gtk_cell_renderer_text_new ();
@@ -1119,7 +1123,7 @@ thunar_tree_view_context_menu (ThunarTreeView *view,
   /* set the stock icon */
   image = gtk_image_new_from_stock (GTK_STOCK_OPEN, GTK_ICON_SIZE_MENU);
   gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item), image);
-  
+
   /* append the "Open in New Tab" menu action */
   item = gtk_image_menu_item_new_with_mnemonic (_("Open in New _Tab"));
   g_signal_connect_swapped (G_OBJECT (item), "activate", G_CALLBACK (thunar_tree_view_action_open_in_new_tab), view);
@@ -1968,11 +1972,11 @@ thunar_tree_view_mount_finish (ThunarDevice *device,
             case OPEN_IN_WINDOW:
               thunar_tree_view_open_selection_in_new_window (data->view);
               break;
-            
+
             case OPEN_IN_TAB:
               thunar_tree_view_open_selection_in_new_tab (data->view);
               break;
-            
+
             default:
               thunar_tree_view_open_selection (data->view);
               break;

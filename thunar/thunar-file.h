@@ -191,9 +191,9 @@ gboolean          thunar_file_is_mountable         (const ThunarFile       *file
 gboolean          thunar_file_is_local             (const ThunarFile       *file);
 gboolean          thunar_file_is_parent            (const ThunarFile       *file,
                                                     const ThunarFile       *child);
-gboolean          thunar_file_is_gfile_ancestor    (const ThunarFile       *file, 
+gboolean          thunar_file_is_gfile_ancestor    (const ThunarFile       *file,
                                                     GFile                  *ancestor);
-gboolean          thunar_file_is_ancestor          (const ThunarFile       *file, 
+gboolean          thunar_file_is_ancestor          (const ThunarFile       *file,
                                                     const ThunarFile       *ancestor);
 gboolean          thunar_file_is_executable        (const ThunarFile       *file);
 gboolean          thunar_file_is_writable          (const ThunarFile       *file);
@@ -225,7 +225,7 @@ gboolean          thunar_file_set_custom_icon      (ThunarFile              *fil
 
 const gchar     *thunar_file_get_thumbnail_path    (ThunarFile              *file);
 ThunarFileThumbState thunar_file_get_thumb_state   (const ThunarFile        *file);
-void             thunar_file_set_thumb_state       (ThunarFile              *file, 
+void             thunar_file_set_thumb_state       (ThunarFile              *file,
                                                     ThunarFileThumbState     state);
 GIcon            *thunar_file_get_preview_icon     (const ThunarFile        *file);
 GFilesystemPreviewType thunar_file_get_preview_type (const ThunarFile *file);

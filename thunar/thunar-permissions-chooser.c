@@ -244,7 +244,9 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), chooser->access_combos[2]);
   gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (chooser->access_combos[2]), renderer_text, TRUE);
   gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (chooser->access_combos[2]), renderer_text, "text", 0);
-  exo_binding_new (G_OBJECT (chooser), "mutable", G_OBJECT (chooser->access_combos[2]), "sensitive");
+  g_object_bind_property (G_OBJECT (chooser), "mutable",
+                          G_OBJECT (chooser->access_combos[2]), "sensitive",
+                          G_BINDING_SYNC_CREATE);
   g_signal_connect_swapped (G_OBJECT (chooser->access_combos[2]), "changed", G_CALLBACK (thunar_permissions_chooser_access_changed), chooser);
   gtk_table_attach (GTK_TABLE (chooser->table), chooser->access_combos[2], 1, 2, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
   thunar_gtk_label_set_a11y_relation (GTK_LABEL (label), chooser->access_combos[2]);
@@ -269,7 +271,9 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (chooser->group_combo), renderer_text, TRUE);
   gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (chooser->group_combo), renderer_text, "text", THUNAR_PERMISSIONS_STORE_COLUMN_NAME);
   gtk_combo_box_set_row_separator_func (GTK_COMBO_BOX (chooser->group_combo), thunar_permissions_chooser_row_separator, NULL, NULL);
-  exo_binding_new (G_OBJECT (chooser), "mutable", G_OBJECT (chooser->group_combo), "sensitive");
+  g_object_bind_property (G_OBJECT (chooser), "mutable",
+                          G_OBJECT (chooser->group_combo), "sensitive",
+                          G_BINDING_SYNC_CREATE);
   g_signal_connect_swapped (G_OBJECT (chooser->group_combo), "changed", G_CALLBACK (thunar_permissions_chooser_group_changed), chooser);
   gtk_table_attach (GTK_TABLE (chooser->table), chooser->group_combo, 1, 2, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
   thunar_gtk_label_set_a11y_relation (GTK_LABEL (label), chooser->group_combo);
@@ -287,7 +291,9 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), chooser->access_combos[1]);
   gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (chooser->access_combos[1]), renderer_text, TRUE);
   gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (chooser->access_combos[1]), renderer_text, "text", 0);
-  exo_binding_new (G_OBJECT (chooser), "mutable", G_OBJECT (chooser->access_combos[1]), "sensitive");
+  g_object_bind_property (G_OBJECT (chooser), "mutable",
+                          G_OBJECT (chooser->access_combos[1]), "sensitive",
+                          G_BINDING_SYNC_CREATE);
   g_signal_connect_swapped (G_OBJECT (chooser->access_combos[1]), "changed", G_CALLBACK (thunar_permissions_chooser_access_changed), chooser);
   gtk_table_attach (GTK_TABLE (chooser->table), chooser->access_combos[1], 1, 2, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
   thunar_gtk_label_set_a11y_relation (GTK_LABEL (label), chooser->access_combos[1]);
@@ -311,7 +317,9 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), chooser->access_combos[0]);
   gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (chooser->access_combos[0]), renderer_text, TRUE);
   gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (chooser->access_combos[0]), renderer_text, "text", 0);
-  exo_binding_new (G_OBJECT (chooser), "mutable", G_OBJECT (chooser->access_combos[0]), "sensitive");
+  g_object_bind_property (G_OBJECT (chooser), "mutable",
+                          G_OBJECT (chooser->access_combos[0]), "sensitive",
+                          G_BINDING_SYNC_CREATE);
   g_signal_connect_swapped (G_OBJECT (chooser->access_combos[0]), "changed", G_CALLBACK (thunar_permissions_chooser_access_changed), chooser);
   gtk_table_attach (GTK_TABLE (chooser->table), chooser->access_combos[0], 1, 2, row, row + 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
   thunar_gtk_label_set_a11y_relation (GTK_LABEL (label), chooser->access_combos[0]);
@@ -332,8 +340,12 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   gtk_widget_show (label);
 
   chooser->program_button = gtk_check_button_new_with_mnemonic (_("Allow this file to _run as a program"));
-  exo_binding_new (G_OBJECT (chooser->program_button), "visible", G_OBJECT (label), "visible");
-  exo_binding_new (G_OBJECT (chooser), "mutable", G_OBJECT (chooser->program_button), "sensitive");
+  g_object_bind_property (G_OBJECT (chooser->program_button), "visible",
+                          G_OBJECT (label), "visible",
+                          G_BINDING_SYNC_CREATE);
+  g_object_bind_property (G_OBJECT (chooser), "mutable",
+                          G_OBJECT (chooser->program_button), "sensitive",
+                          G_BINDING_SYNC_CREATE);
   g_signal_connect_swapped (G_OBJECT (chooser->program_button), "toggled", G_CALLBACK (thunar_permissions_chooser_program_toggled), chooser);
   gtk_table_attach (GTK_TABLE (chooser->table), chooser->program_button, 1, 2, row, row + 1, GTK_FILL, GTK_FILL, 0, 0);
   thunar_gtk_label_set_a11y_relation (GTK_LABEL (label), chooser->program_button);
@@ -342,8 +354,12 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   row += 1;
 
   hbox = gtk_hbox_new (FALSE, 6);
-  exo_binding_new (G_OBJECT (chooser), "mutable", G_OBJECT (hbox), "sensitive");
-  exo_binding_new (G_OBJECT (chooser->program_button), "visible", G_OBJECT (hbox), "visible");
+  g_object_bind_property (G_OBJECT (chooser), "mutable",
+                          G_OBJECT (hbox), "sensitive",
+                          G_BINDING_SYNC_CREATE);
+  g_object_bind_property (G_OBJECT (chooser->program_button), "visible",
+                          G_OBJECT (hbox), "visible",
+                          G_BINDING_SYNC_CREATE);
   gtk_table_attach (GTK_TABLE (chooser->table), hbox, 1, 2, row, row + 1, GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (hbox);
 
@@ -358,7 +374,9 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   gtk_widget_show (label);
 
   hbox = gtk_hbox_new (FALSE, 6);
-  exo_binding_new (G_OBJECT (chooser), "mutable", G_OBJECT (hbox), "sensitive");
+  g_object_bind_property (G_OBJECT (chooser), "mutable",
+                          G_OBJECT (hbox), "sensitive",
+                          G_BINDING_SYNC_CREATE);
   gtk_table_attach (GTK_TABLE (chooser->table), hbox, 1, 2, row, row + 1, GTK_FILL, GTK_FILL, 0, 0);
   gtk_widget_show (hbox);
 
@@ -369,7 +387,9 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   chooser->fixperm_label = gtk_label_new (_("The folder permissions are inconsistent, you\nmay not be able to work with files in this folder."));
   gtk_misc_set_alignment (GTK_MISC (chooser->fixperm_label), 0.0f, 0.5f);
   gtk_label_set_attributes (GTK_LABEL (chooser->fixperm_label), thunar_pango_attr_list_small_italic ());
-  exo_binding_new (G_OBJECT (chooser->fixperm_label), "visible", G_OBJECT (hbox), "visible");
+  g_object_bind_property (G_OBJECT (chooser->fixperm_label), "visible",
+                          G_OBJECT (hbox), "visible",
+                          G_BINDING_SYNC_CREATE);
   gtk_box_pack_start (GTK_BOX (hbox), chooser->fixperm_label, TRUE, TRUE, 0);
   gtk_widget_show (chooser->fixperm_label);
 
@@ -382,7 +402,9 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
   chooser->fixperm_button = gtk_button_new_with_mnemonic (_("Correct _folder permissions..."));
   gtk_widget_set_tooltip_text (chooser->fixperm_button, _("Click here to automatically fix the folder permissions."));
   g_signal_connect_swapped (G_OBJECT (chooser->fixperm_button), "clicked", G_CALLBACK (thunar_permissions_chooser_fixperm_clicked), chooser);
-  exo_binding_new (G_OBJECT (chooser->fixperm_button), "visible", G_OBJECT (hbox), "visible");
+  g_object_bind_property (G_OBJECT (chooser->fixperm_button), "visible",
+                          G_OBJECT (hbox), "visible",
+                          G_BINDING_SYNC_CREATE);
   gtk_box_pack_end (GTK_BOX (hbox), chooser->fixperm_button, FALSE, FALSE, 0);
   gtk_widget_show (chooser->fixperm_button);
 
@@ -392,7 +414,9 @@ thunar_permissions_chooser_init (ThunarPermissionsChooser *chooser)
 
   chooser->job_progress = gtk_progress_bar_new ();
   gtk_progress_bar_set_text (GTK_PROGRESS_BAR (chooser->job_progress), _("Please wait..."));
-  exo_binding_new (G_OBJECT (chooser->job_progress), "visible", G_OBJECT (hbox), "visible");
+  g_object_bind_property (G_OBJECT (chooser->job_progress), "visible",
+                          G_OBJECT (hbox), "visible",
+                          G_BINDING_SYNC_CREATE);
   gtk_box_pack_start (GTK_BOX (hbox), chooser->job_progress, TRUE, TRUE, 0);
 
   button = gtk_button_new ();

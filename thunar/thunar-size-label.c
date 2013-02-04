@@ -143,7 +143,9 @@ thunar_size_label_init (ThunarSizeLabel *size_label)
 
   /* add the spinner widget */
   size_label->spinner = gtk_spinner_new ();
-  exo_binding_new (G_OBJECT (size_label->spinner), "visible", G_OBJECT (ebox), "visible");
+  g_object_bind_property (G_OBJECT (size_label->spinner), "visible",
+                          G_OBJECT (ebox), "visible",
+                          G_BINDING_SYNC_CREATE);
   gtk_container_add (GTK_CONTAINER (ebox), size_label->spinner);
   gtk_widget_show (size_label->spinner);
 
@@ -377,7 +379,7 @@ thunar_size_label_status_update (ThunarDeepCountJob *job,
       size_string = g_format_size (total_size);
       text = g_strdup_printf (ngettext ("%u item, totalling %s", "%u items, totalling %s", n), n, size_string);
       g_free (size_string);
-      
+
       if (unreadable_directory_count > 0)
         {
           /* TRANSLATORS: this is shows if during the deep count size
@@ -386,7 +388,7 @@ thunar_size_label_status_update (ThunarDeepCountJob *job,
           g_free (text);
           text = unreable_text;
         }
-      
+
       gtk_label_set_text (GTK_LABEL (size_label->label), text);
       g_free (text);
     }

@@ -795,7 +795,9 @@ thunar_window_init (ThunarWindow *window)
   window->launcher = thunar_launcher_new ();
   thunar_launcher_set_widget (window->launcher, GTK_WIDGET (window));
   thunar_component_set_ui_manager (THUNAR_COMPONENT (window->launcher), window->ui_manager);
-  exo_binding_new (G_OBJECT (window), "current-directory", G_OBJECT (window->launcher), "current-directory");
+  g_object_bind_property (G_OBJECT (window), "current-directory",
+                          G_OBJECT (window->launcher), "current-directory",
+                          G_BINDING_SYNC_CREATE);
   g_signal_connect_swapped (G_OBJECT (window->launcher), "change-directory", G_CALLBACK (thunar_window_set_current_directory), window);
   g_signal_connect_swapped (G_OBJECT (window->launcher), "open-new-tab", G_CALLBACK (thunar_window_notebook_insert), window);
 
@@ -828,8 +830,9 @@ thunar_window_init (ThunarWindow *window)
   /* place the spinner into the menu item */
   window->spinner = gtk_spinner_new ();
   gtk_container_add (GTK_CONTAINER (item), window->spinner);
-  exo_binding_new (G_OBJECT (window->spinner), "active",
-                   G_OBJECT (window->spinner), "visible");
+  g_object_bind_property (G_OBJECT (window->spinner), "active",
+                          G_OBJECT (window->spinner), "visible",
+                          G_BINDING_SYNC_CREATE);
 
   /* check if we need to add the root warning */
   if (G_UNLIKELY (geteuid () == 0))
@@ -1729,8 +1732,12 @@ thunar_window_notebook_insert (ThunarWindow *window,
   label_box = gtk_hbox_new (FALSE, 0);
 
   label = gtk_label_new (NULL);
-  exo_binding_new (G_OBJECT (view), "display-name", G_OBJECT (label), "label");
-  exo_binding_new (G_OBJECT (view), "tooltip-text", G_OBJECT (label), "tooltip-text");
+  g_object_bind_property (G_OBJECT (view), "display-name",
+                          G_OBJECT (label), "label",
+                          G_BINDING_SYNC_CREATE);
+  g_object_bind_property (G_OBJECT (view), "tooltip-text",
+                          G_OBJECT (label), "tooltip-text",
+                          G_BINDING_SYNC_CREATE);
   gtk_widget_set_has_tooltip (label, TRUE);
   gtk_misc_set_alignment (GTK_MISC (label), 0.0f, 0.5f);
   gtk_misc_set_padding (GTK_MISC (label), 3, 3);
@@ -1807,7 +1814,9 @@ thunar_window_install_location_bar (ThunarWindow *window,
     {
       /* allocate the new location bar widget */
       window->location_bar = g_object_new (type, "ui-manager", window->ui_manager, NULL);
-      exo_binding_new (G_OBJECT (window), "current-directory", G_OBJECT (window->location_bar), "current-directory");
+      g_object_bind_property (G_OBJECT (window), "current-directory",
+                              G_OBJECT (window->location_bar), "current-directory",
+                              G_BINDING_SYNC_CREATE);
       g_signal_connect_swapped (G_OBJECT (window->location_bar), "change-directory", G_CALLBACK (thunar_window_set_current_directory), window);
       g_signal_connect_swapped (G_OBJECT (window->location_bar), "open-new-tab", G_CALLBACK (thunar_window_notebook_insert), window);
 
@@ -1874,8 +1883,12 @@ thunar_window_install_sidepane (ThunarWindow *window,
       window->sidepane = g_object_new (type, NULL);
       gtk_widget_set_size_request (window->sidepane, 0, -1);
       thunar_component_set_ui_manager (THUNAR_COMPONENT (window->sidepane), window->ui_manager);
-      exo_binding_new (G_OBJECT (window), "show-hidden", G_OBJECT (window->sidepane), "show-hidden");
-      exo_binding_new (G_OBJECT (window), "current-directory", G_OBJECT (window->sidepane), "current-directory");
+      g_object_bind_property (G_OBJECT (window), "show-hidden",
+                              G_OBJECT (window->sidepane), "show-hidden",
+                              G_BINDING_SYNC_CREATE);
+      g_object_bind_property (G_OBJECT (window), "current-directory",
+                              G_OBJECT (window->sidepane), "current-directory",
+                              G_BINDING_SYNC_CREATE);
       g_signal_connect_swapped (G_OBJECT (window->sidepane), "change-directory", G_CALLBACK (thunar_window_set_current_directory), window);
       g_signal_connect_swapped (G_OBJECT (window->sidepane), "open-new-tab", G_CALLBACK (thunar_window_notebook_insert), window);
       gtk_paned_pack1 (GTK_PANED (window->paned), window->sidepane, FALSE, FALSE);
@@ -2978,7 +2991,12 @@ thunar_window_action_open_templates (GtkAction    *action,
       gtk_widget_show (label);
 
       button = gtk_check_button_new_with_mnemonic (_("Do _not display this message again"));
-      exo_mutual_binding_new_with_negation (G_OBJECT (window->preferences), "misc-show-about-templates", G_OBJECT (button), "active");
+      g_object_bind_property (G_OBJECT (window->preferences),
+                              "misc-show-about-templates",
+                              G_OBJECT (button), "active",
+                              G_BINDING_INVERT_BOOLEAN
+                              | G_BINDING_BIDIRECTIONAL
+                              | G_BINDING_SYNC_CREATE);
       gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 0);
       gtk_widget_show (button);
 
