@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Thunar by Distrotech</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Thunar</h1>
+          <h2>Mirror of git://git.xfce.org/xfce/Thunar</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/Distrotech/Thunar/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/Distrotech/Thunar/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/Distrotech/Thunar" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a name="what-is-it" class="anchor" href="#what-is-it"><span class="octicon octicon-link"></span></a>What is it?</h1>
+
+<p>Thunar is a modern file manager for the Unix/Linux desktop, aiming to be
+easy-to-use and fast.</p>
+
+<h1>
+<a name="required-packages" class="anchor" href="#required-packages"><span class="octicon octicon-link"></span></a>Required packages</h1>
+
+<p>Thunar depends on the following packages:</p>
+
+<ul>
+<li>perl 5.6 or above</li>
+<li>GTK+ 2.14.0 or above</li>
+<li>GLib 2.18.0 or above</li>
+<li>exo 0.5.1 or above</li>
+<li>intltool 0.30 or above</li>
+</ul><p>Thunar can optionally use the following packages:</p>
+
+<ul>
+<li>D-Bus 0.34 or above (strongly suggested)</li>
+<li>libstartup-notification 0.4 or above</li>
+<li>xfce4-panel 4.3.90 or above (for the trash applet)</li>
+<li>xfconf-query</li>
+</ul><h1>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h1>
+
+<p>The file 'INSTALL' contains generic installation instructions. For more
+detailed information, visit the Thunar website at <a href="http://thunar.xfce.org/">http://thunar.xfce.org/</a>.</p>
+
+<h1>
+<a name="debugging-support" class="anchor" href="#debugging-support"><span class="octicon octicon-link"></span></a>Debugging Support</h1>
+
+<p>Thunar currently supports four different levels of debugging support, which
+can be setup using the configure flag <code>--enable-debug' (check the output of
+</code>configure --help'):</p>
+
+<p>`full'    Use this if you want to debug Thunar to locate a bug. The
+        build will most probably be noticably slower. This is also
+        recommended for people that want to develop Thunar stuff.</p>
+
+<p>`yes'     This is the default for SVN snapshot builds. It adds all
+        kinds of checks to the code, and is therefore likely to run
+        slower. Use this if you want to develop for Thunar (e.g.
+        writing Thunar extensions and such).</p>
+
+<p>`minimum' This is the default for release builds, and presents the
+        recommended behaviour.</p>
+
+<p>`no'      Disables all sanity checks. Don't use this unless you know
+        exactly what you do.</p>
+
+<h1>
+<a name="standards-compliance" class="anchor" href="#standards-compliance"><span class="octicon octicon-link"></span></a>Standards compliance</h1>
+
+<p>Thunar supports the following standards/specifications:</p>
+
+<ul>
+<li><p>XDG Base Directory Specification
+<a href="http://freedesktop.org/wiki/Standards_2fbasedir_2dspec">http://freedesktop.org/wiki/Standards_2fbasedir_2dspec</a></p></li>
+<li><p>Shared MIME Database Specification
+<a href="http://freedesktop.org/wiki/Standards_2fshared_2dmime_2dinfo_2dspec">http://freedesktop.org/wiki/Standards_2fshared_2dmime_2dinfo_2dspec</a></p></li>
+<li><p>X Direct Save (XDS) Protocol for the X Window System
+<a href="http://freedesktop.org/wiki/Standards_2fdirect_2dsave">http://freedesktop.org/wiki/Standards_2fdirect_2dsave</a></p></li>
+<li><p>Icon Theme Specification
+<a href="http://freedesktop.org/wiki/Standards_2ficon_2dtheme_2dspec">http://freedesktop.org/wiki/Standards_2ficon_2dtheme_2dspec</a></p></li>
+<li><p>Thumbnail Managing Standard
+<a href="http://jens.triq.net/thumbnail-spec/index.html">http://jens.triq.net/thumbnail-spec/index.html</a></p></li>
+<li><p>File URI Specification
+<a href="http://freedesktop.org/wiki/Standards_2ffile_2duri_2dspec">http://freedesktop.org/wiki/Standards_2ffile_2duri_2dspec</a></p></li>
+<li><p>Desktop Trash Can Specification
+<a href="http://freedesktop.org/wiki/Standards_2ftrash_2dspec">http://freedesktop.org/wiki/Standards_2ftrash_2dspec</a></p></li>
+</ul><h1>
+<a name="how-to-report-bugs" class="anchor" href="#how-to-report-bugs"><span class="octicon octicon-link"></span></a>How to report bugs?</h1>
+
+<p>Bugs should be reported to the Xfce bug tracking system
+(<a href="http://bugzilla.xfce.org">http://bugzilla.xfce.org</a>, product Thunar). You will need to
+create an account for yourself.</p>
+
+<p>Please read the HACKING file for information on where to send
+changes or bugfixes for this package.</p>
+        </section>
+
+        <footer>
+          Thunar is maintained by <a href="https://github.com/Distrotech">Distrotech</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
