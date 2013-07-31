@@ -38,6 +38,8 @@ static void     thunar_desktop_window_size_request              (GtkWidget      
                                                                  GtkRequisition           *requisition);
 static void     thunar_desktop_window_realize                   (GtkWidget                *widget);
 static void     thunar_desktop_window_unrealize                 (GtkWidget                *widget);
+static void     thunar_desktop_window_style_set                 (GtkWidget                *widget,
+                                                                 GtkStyle                 *old_style);
 static gboolean thunar_desktop_window_expose_event              (GtkWidget                *widget,
                                                                  GdkEventExpose           *event);
 static gboolean thunar_desktop_window_button_press_event        (GtkWidget                *widget,
@@ -46,6 +48,7 @@ static gboolean thunar_desktop_window_scroll_event              (GtkWidget      
                                                                  GdkEventScroll           *event);
 static gboolean thunar_desktop_window_delete_event              (GtkWidget                *widget,
                                                                  GdkEventAny              *event);
+
 
 
 struct _ThunarDesktopWindowClass
@@ -75,6 +78,7 @@ thunar_desktop_window_class_init (ThunarDesktopWindowClass *klass)
   gtkwidget_class->size_request = thunar_desktop_window_size_request;
   gtkwidget_class->realize = thunar_desktop_window_realize;
   gtkwidget_class->unrealize = thunar_desktop_window_unrealize;
+  gtkwidget_class->style_set = thunar_desktop_window_style_set;
   gtkwidget_class->expose_event = thunar_desktop_window_expose_event;
   gtkwidget_class->button_press_event = thunar_desktop_window_button_press_event;
   gtkwidget_class->scroll_event = thunar_desktop_window_scroll_event;
@@ -191,6 +195,19 @@ thunar_desktop_window_unrealize (GtkWidget *widget)
   gdk_property_delete (root, gdk_atom_intern ("XFCE_DESKTOP_WINDOW", FALSE));
 
   GTK_WIDGET_CLASS (thunar_desktop_window_parent_class)->unrealize (widget);
+}
+
+
+
+static void
+thunar_desktop_window_style_set (GtkWidget *widget,
+                                 GtkStyle  *old_style)
+{
+  if (old_style != NULL)
+    {
+      /* redraw to apply on top of new style */
+      gtk_widget_queue_draw (widget);
+    }
 }
 
 
