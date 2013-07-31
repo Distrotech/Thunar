@@ -56,7 +56,7 @@ static gboolean thunar_desktop_preferences_dialog_configure_event           (Gtk
 static void     thunar_desktop_preferences_dialog_response                  (GtkDialog                      *dialog,
                                                                              gint                            response);
 static void     thunar_desktop_preferences_dialog_background_changed        (ThunarDesktopPreferencesDialog *dialog);
-static void     thunar_desktop_preferences_dialog_background_prop           (ThunarDesktopPreferencesDialog *dialog);
+static gboolean thunar_desktop_preferences_dialog_background_prop           (ThunarDesktopPreferencesDialog *dialog);
 static gboolean thunar_desktop_preferences_dialog_update                    (gpointer                        data);
 static void     thunar_desktop_preferences_dialog_folder_changed            (ThunarDesktopPreferencesDialog *dialog);
 static void     thunar_desktop_preferences_dialog_style_changed             (ThunarDesktopPreferencesDialog *dialog);
@@ -168,7 +168,7 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
 
   /* configure the dialog properties */
   gtk_window_set_icon_name (GTK_WINDOW (dialog), "preferences-desktop-wallpaper");
-  gtk_window_set_default_size (GTK_WINDOW (dialog), 900, 700);
+  gtk_window_set_default_size (GTK_WINDOW (dialog), 635, 575);
 
   /* add "Help" and "Close" buttons */
   gtk_dialog_add_buttons (GTK_DIALOG (dialog),
@@ -284,7 +284,7 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
   gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, TRUE, 0);
   gtk_widget_show (hbox);
 
-  button = gtk_check_button_new_with_mnemonic (_("Ch_ange background(s)"));
+  button = gtk_check_button_new_with_mnemonic (_("Ch_ange backgrounds"));
   gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, TRUE, 0);
   xfconf_g_property_bind (dialog->settings, "/background/cycle/enabled",
                           G_TYPE_BOOLEAN, button, "active");
@@ -497,7 +497,8 @@ thunar_desktop_preferences_dialog_update (gpointer data)
   dialog->dialog_update_timeout = 0;
 
   /* update the base property */
-  thunar_desktop_preferences_dialog_background_prop (dialog);
+  if (!thunar_desktop_preferences_dialog_background_prop (dialog))
+    return FALSE;
 
   /* background image */
   g_snprintf (prop, sizeof (prop), "%s/uri", dialog->background_prop);
@@ -583,7 +584,7 @@ thunar_desktop_preferences_dialog_background_changed (ThunarDesktopPreferencesDi
 
 
 
-static void
+static gboolean
 thunar_desktop_preferences_dialog_background_prop (ThunarDesktopPreferencesDialog *dialog)
 {
   GdkScreen *screen;
@@ -591,8 +592,8 @@ thunar_desktop_preferences_dialog_background_prop (ThunarDesktopPreferencesDialo
   gchar     *monitor_name;
   gchar     *nice_name;
   gchar     *title;
-
-  g_free (dialog->background_prop);
+  gchar     *prop;
+  gboolean   changed;
 
   screen = gtk_window_get_screen (GTK_WINDOW (dialog));
   monitor_num = gdk_screen_get_monitor_at_window (screen, gtk_widget_get_window (GTK_WIDGET (dialog)));
@@ -626,11 +627,18 @@ thunar_desktop_preferences_dialog_background_prop (ThunarDesktopPreferencesDialo
     monitor_name = g_strdup_printf ("monitor-%d", monitor_num);
 
   /* xfconf base property for settings in this dialog */
-  dialog->background_prop = g_strdup_printf ("/background/screen-%d/%s",
-                                             gdk_screen_get_number (screen),
-                                             monitor_name);
+  prop = g_strdup_printf ("/background/screen-%d/%s",
+                          gdk_screen_get_number (screen),
+                          monitor_name);
+
+  changed = g_strcmp0 (prop, dialog->background_prop) != 0;
+
+  g_free (dialog->background_prop);
+  dialog->background_prop = prop;
 
   g_free (monitor_name);
+
+  return changed;
 }
 
 

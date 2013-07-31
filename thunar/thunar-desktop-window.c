@@ -21,6 +21,8 @@
 #include <config.h>
 #endif
 
+#include <libxfce4util/libxfce4util.h>
+
 #include <thunar/thunar-private.h>
 #include <thunar/thunar-desktop-window.h>
 #include <thunar/thunar-desktop-background.h>
@@ -40,7 +42,10 @@ static gboolean thunar_desktop_window_expose_event              (GtkWidget      
                                                                  GdkEventExpose           *event);
 static gboolean thunar_desktop_window_button_press_event        (GtkWidget                *widget,
                                                                  GdkEventButton           *event);
-
+static gboolean thunar_desktop_window_scroll_event              (GtkWidget                *widget,
+                                                                 GdkEventScroll           *event);
+static gboolean thunar_desktop_window_delete_event              (GtkWidget                *widget,
+                                                                 GdkEventAny              *event);
 
 
 struct _ThunarDesktopWindowClass
@@ -72,6 +77,8 @@ thunar_desktop_window_class_init (ThunarDesktopWindowClass *klass)
   gtkwidget_class->unrealize = thunar_desktop_window_unrealize;
   gtkwidget_class->expose_event = thunar_desktop_window_expose_event;
   gtkwidget_class->button_press_event = thunar_desktop_window_button_press_event;
+  gtkwidget_class->scroll_event = thunar_desktop_window_scroll_event;
+  gtkwidget_class->delete_event = thunar_desktop_window_delete_event;
 }
 
 
@@ -85,6 +92,8 @@ thunar_desktop_window_init (ThunarDesktopWindow *window)
   gtk_window_move (GTK_WINDOW (window), 0, 0);
   gtk_window_set_type_hint (GTK_WINDOW (window), GDK_WINDOW_TYPE_HINT_DESKTOP);
   gtk_widget_set_double_buffered (GTK_WIDGET (window), FALSE);
+  gtk_window_set_accept_focus (GTK_WINDOW (window), FALSE);
+  gtk_window_set_title (GTK_WINDOW (window), _("Desktop"));
 }
 
 
@@ -199,6 +208,8 @@ thunar_desktop_window_expose_event (GtkWidget      *widget,
                          event->area.x, event->area.y,
                          event->area.width, event->area.height);
 
+  /* TODO propagate children */
+
   return FALSE;
 }
 
@@ -222,6 +233,60 @@ thunar_desktop_window_button_press_event (GtkWidget      *widget,
     }
 
   return FALSE;
+}
+
+
+
+static gboolean
+thunar_desktop_window_scroll_event (GtkWidget      *widget,
+                                    GdkEventScroll *event)
+{
+#ifdef GDK_WINDOWING_X11
+  XButtonEvent  xev;
+  gint          button;
+  GdkWindow    *root_window;
+
+  root_window = gdk_screen_get_root_window (gtk_widget_get_screen (widget));
+
+  /* create an event for the root window */
+  xev.window = GDK_WINDOW_XWINDOW (root_window);
+  xev.button = event->direction + 4;
+  xev.x = event->x; /* needed for icewm */
+  xev.y = event->y;
+  xev.x_root = event->x_root;
+  xev.y_root = event->y_root;
+  xev.state = event->state;
+  xev.root =  xev.window;
+  xev.subwindow = None;
+  xev.time = event->time;
+  xev.same_screen = True;
+
+  /* send a button press and release */
+  for (button = ButtonPress; button < ButtonRelease; button++)
+    {
+      xev.type = button;
+
+      /* forward event to root window */
+      XSendEvent (GDK_WINDOW_XDISPLAY (root_window),
+                  xev.window, False,
+                  ButtonPressMask | ButtonReleaseMask,
+                  (XEvent *) &xev);
+    }
+#endif
+
+  return TRUE;
+}
+
+
+
+static gboolean
+thunar_desktop_window_delete_event (GtkWidget   *widget,
+                                    GdkEventAny *event)
+{
+  /* TODO: hoopup session logout handler here */
+
+  /* never close the window */
+  return TRUE;
 }
 
 

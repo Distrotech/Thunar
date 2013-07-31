@@ -82,7 +82,7 @@ thunar_desktop_background_icon_view_init (ThunarDesktopBackgroundIconView *icon_
   /* only a single selection is possible */
   exo_view = gtk_bin_get_child (GTK_BIN (icon_view));
   exo_icon_view_set_selection_mode (EXO_ICON_VIEW (exo_view), GTK_SELECTION_BROWSE);
-  exo_icon_view_set_enable_search (EXO_ICON_VIEW (exo_view), TRUE);
+  exo_icon_view_set_enable_search (EXO_ICON_VIEW (exo_view), FALSE);
 
   /* setup the icon renderer */
   g_object_set (G_OBJECT (THUNAR_STANDARD_VIEW (icon_view)->icon_renderer),
