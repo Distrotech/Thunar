@@ -123,7 +123,7 @@ main (int argc, char **argv)
   gchar               *working_directory;
   gchar              **filenames = NULL;
   const gchar         *startup_id;
-  GtkWidget           *window;
+  gboolean             result;
 
   /* setup translation domain */
   xfce_textdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR, "UTF-8");
@@ -206,14 +206,6 @@ main (int argc, char **argv)
     }
 #endif
 
-  if (G_UNLIKELY (opt_desktop))
-    {
-      window = thunar_desktop_window_new ();
-      gtk_widget_show (window);
-      gtk_main ();
-      return 0;
-    }
-
   /* determine the current working directory */
   working_directory = g_get_current_dir ();
 
@@ -232,7 +224,7 @@ main (int argc, char **argv)
       filenames = g_new (gchar *, 1);
       filenames[0] = NULL;
     }
-  else if (!opt_daemon)
+  else if (!opt_daemon && !opt_desktop)
     {
       /* use the current working directory */
       filenames = g_new (gchar *, 2);
@@ -242,8 +234,16 @@ main (int argc, char **argv)
 
 #ifdef HAVE_DBUS
   /* check if we can reuse an existing instance */
-  if ((!opt_bulk_rename && filenames != NULL && thunar_dbus_client_launch_files (working_directory, filenames, NULL, startup_id, NULL))
-      || (opt_bulk_rename && thunar_dbus_client_bulk_rename (working_directory, filenames, TRUE, NULL, startup_id, NULL)))
+  if (opt_bulk_rename)
+    result = thunar_dbus_client_bulk_rename (working_directory, filenames, TRUE, NULL, startup_id, NULL);
+  else if (opt_desktop)
+    result = thunar_dbus_client_manage_desktop (NULL);
+  else if (filenames != NULL)
+    result = thunar_dbus_client_launch_files (working_directory, filenames, NULL, startup_id, NULL);
+  else
+    result = FALSE;
+
+  if (result)
     {
       /* that worked, let's get outa here */
       g_free (working_directory);
@@ -260,7 +260,7 @@ main (int argc, char **argv)
 
 #ifdef HAVE_DBUS
   /* setup daemon mode if requested and supported */
-  thunar_application_set_daemon (application, opt_daemon);
+  thunar_application_set_daemon (application, opt_daemon || opt_desktop);
 #endif
 
   /* use the Thunar icon as default for new windows */
@@ -272,6 +272,11 @@ main (int argc, char **argv)
       /* try to open the bulk rename dialog */
       if (!thunar_application_bulk_rename (application, working_directory, filenames, TRUE, NULL, startup_id, &error))
         goto error0;
+    }
+  else if (G_UNLIKELY (opt_desktop))
+    {
+      /* show desktop windows */
+      thunar_desktop_window_show_all ();
     }
   else if (filenames != NULL && !thunar_application_process_filenames (application, working_directory, filenames, NULL, startup_id, &error))
     {

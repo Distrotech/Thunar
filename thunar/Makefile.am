@@ -288,7 +288,9 @@ thunar_LDADD +=								\
 endif
 
 desktopdir = $(datadir)/applications
-desktop_in_files = thunar-settings.desktop.in
+desktop_in_files = \
+  thunar-settings.desktop.in \
+  thunar-desktop-settings.desktop.in
 desktop_DATA = $(desktop_in_files:.desktop.in=.desktop)
 @INTLTOOL_DESKTOP_RULE@
 
@@ -301,7 +303,7 @@ clean-local:
 	rm -f *.core core core.*
 
 DISTCLEANFILES =							\
-	thunar-settings.desktop
+	$(desktop_DATA)
 
 if MAINTAINER_MODE
 CLEANFILES =								\

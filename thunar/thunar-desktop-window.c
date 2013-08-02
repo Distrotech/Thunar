@@ -26,7 +26,7 @@
 #include <thunar/thunar-private.h>
 #include <thunar/thunar-desktop-window.h>
 #include <thunar/thunar-desktop-background.h>
-#include <thunar/thunar-desktop-preferences-dialog.h>
+#include <thunar/thunar-application.h>
 
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
@@ -236,16 +236,14 @@ static gboolean
 thunar_desktop_window_button_press_event (GtkWidget      *widget,
                                           GdkEventButton *event)
 {
-  ThunarDesktopWindow *window = THUNAR_DESKTOP_WINDOW (widget);
-  GtkWidget           *dialog;
+  //ThunarDesktopWindow *window = THUNAR_DESKTOP_WINDOW (widget);
 
   if (event->type == GDK_BUTTON_PRESS)
     {
       if (event->button == 3
           || (event->button == 1 && (event->state & GDK_SHIFT_MASK) != 0))
         {
-          dialog = thunar_desktop_preferences_dialog_new (GTK_WINDOW (window));
-          gtk_widget_show (dialog);
+
         }
     }
 
@@ -309,16 +307,35 @@ thunar_desktop_window_delete_event (GtkWidget   *widget,
 
 
 /**
- * thunar_desktop_window_new:
+ * thunar_desktop_window_show_all:
  *
- * Allocates a new #ThunarDesktopWindow instance.
- *
- * Return value: the newly allocated #ThunarDesktopWindow.
+ * Create a new window for each screen.
  **/
-GtkWidget*
-thunar_desktop_window_new (void)
+void
+thunar_desktop_window_show_all (void)
 {
-  return thunar_desktop_window_new_with_screen (gdk_screen_get_default ());
+  GdkDisplay        *display = gdk_display_get_default ();
+  gint               n_screens, n;
+  GdkScreen         *screen;
+  GtkWidget         *desktop;
+  ThunarApplication *application;
+  gboolean           managing_desktop;
+
+  /* check if there are already desktop windows */
+  application = thunar_application_get ();
+  managing_desktop = thunar_application_has_desktop_windows (application);
+  g_object_unref (application);
+
+  if (!managing_desktop)
+    {
+      n_screens = gdk_display_get_n_screens (display);
+      for (n = 0; n < n_screens; n++)
+        {
+          screen = gdk_display_get_screen (display, n);
+          desktop = thunar_desktop_window_new_with_screen (screen);
+          gtk_widget_show (desktop);
+        }
+    }
 }
 
 
@@ -335,8 +352,15 @@ thunar_desktop_window_new (void)
 GtkWidget*
 thunar_desktop_window_new_with_screen (GdkScreen *screen)
 {
+  GtkWidget         *desktop;
+  ThunarApplication *application;
+
   g_return_val_if_fail (GDK_IS_SCREEN (screen), NULL);
-  return g_object_new (THUNAR_TYPE_DESKTOP_WINDOW,
-                       "screen", screen,
-                       NULL);
+  desktop = g_object_new (THUNAR_TYPE_DESKTOP_WINDOW, "screen", screen, NULL);
+
+  application = thunar_application_get ();
+  thunar_application_take_window (application, GTK_WINDOW (desktop));
+  g_object_unref (application);
+
+  return desktop;
 }

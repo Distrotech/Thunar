@@ -24,20 +24,22 @@
 
 G_BEGIN_DECLS;
 
-gboolean thunar_dbus_client_bulk_rename  (const gchar *working_directory,
-                                          gchar      **filenames,
-                                          gboolean     standalone,
-                                          GdkScreen   *screen,
-                                          const gchar *startup_id,
-                                          GError     **error);
+gboolean thunar_dbus_client_bulk_rename    (const gchar *working_directory,
+                                            gchar      **filenames,
+                                            gboolean     standalone,
+                                            GdkScreen   *screen,
+                                            const gchar *startup_id,
+                                            GError     **error);
 
-gboolean thunar_dbus_client_launch_files (const gchar *working_directory,
-                                          gchar      **filenames,
-                                          GdkScreen   *screen,
-                                          const gchar *startup_id,
-                                          GError     **error);
+gboolean thunar_dbus_client_launch_files   (const gchar *working_directory,
+                                            gchar      **filenames,
+                                            GdkScreen   *screen,
+                                            const gchar *startup_id,
+                                            GError     **error);
 
-gboolean thunar_dbus_client_terminate    (GError     **error);
+gboolean thunar_dbus_client_manage_desktop (GError     **error);
+
+gboolean thunar_dbus_client_terminate      (GError     **error);
 
 G_END_DECLS;
 

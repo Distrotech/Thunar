@@ -58,6 +58,7 @@
 #include <thunar/thunar-thumbnailer.h>
 #include <thunar/thunar-util.h>
 #include <thunar/thunar-view.h>
+#include <thunar/thunar-desktop-window.h>
 
 #define ACCEL_MAP_PATH "Thunar/accels.scm"
 
@@ -901,6 +902,7 @@ thunar_application_get_windows (ThunarApplication *application)
 }
 
 
+
 /**
  * thunar_application_has_windows:
  * @application : a #ThunarApplication.
@@ -914,6 +916,30 @@ thunar_application_has_windows (ThunarApplication *application)
 {
   _thunar_return_val_if_fail (THUNAR_IS_APPLICATION (application), FALSE);
   return (application->windows != NULL);
+}
+
+
+
+/**
+ * thunar_application_has_desktop_windows:
+ * @application : a #ThunarApplication.
+ *
+ * Returns %TRUE if @application controls atleast one desktop window.
+ *
+ * Return value: %TRUE if @application controls atleast one desktop window.
+ **/
+gboolean
+thunar_application_has_desktop_windows (ThunarApplication *application)
+{
+  GList *lp;
+
+  _thunar_return_val_if_fail (THUNAR_IS_APPLICATION (application), FALSE);
+
+  for (lp = application->windows; lp != NULL; lp = lp->next)
+    if (THUNAR_IS_DESKTOP_WINDOW (lp->data))
+      break;
+
+  return (lp != NULL);
 }
 
 

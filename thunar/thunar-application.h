@@ -50,6 +50,8 @@ GList                *thunar_application_get_windows                (ThunarAppli
 
 gboolean              thunar_application_has_windows                (ThunarApplication *application);
 
+gboolean              thunar_application_has_desktop_windows        (ThunarApplication *application);
+
 void                  thunar_application_take_window                (ThunarApplication *application,
                                                                      GtkWindow         *window);
 

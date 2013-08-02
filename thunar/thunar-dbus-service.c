@@ -44,6 +44,8 @@
 #include <thunar/thunar-file.h>
 #include <thunar/thunar-gdk-extensions.h>
 #include <thunar/thunar-preferences-dialog.h>
+#include <thunar/thunar-desktop-preferences-dialog.h>
+#include <thunar/thunar-desktop-window.h>
 #include <thunar/thunar-private.h>
 #include <thunar/thunar-properties-dialog.h>
 #include <thunar/thunar-util.h>
@@ -111,6 +113,10 @@ static gboolean thunar_dbus_service_execute                     (ThunarDBusServi
                                                                  const gchar            *startup_id,
                                                                  GError                **error);
 static gboolean thunar_dbus_service_display_preferences_dialog  (ThunarDBusService      *dbus_service,
+                                                                 const gchar            *display,
+                                                                 const gchar            *startup_id,
+                                                                 GError                **error);
+static gboolean thunar_dbus_service_display_desktop_dialog      (ThunarDBusService      *dbus_service,
                                                                  const gchar            *display,
                                                                  const gchar            *startup_id,
                                                                  GError                **error);
@@ -193,6 +199,8 @@ static gboolean thunar_dbus_service_unlink_files                (ThunarDBusServi
                                                                  gchar                 **filenames,
                                                                  const gchar            *display,
                                                                  const gchar            *startup_id,
+                                                                 GError                **error);
+static gboolean thunar_dbus_service_manage_desktop              (ThunarDBusService      *dbus_service,
                                                                  GError                **error);
 static gboolean thunar_dbus_service_terminate                   (ThunarDBusService      *dbus_service,
                                                                  GError                **error);
@@ -656,6 +664,40 @@ thunar_dbus_service_display_preferences_dialog (ThunarDBusService *dbus_service,
 
   /* popup the preferences dialog... */
   dialog = thunar_preferences_dialog_new (NULL);
+  gtk_window_set_screen (GTK_WINDOW (dialog), screen);
+  gtk_window_set_startup_id (GTK_WINDOW (dialog), startup_id);
+  gtk_widget_show (GTK_WIDGET (dialog));
+
+  /* ...and let the application take care of it */
+  application = thunar_application_get ();
+  thunar_application_take_window (application, GTK_WINDOW (dialog));
+  g_object_unref (G_OBJECT (application));
+
+  /* cleanup */
+  g_object_unref (G_OBJECT (screen));
+
+  return TRUE;
+}
+
+
+
+static gboolean
+thunar_dbus_service_display_desktop_dialog (ThunarDBusService *dbus_service,
+                                            const gchar       *display,
+                                            const gchar       *startup_id,
+                                            GError           **error)
+{
+  ThunarApplication *application;
+  GdkScreen         *screen;
+  GtkWidget         *dialog;
+
+  /* try to open the screen for the display name */
+  screen = thunar_gdk_screen_open (display, error);
+  if (G_UNLIKELY (screen == NULL))
+    return FALSE;
+
+  /* popup the preferences dialog... */
+  dialog = thunar_desktop_preferences_dialog_new (NULL);
   gtk_window_set_screen (GTK_WINDOW (dialog), screen);
   gtk_window_set_startup_id (GTK_WINDOW (dialog), startup_id);
   gtk_widget_show (GTK_WIDGET (dialog));
@@ -1307,6 +1349,19 @@ thunar_dbus_service_unlink_files (ThunarDBusService  *dbus_service,
       return FALSE;
     }
 
+  return TRUE;
+}
+
+
+
+static gboolean
+thunar_dbus_service_manage_desktop (ThunarDBusService *dbus_service,
+                                    GError           **error)
+{
+  /* show desktop windows */
+  thunar_desktop_window_show_all ();
+
+  /* we cannot fail */
   return TRUE;
 }
 

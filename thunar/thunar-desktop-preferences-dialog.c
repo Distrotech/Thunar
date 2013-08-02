@@ -744,7 +744,17 @@ thunar_desktop_preferences_dialog_cycle_time_changed (ThunarDesktopPreferencesDi
 GtkWidget *
 thunar_desktop_preferences_dialog_new (GtkWindow *parent)
 {
-  return g_object_new (THUNAR_TYPE_DESKTOP_PREFERENCES_DIALOG,
-                       "screen", gtk_window_get_screen (parent), NULL);
+  GtkWidget *dialog;
+  GdkScreen *screen;
+
+  dialog = g_object_new (THUNAR_TYPE_DESKTOP_PREFERENCES_DIALOG, NULL);
+
+  if (parent != NULL)
+    {
+      screen = gtk_window_get_screen (parent);
+      gtk_window_set_screen (GTK_WINDOW (dialog), screen);
+    }
+
+  return dialog;
 }
 

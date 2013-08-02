@@ -241,6 +241,72 @@ thunar_dbus_client_launch_files (const gchar *working_directory,
 
 
 /**
+ * thunar_dbus_client_manage_desktop:
+ * @error : Return location for errors or %NULL.
+ *
+ * Tells a running Thunar instance, connected to the D-BUS
+ * session bus, to open the desktop.
+ *
+ * Return value: %TRUE if any desktop was started (or was already
+ *               running) else %FALSE.
+ **/
+gboolean
+thunar_dbus_client_manage_desktop (GError **error)
+{
+  DBusConnection *connection;
+  DBusMessage    *message;
+  DBusMessage    *result;
+  DBusError       derror;
+
+  _thunar_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  /* initialize the DBusError struct */
+  dbus_error_init (&derror);
+
+  /* try to connect to the session bus */
+  connection = dbus_bus_get (DBUS_BUS_SESSION, &derror);
+  if (G_UNLIKELY (connection == NULL))
+    {
+      dbus_set_g_error (error, &derror);
+      dbus_error_free (&derror);
+      return FALSE;
+    }
+
+  /* generate the LaunchFiles() method (disable activation!) */
+  message = dbus_message_new_method_call ("org.xfce.Thunar", "/org/xfce/FileManager", "org.xfce.Thunar", "ManageDesktop");
+  dbus_message_set_auto_start (message, FALSE);
+
+  /* send the message and release our references on connection and message */
+  dbus_error_init (&derror);
+  result = dbus_connection_send_with_reply_and_block (connection, message, -1, &derror);
+  dbus_message_unref (message);
+
+  /* check if no reply was received */
+  if (G_UNLIKELY (result == NULL))
+    {
+      dbus_set_g_error (error, &derror);
+      dbus_error_free (&derror);
+      return FALSE;
+    }
+
+  /* but maybe we received an error */
+  if (dbus_message_get_type (result) == DBUS_MESSAGE_TYPE_ERROR)
+    {
+      dbus_set_error_from_message (&derror, result);
+      dbus_set_g_error (error, &derror);
+      dbus_message_unref (result);
+      dbus_error_free (&derror);
+      return FALSE;
+    }
+
+  /* let's asume that it worked */
+  dbus_message_unref (result);
+  return TRUE;
+}
+
+
+
+/**
  * thunar_dbus_client_terminate:
  * @error : Return location for errors or %NULL.
  *

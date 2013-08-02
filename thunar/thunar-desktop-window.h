@@ -35,7 +35,7 @@ typedef struct _ThunarDesktopWindow      ThunarDesktopWindow;
 
 GType      thunar_desktop_window_get_type         (void) G_GNUC_CONST;
 
-GtkWidget *thunar_desktop_window_new              (void);
+void       thunar_desktop_window_show_all         (void);
 
 GtkWidget *thunar_desktop_window_new_with_screen  (GdkScreen *screen);
 

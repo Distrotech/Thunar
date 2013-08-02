@@ -166,6 +166,20 @@
 
 
     <!--
+      DisplayDesktopDialog (display : STRING) : VOID
+
+      display    : the screen on which to display the preferences dialog
+                   or "" to use the default screen of the file manager.
+      startup_id : the DESKTOP_STARTUP_ID environment variable for properly
+                   handling startup notification and focus stealing.
+    -->
+    <method name="DisplayDesktopDialog">
+      <arg direction="in" name="display" type="s" />
+      <arg direction="in" name="startup_id" type="s" />
+    </method>
+
+
+    <!--
       CopyTo (working_directory : STRING, source_filenames : ARRAY OF STRING, target_filenames : ARRAY OF STRING, display : STRING, startup_id : STRING) : VOID
 
       working_directory : working directory used to resolve relative filenames.
@@ -475,6 +489,14 @@
       <arg direction="in" name="standalone" type="b" />
       <arg direction="in" name="display" type="s" />
       <arg direction="in" name="startup_id" type="s" />
+    </method>
+
+    <!--
+      ManageDesktop () : VOID
+
+      Tells a running Thunar instance to manage the desktop.
+    -->
+    <method name="ManageDesktop">
     </method>
 
     <!--
