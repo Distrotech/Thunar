@@ -27,7 +27,6 @@ core.*
 core
 *.core
 *.desktop
-*.desktop.in
 *.service
 gtk-doc.make
 ThunarBulkRename
