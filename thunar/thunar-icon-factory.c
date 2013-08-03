@@ -194,6 +194,7 @@ thunar_icon_factory_init (ThunarIconFactory *factory)
   GFile *home_file;
 
   factory->thumbnail_mode = THUNAR_THUMBNAIL_MODE_ONLY_LOCAL;
+  factory->home_file = thunar_g_file_new_for_home ();
 
   home_file = thunar_g_file_new_for_home ();
   factory->home_file = thunar_file_get (home_file, NULL);
