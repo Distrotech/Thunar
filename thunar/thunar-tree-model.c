@@ -141,8 +141,6 @@ static void                 thunar_tree_model_item_files_added        (ThunarTre
 static void                 thunar_tree_model_item_files_removed      (ThunarTreeModelItem    *item,
                                                                        GList                  *files,
                                                                        ThunarFolder           *folder);
-static gboolean             thunar_tree_model_item_load_idle          (gpointer                user_data);
-static void                 thunar_tree_model_item_load_idle_destroy  (gpointer                user_data);
 static void                 thunar_tree_model_item_notify_loading     (ThunarTreeModelItem    *item,
                                                                        GParamSpec             *pspec,
                                                                        ThunarFolder           *folder);
@@ -203,7 +201,7 @@ struct _ThunarTreeModel
 struct _ThunarTreeModelItem
 {
   gint             ref_count;
-  guint            load_idle_id;
+  guint            new_files_idle_id;
   ThunarFile      *file;
   ThunarFolder    *folder;
   ThunarDevice    *device;
@@ -1185,8 +1183,8 @@ static void
 thunar_tree_model_item_reset (ThunarTreeModelItem *item)
 {
   /* cancel any pending load idle source */
-  if (G_UNLIKELY (item->load_idle_id != 0))
-    g_source_remove (item->load_idle_id);
+  if (G_UNLIKELY (item->new_files_idle_id != 0))
+    g_source_remove (item->new_files_idle_id);
 
   /* disconnect from the folder */
   if (G_LIKELY (item->folder != NULL))
@@ -1219,21 +1217,6 @@ thunar_tree_model_item_reset (ThunarTreeModelItem *item)
 
 
 static void
-thunar_tree_model_item_load_folder (ThunarTreeModelItem *item)
-{
-  _thunar_return_if_fail (THUNAR_IS_FILE (item->file) || THUNAR_IS_DEVICE (item->device));
-
-  /* schedule the "load" idle source (if not already done) */
-  if (G_LIKELY (item->load_idle_id == 0 && item->folder == NULL))
-    {
-      item->load_idle_id = g_idle_add_full (G_PRIORITY_HIGH, thunar_tree_model_item_load_idle,
-                                            item, thunar_tree_model_item_load_idle_destroy);
-    }
-}
-
-
-
-static void
 thunar_tree_model_item_files_added (ThunarTreeModelItem *item,
                                     GList               *files,
                                     ThunarFolder        *folder)
@@ -1250,6 +1233,7 @@ thunar_tree_model_item_files_added (ThunarTreeModelItem *item,
   _thunar_return_if_fail (THUNAR_IS_FOLDER (folder));
   _thunar_return_if_fail (item->folder == folder);
   _thunar_return_if_fail (model->visible_func != NULL);
+  _thunar_return_if_fail (item->ref_count > 0);
 
   /* process all specified files */
   for (lp = files; lp != NULL; lp = lp->next)
@@ -1413,31 +1397,65 @@ thunar_tree_model_item_notify_loading (ThunarTreeModelItem *item,
 
 
 static gboolean
-thunar_tree_model_item_load_idle (gpointer user_data)
+thunar_tree_model_item_files_added_idle (gpointer user_data)
 {
   ThunarTreeModelItem *item = user_data;
-  GFile               *mount_point;
   GList               *files;
-#ifndef NDEBUG
-  GNode               *node;
-#endif
-
-  _thunar_return_val_if_fail (item->folder == NULL, FALSE);
-
-#ifndef NDEBUG
-      /* find the node in the tree */
-      node = g_node_find (item->model->root, G_POST_ORDER, G_TRAVERSE_ALL, item);
-
-      /* debug check to make sure the node is empty or contains a dummy node.
-       * if this is not true, the node already contains sub folders which means
-       * something went wrong. */
-      _thunar_return_val_if_fail (node->children == NULL || G_NODE_HAS_DUMMY (node), FALSE);
-#endif
 
   GDK_THREADS_ENTER ();
 
+  /* load the initial set of files (if any) */
+  files = thunar_folder_get_files (item->folder);
+  if (G_UNLIKELY (files != NULL))
+    thunar_tree_model_item_files_added (item, files, item->folder);
+
+  /* notify for "loading" if already loaded */
+  g_object_notify (G_OBJECT (item->folder), "loading");
+
+  GDK_THREADS_LEAVE ();
+
+  return FALSE;
+}
+
+
+
+static void
+thunar_tree_model_item_files_added_idle_destroy (gpointer user_data)
+{
+  THUNAR_TREE_MODEL_ITEM (user_data)->new_files_idle_id = 0;
+}
+
+
+
+static void
+thunar_tree_model_item_load_folder (ThunarTreeModelItem *item)
+{
+  GFile *mount_point;
+#ifndef NDEBUG
+  GNode *node;
+#endif
+
+  _thunar_return_if_fail (THUNAR_IS_FILE (item->file) || THUNAR_IS_DEVICE (item->device));
+  _thunar_return_if_fail (THUNAR_IS_TREE_MODEL (item->model));
+
+  /* leave if the folder is already loaded */
+  if (item->folder != NULL)
+    return;
+
+#ifndef NDEBUG
+  /* find the node in the tree */
+  node = g_node_find (item->model->root, G_POST_ORDER, G_TRAVERSE_ALL, item);
+
+  /* debug check to make sure the node is empty or contains a dummy node.
+   * if this is not true, the node already contains sub folders which means
+   * something went wrong. */
+  _thunar_return_if_fail (node->children == NULL || G_NODE_HAS_DUMMY (node));
+#endif
+
   /* check if we don't have a file yet and this is a mounted volume */
-  if (item->file == NULL && item->device != NULL && thunar_device_is_mounted (item->device))
+  if (item->file == NULL
+      && item->device != NULL
+      && thunar_device_is_mounted (item->device))
     {
       mount_point = thunar_device_get_root (item->device);
       if (G_LIKELY (mount_point != NULL))
@@ -1461,27 +1479,14 @@ thunar_tree_model_item_load_idle (gpointer user_data)
           g_signal_connect_swapped (G_OBJECT (item->folder), "notify::loading", G_CALLBACK (thunar_tree_model_item_notify_loading), item);
 
           /* load the initial set of files (if any) */
-          files = thunar_folder_get_files (item->folder);
-          if (G_UNLIKELY (files != NULL))
-            thunar_tree_model_item_files_added (item, files, item->folder);
-
-          /* notify for "loading" if already loaded */
           if (!thunar_folder_get_loading (item->folder))
-            g_object_notify (G_OBJECT (item->folder), "loading");
+            {
+              _thunar_assert (item->new_files_idle_id == 0);
+              item->new_files_idle_id = g_idle_add_full (G_PRIORITY_HIGH, thunar_tree_model_item_files_added_idle,
+                                                         item, thunar_tree_model_item_files_added_idle_destroy);
+            }
         }
     }
-
-  GDK_THREADS_LEAVE ();
-
-  return FALSE;
-}
-
-
-
-static void
-thunar_tree_model_item_load_idle_destroy (gpointer user_data)
-{
-  THUNAR_TREE_MODEL_ITEM (user_data)->load_idle_id = 0;
 }
 
 
