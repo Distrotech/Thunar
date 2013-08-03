@@ -128,8 +128,6 @@ thunar_SOURCES =							\
 	thunar-location-dialog.h					\
 	thunar-location-entry.c						\
 	thunar-location-entry.h						\
-	thunar-misc-jobs.c						\
-	thunar-misc-jobs.h						\
 	thunar-notify.c							\
 	thunar-notify.h							\
 	thunar-navigator.c						\
