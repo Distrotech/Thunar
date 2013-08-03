@@ -73,8 +73,8 @@ gchar   **thunar_g_file_list_to_stringv             (GList             *list);
 /* deep copy jobs for GLists */
 #define   thunar_g_file_list_append(list,object)    g_list_append (list, g_object_ref (G_OBJECT (object)))
 #define   thunar_g_file_list_prepend(list,object)   g_list_prepend (list, g_object_ref (G_OBJECT (object)))
-#define   thunar_g_file_list_copy                   thunarx_file_info_list_copy
-#define   thunar_g_file_list_free                   thunarx_file_info_list_free
+#define   thunar_g_file_list_copy(list)             g_list_copy_deep (list, (GCopyFunc) g_object_ref, NULL)
+#define   thunar_g_file_list_free(list)             g_list_free_full (list, g_object_unref)
 
 gboolean  thunar_g_app_info_launch                  (GAppInfo          *info,
                                                      GFile             *working_directory,

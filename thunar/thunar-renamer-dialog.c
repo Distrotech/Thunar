@@ -655,7 +655,7 @@ thunar_renamer_dialog_finalize (GObject *object)
   g_object_unref (G_OBJECT (renamer_dialog->model));
 
   /* release the list of selected files */
-  thunarx_file_info_list_free (renamer_dialog->selected_files);
+  thunar_g_file_list_free (renamer_dialog->selected_files);
 
   (*G_OBJECT_CLASS (thunar_renamer_dialog_parent_class)->finalize) (object);
 }
@@ -1663,7 +1663,7 @@ thunar_renamer_dialog_selection_changed (GtkTreeSelection    *selection,
   _thunar_return_if_fail (THUNAR_IS_RENAMER_DIALOG (renamer_dialog));
 
   /* release the list of previously selected files */
-  thunarx_file_info_list_free (renamer_dialog->selected_files);
+  thunar_g_file_list_free (renamer_dialog->selected_files);
   renamer_dialog->selected_files = NULL;
 
   /* determine the new list of selected files */

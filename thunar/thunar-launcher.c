@@ -597,7 +597,7 @@ thunar_launcher_open_files (ThunarLauncher *launcher,
   applications = g_hash_table_new_full (thunar_launcher_g_app_info_hash,
                                         (GEqualFunc) g_app_info_equal,
                                         (GDestroyNotify) g_object_unref,
-                                        (GDestroyNotify) thunar_g_file_list_free);
+                                        (GDestroyNotify) thunarx_file_info_list_free);
 
   for (lp = files; lp != NULL; lp = lp->next)
     {
