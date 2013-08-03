@@ -215,6 +215,8 @@ thunar_preferences_dialog_init (ThunarPreferencesDialog *dialog)
   GtkWidget      *vbox;
   gchar          *path;
   gchar          *date;
+  guint           n;
+  GEnumClass     *klass;
 
   /* grab a reference on the preferences */
   dialog->preferences = thunar_preferences_get ();
@@ -284,9 +286,10 @@ thunar_preferences_dialog_init (ThunarPreferencesDialog *dialog)
   gtk_widget_show (label);
 
   combo = gtk_combo_box_text_new ();
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Never"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Local Files Only"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Always"));
+  klass = g_type_class_ref (THUNAR_TYPE_THUMBNAIL_MODE);
+  for (n = 0; n < klass->n_values; ++n)
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _(klass->values[n].value_nick));
+  g_type_class_unref (klass);
   exo_mutual_binding_new_full (G_OBJECT (dialog->preferences), "misc-thumbnail-mode", G_OBJECT (combo), "active",
                                transform_thumbnail_mode_to_index, transform_thumbnail_index_to_mode, NULL, NULL);
   gtk_table_attach (GTK_TABLE (table), combo, 1, 2, 1, 2, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
@@ -387,13 +390,10 @@ thunar_preferences_dialog_init (ThunarPreferencesDialog *dialog)
   gtk_widget_show (label);
 
   combo = gtk_combo_box_text_new ();
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Very Small"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Smaller"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Small"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Normal"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Large"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Larger"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Very Large"));
+  klass = g_type_class_ref (THUNAR_TYPE_ICON_SIZE);
+  for (n = 0; n < klass->n_values; ++n)
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _(klass->values[n].value_nick));
+  g_type_class_unref (klass);
   exo_mutual_binding_new_full (G_OBJECT (dialog->preferences), "shortcuts-icon-size", G_OBJECT (combo), "active",
                                transform_icon_size_to_index, transform_index_to_icon_size, NULL, NULL);
   gtk_table_attach (GTK_TABLE (table), combo, 1, 2, 0, 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
@@ -429,13 +429,10 @@ thunar_preferences_dialog_init (ThunarPreferencesDialog *dialog)
   gtk_widget_show (label);
 
   combo = gtk_combo_box_text_new ();
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Very Small"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Smaller"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Small"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Normal"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Large"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Larger"));
-  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _("Very Large"));
+  klass = g_type_class_ref (THUNAR_TYPE_ICON_SIZE);
+  for (n = 0; n < klass->n_values; ++n)
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), _(klass->values[n].value_nick));
+  g_type_class_unref (klass);
   exo_mutual_binding_new_full (G_OBJECT (dialog->preferences), "tree-icon-size", G_OBJECT (combo), "active",
                                transform_icon_size_to_index, transform_index_to_icon_size, NULL, NULL);
   gtk_table_attach (GTK_TABLE (table), combo, 1, 2, 0, 1, GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);

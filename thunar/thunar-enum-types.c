@@ -120,14 +120,14 @@ thunar_icon_size_get_type (void)
     {
       static const GEnumValue values[] =
       {
-        { THUNAR_ICON_SIZE_SMALLEST, "THUNAR_ICON_SIZE_SMALLEST", "smallest", },
-        { THUNAR_ICON_SIZE_SMALLER,  "THUNAR_ICON_SIZE_SMALLER",  "smaller",  },
-        { THUNAR_ICON_SIZE_SMALL,    "THUNAR_ICON_SIZE_SMALL",    "small",    },
-        { THUNAR_ICON_SIZE_NORMAL,   "THUNAR_ICON_SIZE_NORMAL",   "normal",   },
-        { THUNAR_ICON_SIZE_LARGE,    "THUNAR_ICON_SIZE_LARGE",    "large",    },
-        { THUNAR_ICON_SIZE_LARGER,   "THUNAR_ICON_SIZE_LARGER",   "larger",   },
-        { THUNAR_ICON_SIZE_LARGEST,  "THUNAR_ICON_SIZE_LARGEST",  "largest",  },
-        { 0,                         NULL,                        NULL,       },
+        { THUNAR_ICON_SIZE_SMALLEST, "THUNAR_ICON_SIZE_SMALLEST", N_("Very Small"),  },
+        { THUNAR_ICON_SIZE_SMALLER,  "THUNAR_ICON_SIZE_SMALLER",  N_("Smaller"),     },
+        { THUNAR_ICON_SIZE_SMALL,    "THUNAR_ICON_SIZE_SMALL",    N_("Small"),       },
+        { THUNAR_ICON_SIZE_NORMAL,   "THUNAR_ICON_SIZE_NORMAL",   N_("Normal"),      },
+        { THUNAR_ICON_SIZE_LARGE,    "THUNAR_ICON_SIZE_LARGE",    N_("Large"),       },
+        { THUNAR_ICON_SIZE_LARGER,   "THUNAR_ICON_SIZE_LARGER",   N_("Larger"),      },
+        { THUNAR_ICON_SIZE_LARGEST,  "THUNAR_ICON_SIZE_LARGEST",  N_("Very Large"),  },
+        { 0,                         NULL,                        NULL,              },
       };
 
       type = g_enum_register_static (I_("ThunarIconSize"), values);
@@ -200,10 +200,10 @@ thunar_thumbnail_mode_get_type (void)
     {
       static const GEnumValue values[] =
       {
-        { THUNAR_THUMBNAIL_MODE_NEVER,      "THUNAR_THUMBNAIL_MODE_NEVER",      "never",      },
-        { THUNAR_THUMBNAIL_MODE_ONLY_LOCAL, "THUNAR_THUMBNAIL_MODE_ONLY_LOCAL", "only-local", },
-        { THUNAR_THUMBNAIL_MODE_ALWAYS,     "THUNAR_THUMBNAIL_MODE_ALWAYS",     "always",     },
-        { 0,                                NULL,                               NULL,         },
+        { THUNAR_THUMBNAIL_MODE_NEVER,      "THUNAR_THUMBNAIL_MODE_NEVER",      N_("Never"),            },
+        { THUNAR_THUMBNAIL_MODE_ONLY_LOCAL, "THUNAR_THUMBNAIL_MODE_ONLY_LOCAL", N_("Local Files Only"), },
+        { THUNAR_THUMBNAIL_MODE_ALWAYS,     "THUNAR_THUMBNAIL_MODE_ALWAYS",     N_("Always"),           },
+        { 0,                                NULL,                               NULL,                   },
       };
 
       type = g_enum_register_static (I_("ThunarThumbnailMode"), values);
