@@ -112,6 +112,8 @@ struct _ThunarIconFactory
 
   /* stamp that gets bumped when the theme changes */
   guint                theme_stamp;
+
+  ThunarFile          *home_file;
 };
 
 struct _ThunarIconKey
@@ -189,7 +191,13 @@ thunar_icon_factory_class_init (ThunarIconFactoryClass *klass)
 static void
 thunar_icon_factory_init (ThunarIconFactory *factory)
 {
+  GFile *home_file;
+
   factory->thumbnail_mode = THUNAR_THUMBNAIL_MODE_ONLY_LOCAL;
+
+  home_file = thunar_g_file_new_for_home ();
+  factory->home_file = thunar_file_get (home_file, NULL);
+  g_object_unref (home_file);
 
   /* connect emission hook for the "changed" signal on the GtkIconTheme class. We use the emission
    * hook way here, because that way we can make sure that the icon cache is definetly cleared
@@ -242,6 +250,8 @@ thunar_icon_factory_finalize (GObject *object)
 
   /* disconnect from the preferences */
   g_object_unref (G_OBJECT (factory->preferences));
+
+  g_object_unref (G_OBJECT (factory->home_file));
 
   (*G_OBJECT_CLASS (thunar_icon_factory_parent_class)->finalize) (object);
 }
@@ -694,7 +704,8 @@ gboolean
 thunar_icon_factory_get_show_thumbnail (const ThunarIconFactory *factory,
                                         const ThunarFile        *file)
 {
-  GFilesystemPreviewType preview;
+  static const gchar *local_ish[] = { "file", "gphoto2", "recent", "trash" };
+  guint               n;
 
   _thunar_return_val_if_fail (THUNAR_IS_ICON_FACTORY (factory), THUNAR_THUMBNAIL_MODE_NEVER);
   _thunar_return_val_if_fail (file == NULL || THUNAR_IS_FILE (file), THUNAR_THUMBNAIL_MODE_NEVER);
@@ -703,22 +714,22 @@ thunar_icon_factory_get_show_thumbnail (const ThunarIconFactory *factory,
       || factory->thumbnail_mode == THUNAR_THUMBNAIL_MODE_NEVER)
     return FALSE;
 
-  /* always create thumbs for local files */
-  if (thunar_file_is_local (file))
+  /* don't check anything */
+  if (factory->thumbnail_mode == THUNAR_THUMBNAIL_MODE_ALWAYS)
     return TRUE;
 
-  preview = thunar_file_get_preview_type (file);
-
-  /* file system says to never thumbnail anything */
-  if (preview == G_FILESYSTEM_PREVIEW_TYPE_NEVER)
+  /* check for not home files */
+  if (factory->thumbnail_mode == THUNAR_THUMBNAIL_MODE_ONLY_HOME
+      && !thunar_file_is_ancestor (file, factory->home_file))
     return FALSE;
 
-  /* only if the setting is local and the fs reports to be local */
-  if (factory->thumbnail_mode == THUNAR_THUMBNAIL_MODE_ONLY_LOCAL)
-    return preview == G_FILESYSTEM_PREVIEW_TYPE_IF_LOCAL;
+  /* schemes that are most likely local */
+  for (n = 0; n < G_N_ELEMENTS (local_ish); n++)
+    if (thunar_file_has_uri_scheme (file, local_ish[n]))
+      return TRUE;
 
-  /* THUNAR_THUMBNAIL_MODE_ALWAYS */
-  return TRUE;
+  /* not a local scheme */
+  return FALSE;
 }
 
 

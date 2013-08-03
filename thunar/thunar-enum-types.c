@@ -201,6 +201,7 @@ thunar_thumbnail_mode_get_type (void)
       static const GEnumValue values[] =
       {
         { THUNAR_THUMBNAIL_MODE_NEVER,      "THUNAR_THUMBNAIL_MODE_NEVER",      N_("Never"),            },
+        { THUNAR_THUMBNAIL_MODE_ONLY_HOME,  "THUNAR_THUMBNAIL_MODE_ONLY_HOME",  N_("Only in Home"),     },
         { THUNAR_THUMBNAIL_MODE_ONLY_LOCAL, "THUNAR_THUMBNAIL_MODE_ONLY_LOCAL", N_("Local Files Only"), },
         { THUNAR_THUMBNAIL_MODE_ALWAYS,     "THUNAR_THUMBNAIL_MODE_ALWAYS",     N_("Always"),           },
         { 0,                                NULL,                               NULL,                   },
