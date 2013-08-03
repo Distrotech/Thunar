@@ -37,13 +37,11 @@
 #include <thunar/thunar-thumbnail-cache.h>
 #include <thunar/thunar-file.h>
 
-#if GLIB_CHECK_VERSION (2, 32, 0)
+
+
+
 #define _thumbnail_cache_lock(cache)   g_mutex_lock (&((cache)->lock))
 #define _thumbnail_cache_unlock(cache) g_mutex_unlock (&((cache)->lock))
-#else
-#define _thumbnail_cache_lock(cache)   g_mutex_lock ((cache)->lock)
-#define _thumbnail_cache_unlock(cache) g_mutex_unlock ((cache)->lock)
-#endif
 
 
 
@@ -77,11 +75,7 @@ struct _ThunarThumbnailCache
   GList      *cleanup_queue;
   guint       cleanup_queue_idle_id;
 
-#if GLIB_CHECK_VERSION (2, 32, 0)
   GMutex      lock;
-#else
-  GMutex     *lock;
-#endif
 #endif
 };
 
@@ -127,11 +121,7 @@ thunar_thumbnail_cache_init (ThunarThumbnailCache *cache)
     }
 
 /* create a new mutex for accessing the cache from different threads */
-#if GLIB_CHECK_VERSION (2, 32, 0)
   g_mutex_init (&cache->lock);
-#else
-  cache->lock = g_mutex_new ();
-#endif
 #endif
 }
 
@@ -176,11 +166,7 @@ thunar_thumbnail_cache_finalize (GObject *object)
   _thumbnail_cache_unlock (cache);
 
   /* release the mutex itself */
-#if GLIB_CHECK_VERSION (2, 32, 0)
   g_mutex_clear (&cache->lock);
-#else
-  g_mutex_free (cache->lock);
-#endif
 #endif
 
   (*G_OBJECT_CLASS (thunar_thumbnail_cache_parent_class)->finalize) (object);
