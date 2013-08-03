@@ -1165,79 +1165,33 @@ thunar_io_jobs_change_mode (GList         *files,
 
 
 
-static gboolean
-_thunar_io_jobs_ls (ThunarJob  *job,
-                    GArray     *param_values,
-                    GError    **error)
+void
+thunar_io_jobs_list_directory (GTask        *task,
+                               gpointer      source_object,
+                               gpointer      task_data,
+                               GCancellable *cancellable)
 {
+  GFile  *directory = G_FILE (task_data);
+  GList  *file_list;
   GError *err = NULL;
-  GFile  *directory;
-  GList  *file_list = NULL;
 
-  _thunar_return_val_if_fail (THUNAR_IS_JOB (job), FALSE);
-  _thunar_return_val_if_fail (param_values != NULL, FALSE);
-  _thunar_return_val_if_fail (param_values->len == 1, FALSE);
-  _thunar_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-  if (exo_job_set_error_if_cancelled (EXO_JOB (job), error))
-    return FALSE;
-
-  /* determine the directory to list */
-  directory = g_value_get_object (&g_array_index (param_values, GValue, 0));
-
-  /* make sure the object is valid */
-  _thunar_assert (G_IS_FILE (directory));
+  _thunar_return_if_fail (G_IS_FILE (task_data));
 
   /* collect directory contents (non-recursively) */
-  file_list = thunar_io_scan_directory (job, directory,
+  file_list = thunar_io_scan_directory2 (directory, cancellable,
                                         G_FILE_QUERY_INFO_NONE, 
                                         FALSE, FALSE, TRUE, &err);
 
   /* abort on errors or cancellation */
   if (err != NULL)
     {
-      g_propagate_error (error, err);
-      return FALSE;
-    }
-  else if (exo_job_set_error_if_cancelled (EXO_JOB (job), &err))
-    {
-      g_propagate_error (error, err);
-      return FALSE;
+      _thunar_assert (file_list == NULL);
+      g_task_return_error (task, err);
+      return;
     }
 
-  /* check if we have any files to report */
-  if (G_LIKELY (file_list != NULL))
-    {
-      /* emit the "files-ready" signal */
-      if (!thunar_job_files_ready (THUNAR_JOB (job), file_list))
-        {
-          /* none of the handlers took over the file list, so it's up to us
-           * to destroy it */
-          thunar_g_file_list_free (file_list);
-        }
-    }
-  
-  /* there should be no errors here */
-  _thunar_assert (err == NULL);
-
-  /* propagate cancellation error */
-  if (exo_job_set_error_if_cancelled (EXO_JOB (job), &err))
-    {
-      g_propagate_error (error, err);
-      return FALSE;
-    }
-
-  return TRUE;
-}
-
-
-
-ThunarJob *
-thunar_io_jobs_list_directory (GFile *directory)
-{
-  _thunar_return_val_if_fail (G_IS_FILE (directory), NULL);
-  
-  return thunar_simple_job_launch (_thunar_io_jobs_ls, 1, G_TYPE_FILE, directory);
+  /* we've got the files */
+  g_task_return_pointer (task, file_list, NULL);
 }
 
 

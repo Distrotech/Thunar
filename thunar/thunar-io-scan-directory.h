@@ -28,6 +28,15 @@
 
 G_BEGIN_DECLS
 
+GList *
+thunar_io_scan_directory2 (GFile              *file,
+                          GCancellable       *cancellable,
+                          GFileQueryInfoFlags flags,
+                          gboolean            recursively,
+                          gboolean            unlinking,
+                          gboolean            return_thunar_files,
+                          GError            **error);
+
 GList *thunar_io_scan_directory (ThunarJob          *job,
                                  GFile              *file,
                                  GFileQueryInfoFlags flags,

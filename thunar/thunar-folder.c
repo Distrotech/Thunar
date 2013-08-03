@@ -64,14 +64,6 @@ static void     thunar_folder_set_property                (GObject              
                                                            const GValue           *value,
                                                            GParamSpec             *pspec);
 static void     thunar_folder_real_destroy                (ThunarFolder           *folder);
-static void     thunar_folder_error                       (ExoJob                 *job,
-                                                           GError                 *error,
-                                                           ThunarFolder           *folder);
-static gboolean thunar_folder_files_ready                 (ThunarJob              *job,
-                                                           GList                  *files,
-                                                           ThunarFolder           *folder);
-static void     thunar_folder_finished                    (ExoJob                 *job,
-                                                           ThunarFolder           *folder);
 static void     thunar_folder_file_changed                (ThunarFileMonitor      *file_monitor,
                                                            ThunarFile             *file,
                                                            ThunarFolder           *folder);
@@ -104,10 +96,9 @@ struct _ThunarFolder
 {
   GObject __parent__;
 
-  ThunarJob         *job;
+  GTask             *task;
 
   ThunarFile        *corresponding_file;
-  GList             *new_files;
   GList             *files;
 
   GList             *content_type_ptr;
@@ -286,12 +277,11 @@ thunar_folder_finalize (GObject *object)
       g_object_unref (folder->monitor);
     }
 
-  /* cancel the pending job (if any) */
-  if (G_UNLIKELY (folder->job != NULL))
+  /* cancel the pending task (if any) */
+  if (G_UNLIKELY (folder->task != NULL))
     {
-      g_signal_handlers_disconnect_matched (folder->job, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, folder);
-      g_object_unref (folder->job);
-      folder->job = NULL;
+      g_object_unref (folder->task);
+      folder->task = NULL;
     }
 
   /* disconnect from the corresponding file */
@@ -305,9 +295,6 @@ thunar_folder_finalize (GObject *object)
   /* stop metadata collector */
   if (folder->content_type_idle_id != 0)
     g_source_remove (folder->content_type_idle_id);
-
-  /* release references to the new files */
-  thunar_g_file_list_free (folder->new_files);
 
   /* release references to the current files */
   thunar_g_file_list_free (folder->files);
@@ -377,38 +364,6 @@ thunar_folder_real_destroy (ThunarFolder *folder)
 
 
 
-static void
-thunar_folder_error (ExoJob       *job,
-                     GError       *error,
-                     ThunarFolder *folder)
-{
-  _thunar_return_if_fail (THUNAR_IS_FOLDER (folder));
-  _thunar_return_if_fail (THUNAR_IS_JOB (job));
-
-  /* tell the consumer about the problem */
-  g_signal_emit (G_OBJECT (folder), folder_signals[ERROR], 0, error);
-}
-
-
-
-static gboolean
-thunar_folder_files_ready (ThunarJob    *job,
-                           GList        *files,
-                           ThunarFolder *folder)
-{
-  _thunar_return_val_if_fail (THUNAR_IS_FOLDER (folder), FALSE);
-  _thunar_return_val_if_fail (THUNAR_IS_JOB (job), FALSE);
-  _thunar_return_val_if_fail (folder->monitor == NULL, FALSE);
-
-  /* merge the list with the existing list of new files */
-  folder->new_files = g_list_concat (folder->new_files, files);
-
-  /* indicate that we took over ownership of the file list */
-  return TRUE;
-}
-
-
-
 static gboolean
 thunar_folder_content_type_loader_idle (gpointer data)
 {
@@ -460,24 +415,44 @@ thunar_folder_content_type_loader (ThunarFolder *folder)
 
 
 static void
-thunar_folder_finished (ExoJob       *job,
-                        ThunarFolder *folder)
+thunar_folder_finished (GObject      *source_object,
+                        GAsyncResult *result,
+                        gpointer      user_data)
 {
-  ThunarFile *file;
-  GList      *files;
-  GList      *lp;
+  ThunarFolder *folder = THUNAR_FOLDER (source_object);
+  ThunarFile   *file;
+  GList        *files;
+  GList        *lp;
+  GList        *new_files;
+  GError       *error = NULL;
 
   _thunar_return_if_fail (THUNAR_IS_FOLDER (folder));
-  _thunar_return_if_fail (THUNAR_IS_JOB (job));
   _thunar_return_if_fail (THUNAR_IS_FILE (folder->corresponding_file));
   _thunar_return_if_fail (folder->monitor == NULL);
+  _thunar_return_if_fail (folder->task == G_TASK (result));
   _thunar_return_if_fail (folder->content_type_idle_id == 0);
+
+  /* check if everything went fine */
+  new_files = g_task_propagate_pointer (folder->task, &error);
+  if (error != NULL)
+    {
+      /* something when wrong */
+      _thunar_assert (new_files == NULL);
+      g_signal_emit (G_OBJECT (folder), folder_signals[ERROR], 0, error);
+      g_error_free (error);
+
+      /* remove the task */
+      g_object_unref (folder->task);
+      folder->task = NULL;
+
+      return;
+    }
 
   /* check if we need to merge new files with existing files */
   if (G_UNLIKELY (folder->files != NULL))
     {
       /* determine all added files (files on new_files, but not on files) */
-      for (files = NULL, lp = folder->new_files; lp != NULL; lp = lp->next)
+      for (files = NULL, lp = new_files; lp != NULL; lp = lp->next)
         if (g_list_find (folder->files, lp->data) == NULL)
           {
             /* put the file on the added list */
@@ -508,7 +483,7 @@ thunar_folder_finished (ExoJob       *job,
           lp = lp->next;
 
           /* check if the file is not on new_files */
-          if (g_list_find (folder->new_files, file) == NULL)
+          if (g_list_find (new_files, file) == NULL)
             {
               /* put the file on the removed list (owns the reference now) */
               files = g_list_prepend (files, file);
@@ -529,14 +504,12 @@ thunar_folder_finished (ExoJob       *job,
         }
 
       /* drop the temporary new_files list */
-      thunar_g_file_list_free (folder->new_files);
-      folder->new_files = NULL;
+      thunar_g_file_list_free (new_files);
     }
   else
     {
       /* just use the new files for the files list */
-      folder->files = folder->new_files;
-      folder->new_files = NULL;
+      folder->files = new_files;
 
       if (folder->files != NULL)
         {
@@ -546,9 +519,8 @@ thunar_folder_finished (ExoJob       *job,
     }
 
   /* we did it, the folder is loaded */
-  g_signal_handlers_disconnect_matched (folder->job, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, folder);
-  g_object_unref (folder->job);
-  folder->job = NULL;
+  g_object_unref (folder->task);
+  folder->task = NULL;
 
   /* restart the content type idle loader */
   thunar_folder_content_type_loader (folder);
@@ -705,7 +677,6 @@ thunar_folder_monitor (GFileMonitor     *monitor,
   _thunar_return_if_fail (G_IS_FILE_MONITOR (monitor));
   _thunar_return_if_fail (THUNAR_IS_FOLDER (folder));
   _thunar_return_if_fail (folder->monitor == monitor);
-  _thunar_return_if_fail (folder->job == NULL);
   _thunar_return_if_fail (THUNAR_IS_FILE (folder->corresponding_file));
   _thunar_return_if_fail (G_IS_FILE (event_file));
 
@@ -881,7 +852,7 @@ gboolean
 thunar_folder_get_loading (const ThunarFolder *folder)
 {
   _thunar_return_val_if_fail (THUNAR_IS_FOLDER (folder), FALSE);
-  return (folder->job != NULL);
+  return (folder->task != NULL);
 }
 
 
@@ -896,6 +867,8 @@ thunar_folder_get_loading (const ThunarFolder *folder)
 void
 thunar_folder_reload (ThunarFolder *folder)
 {
+  GCancellable *cancellable;
+
   _thunar_return_if_fail (THUNAR_IS_FOLDER (folder));
 
   /* stop metadata collector */
@@ -903,12 +876,12 @@ thunar_folder_reload (ThunarFolder *folder)
     g_source_remove (folder->content_type_idle_id);
 
   /* check if we are currently connect to a job */
-  if (G_UNLIKELY (folder->job != NULL))
+  if (G_UNLIKELY (folder->task != NULL))
     {
-      /* disconnect from the job */
-      g_signal_handlers_disconnect_matched (folder->job, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, folder);
-      g_object_unref (folder->job);
-      folder->job = NULL;
+      /* stop the task */
+      g_task_return_error_if_cancelled (folder->task);
+      g_object_unref (folder->task);
+      folder->task = NULL;
     }
 
   /* disconnect from the file alteration monitor */
@@ -920,15 +893,12 @@ thunar_folder_reload (ThunarFolder *folder)
       folder->monitor = NULL;
     }
 
-  /* reset the new_files list */
-  thunar_g_file_list_free (folder->new_files);
-  folder->new_files = NULL;
-
-  /* start a new job */
-  folder->job = thunar_io_jobs_list_directory (thunar_file_get_file (folder->corresponding_file));
-  g_signal_connect (folder->job, "error", G_CALLBACK (thunar_folder_error), folder);
-  g_signal_connect (folder->job, "finished", G_CALLBACK (thunar_folder_finished), folder);
-  g_signal_connect (folder->job, "files-ready", G_CALLBACK (thunar_folder_files_ready), folder);
+  /* start a new task */
+  cancellable = g_cancellable_new ();
+  folder->task = g_task_new (folder, cancellable, thunar_folder_finished, NULL);
+  g_task_set_task_data (folder->task, thunar_file_get_file (folder->corresponding_file), NULL);
+  g_task_run_in_thread (folder->task, thunar_io_jobs_list_directory);
+  g_object_unref (cancellable);
 
   /* tell all consumers that we're loading */
   g_object_notify (G_OBJECT (folder), "loading");
