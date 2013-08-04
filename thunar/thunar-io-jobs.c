@@ -1165,37 +1165,6 @@ thunar_io_jobs_change_mode (GList         *files,
 
 
 
-void
-thunar_io_jobs_list_directory (GTask        *task,
-                               gpointer      source_object,
-                               gpointer      task_data,
-                               GCancellable *cancellable)
-{
-  GFile  *directory = G_FILE (task_data);
-  GList  *file_list;
-  GError *err = NULL;
-
-  _thunar_return_if_fail (G_IS_FILE (task_data));
-
-  /* collect directory contents (non-recursively) */
-  file_list = thunar_io_scan_directory2 (directory, cancellable,
-                                        G_FILE_QUERY_INFO_NONE, 
-                                        FALSE, FALSE, TRUE, &err);
-
-  /* abort on errors or cancellation */
-  if (err != NULL)
-    {
-      _thunar_assert (file_list == NULL);
-      g_task_return_error (task, err);
-      return;
-    }
-
-  /* we've got the files */
-  g_task_return_pointer (task, file_list, NULL);
-}
-
-
-
 static gboolean
 _thunar_io_jobs_rename_notify (ThunarFile *file)
 {

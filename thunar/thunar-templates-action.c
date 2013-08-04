@@ -25,7 +25,7 @@
 #include <gio/gio.h>
 
 #include <thunar/thunar-icon-factory.h>
-#include <thunar/thunar-io-jobs.h>
+#include <thunar/thunar-tasks.h>
 #include <thunar/thunar-private.h>
 #include <thunar/thunar-templates-action.h>
 
@@ -504,9 +504,8 @@ static void
 thunar_templates_action_menu_shown (GtkWidget             *menu,
                                     ThunarTemplatesAction *templates_action)
 {
-  GList        *children;
-  GFile        *templates_dir;
-  GCancellable *cancellable;
+  GList *children;
+  GFile *templates_dir;
 
   _thunar_return_if_fail (THUNAR_IS_TEMPLATES_ACTION (templates_action));
   _thunar_return_if_fail (GTK_IS_MENU_SHELL (menu));
@@ -521,11 +520,9 @@ thunar_templates_action_menu_shown (GtkWidget             *menu,
       if (templates_dir != NULL)
         {
           /* start the collection task */
-          cancellable = g_cancellable_new ();
-          templates_action->task = g_task_new (templates_action, cancellable, thunar_templates_action_load_finished, menu);
-          g_task_set_task_data (templates_action->task, templates_dir, g_object_unref);
-          g_task_run_in_thread (templates_action->task, thunar_io_jobs_list_directory);
-          g_object_unref (cancellable);
+          templates_action->task = thunar_tasks_new (templates_action, thunar_templates_action_load_finished, menu);
+          thunar_tasks_list_directory (templates_action->task, templates_dir);
+          g_object_unref (templates_dir);
         }
       else
         {

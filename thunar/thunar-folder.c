@@ -25,8 +25,7 @@
 #include <thunar/thunar-file-monitor.h>
 #include <thunar/thunar-folder.h>
 #include <thunar/thunar-gobject-extensions.h>
-#include <thunar/thunar-io-jobs.h>
-#include <thunar/thunar-job.h>
+#include <thunar/thunar-tasks.h>
 #include <thunar/thunar-private.h>
 
 #define DEBUG_FILE_CHANGES FALSE
@@ -867,8 +866,6 @@ thunar_folder_get_loading (const ThunarFolder *folder)
 void
 thunar_folder_reload (ThunarFolder *folder)
 {
-  GCancellable *cancellable;
-
   _thunar_return_if_fail (THUNAR_IS_FOLDER (folder));
 
   /* stop metadata collector */
@@ -894,11 +891,8 @@ thunar_folder_reload (ThunarFolder *folder)
     }
 
   /* start a new task */
-  cancellable = g_cancellable_new ();
-  folder->task = g_task_new (folder, cancellable, thunar_folder_finished, NULL);
-  g_task_set_task_data (folder->task, thunar_file_get_file (folder->corresponding_file), NULL);
-  g_task_run_in_thread (folder->task, thunar_io_jobs_list_directory);
-  g_object_unref (cancellable);
+  folder->task = thunar_tasks_new (folder,thunar_folder_finished, NULL);
+  thunar_tasks_list_directory (folder->task, thunar_file_get_file (folder->corresponding_file));
 
   /* tell all consumers that we're loading */
   g_object_notify (G_OBJECT (folder), "loading");

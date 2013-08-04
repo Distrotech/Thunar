@@ -188,6 +188,8 @@ thunar_SOURCES =							\
 	thunar-templates-action.h					\
 	thunar-text-renderer.c						\
 	thunar-text-renderer.h						\
+	thunar-tasks.c							\
+	thunar-tasks.h							\
 	thunar-thumbnail-cache.c					\
 	thunar-thumbnail-cache.h					\
 	thunar-thumbnailer.c						\
