@@ -4,7 +4,7 @@
 
 test "x$DISPLAY" != "x" || DISPLAY=:0
 
-if [ "x$1" == "x--desktop" ]; then
+if [ "x$1" = "x--desktop" ]; then
   method="DisplayDesktopDialog"
 else
   method="DisplayPreferencesDialog"
