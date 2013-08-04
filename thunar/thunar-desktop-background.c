@@ -36,6 +36,7 @@
 #include <thunar/thunar-private.h>
 #include <thunar/thunar-desktop-background.h>
 #include <thunar/thunar-enum-types.h>
+#include <thunar/thunar-tasks.h>
 #include <thunar/thunar-gdk-extensions.h>
 
 #define FADE_ANIMATION_USEC ((gdouble) G_USEC_PER_SEC / 2.0) /* 0.5 second */
@@ -88,6 +89,9 @@ struct _ThunarDesktopBackground
   GdkWindow     *source_window;
   GdkPixmap     *pixmap;
 
+  /* async to prepare images in a thread */
+  GTask         *task;
+
   /* fade timeout for paint() */
   guint          fade_timeout_id;
 
@@ -106,6 +110,29 @@ typedef struct
   gint64                   start_time;
 }
 BackgroundFade;
+
+typedef struct
+{
+  /* base property for xfconf */
+  gchar                  *base_prop;
+
+  /* size of the monitor */
+  GdkRectangle            geometry;
+
+  /* bckground style */
+  ThunarBackgroundStyle   bg_style;
+
+  /* not per-monitor, but we need this later */
+  gboolean                fade_animation;
+
+  /* location loaded during the async */
+  GFile                  *image_file;
+  GdkInterpType           image_interp;
+
+  /* this is returned from the thread */
+  GdkPixbuf              *pixbuf;
+}
+BackgroundAsync;
 
 
 
@@ -182,6 +209,10 @@ thunar_desktop_background_finalize (GObject *object)
 {
   ThunarDesktopBackground *background = THUNAR_DESKTOP_BACKGROUND (object);
   GdkWindow               *root_window;
+
+  /* stop running task */
+  if (background->task != NULL)
+    thunar_tasks_cancel (background->task);
 
   /* unset the backgrounds */
   gdk_window_set_back_pixmap (background->source_window, NULL, FALSE);
@@ -270,126 +301,6 @@ thunar_desktop_background_get_monitor_name (GdkScreen *screen,
     name = g_strdup_printf ("monitor-%d", n);
 
   return name;
-}
-
-
-
-static void
-thunar_desktop_background_paint_image (cairo_t               *cr,
-                                       const GdkRectangle    *area,
-                                       GdkInterpType          interp,
-                                       ThunarBackgroundStyle  style,
-                                       const GdkPixbuf       *src_pixbuf)
-{
-  gint             src_w, src_h;
-  GdkPixbuf       *dst_pixbuf = NULL;
-  gint             dx, dy;
-  gint             dst_w, dst_h;
-  gdouble          wratio, hratio;
-  gboolean         scale_dst = FALSE;
-  cairo_pattern_t *pattern;
-
-  _thunar_return_if_fail (GDK_IS_PIXBUF (src_pixbuf));
-
-  src_w = gdk_pixbuf_get_width (src_pixbuf);
-  src_h = gdk_pixbuf_get_height (src_pixbuf);
-
-  dx = area->x;
-  dy = area->y;
-
-  dst_w = area->width;
-  dst_h = area->height;
-
-  switch (style)
-    {
-    case THUNAR_BACKGROUND_STYLE_NONE:
-      return;
-
-    case THUNAR_BACKGROUND_STYLE_TILED:
-      break;
-
-    case THUNAR_BACKGROUND_STYLE_CENTERED:
-      dx += (area->width - src_w) / 2;
-      dy += (area->height - src_h) / 2;
-      break;
-
-    case THUNAR_BACKGROUND_STYLE_STRETCHED:
-      if (src_w != dst_w || src_h != dst_h)
-        {
-          /* scale to fill screen */
-          scale_dst = TRUE;
-        }
-      break;
-
-    case THUNAR_BACKGROUND_STYLE_SCALED:
-      if (src_w != dst_w || src_h != dst_h)
-        {
-          /* calculate the new dimensions */
-          wratio = (gdouble) src_w / (gdouble) dst_w;
-          hratio = (gdouble) src_h / (gdouble) dst_h;
-
-          if (hratio > wratio)
-            dst_w = rint (src_w / hratio);
-          else
-            dst_h = rint (src_h / wratio);
-
-          /* scale to monitor, no corp */
-          scale_dst = TRUE;
-        }
-      break;
-
-    case THUNAR_BACKGROUND_STYLE_SPANNED:
-    case THUNAR_BACKGROUND_STYLE_ZOOMED:
-      if (src_w != dst_w || src_h != dst_h)
-        {
-          /* calculate the new dimensions */
-          wratio = (gdouble) src_w / (gdouble) dst_w;
-          hratio = (gdouble) src_h / (gdouble) dst_h;
-
-          if (hratio < wratio)
-            dst_w = rint (src_w / hratio);
-          else
-            dst_h = rint (src_h / wratio);
-
-          /* scale to monitor, no corp */
-          scale_dst = TRUE;
-        }
-      break;
-    }
-
-  if (scale_dst)
-    {
-      /* scale source */
-      dst_pixbuf = gdk_pixbuf_scale_simple (src_pixbuf, MAX (1, dst_w), MAX (1, dst_h), interp);
-
-      /* center on monitor */
-      dx += (area->width - dst_w) / 2;
-      dy += (area->height - dst_h) / 2;
-    }
-  else
-    {
-      /* no scaling was required, ref source */
-      dst_pixbuf = g_object_ref (G_OBJECT (src_pixbuf));
-    }
-
-  /* clip area */
-  cairo_save (cr);
-  gdk_cairo_rectangle (cr, area);
-  cairo_clip (cr);
-
-  /* paint the image */
-  thunar_gdk_cairo_set_source_pixbuf (cr, dst_pixbuf, dx, dy);
-
-  if (style == THUNAR_BACKGROUND_STYLE_TILED)
-    {
-      pattern = cairo_get_source (cr);
-      cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
-    }
-
-  cairo_paint (cr);
-  cairo_restore (cr);
-
-  g_object_unref (G_OBJECT (dst_pixbuf));
 }
 
 
@@ -600,161 +511,146 @@ thunar_desktop_background_fade_completed (gpointer data)
 
 
 static void
-thunar_desktop_background_paint (ThunarDesktopBackground *background,
-                                 gboolean                 fade_animation)
+thunar_desktop_background_paint_finished (GObject      *source_object,
+                                          GAsyncResult *result,
+                                          gpointer      user_data)
 {
+  ThunarDesktopBackground    *background = THUNAR_DESKTOP_BACKGROUND (source_object);
+  GPtrArray                  *monitors = user_data;
   cairo_t                    *cr;
-  GdkScreen                  *screen;
-  gint                        n, n_monitors;
-  GdkRectangle                area;
-  GdkInterpType               interp;
-  GdkPixbuf                  *pixbuf;
-  cairo_surface_t            *start_surface;
-  cairo_surface_t            *end_surface;
-  BackgroundFade             *fade;
-  ThunarBackgroundStyle       bg_style;
+  BackgroundAsync            *data = g_ptr_array_index (monitors, 0);
+  guint                       n;
   ThunarBackgroundColorStyle  color_style;
-  GError                     *error = NULL;
-  gchar                      *monitor_name;
-  gint                        screen_num;
   gchar                       prop[128];
   GdkColor                    color_start;
   GdkColor                    color_end;
-  gchar                      *filename;
-  gchar                      *uri;
-  gchar                      *base_prop;
+  cairo_surface_t            *start_surface;
+  BackgroundFade             *fade;
+  cairo_surface_t            *end_surface;
+  cairo_pattern_t            *pattern;
+  gint                        dx, dy;
+  gboolean                    fade_animation;
 
   _thunar_return_if_fail (THUNAR_IS_DESKTOP_BACKGROUND (background));
-  _thunar_return_if_fail (GDK_IS_DRAWABLE (background->pixmap));
+  _thunar_return_if_fail (background->task == G_TASK (result));
 
-  /* stop pending animation */
-  if (background->fade_timeout_id != 0)
-    g_source_remove (background->fade_timeout_id);
+  /* abort on an error or cancellation */
+  if (g_task_had_error (G_TASK (result)))
+    {
+      for (n = 0; n < monitors->len; n++)
+        {
+          data = g_ptr_array_index (monitors, n);
+          if (data != NULL)
+            {
+              g_clear_object (&data->image_file);
+              g_clear_object (&data->pixbuf);
+              g_free (data->base_prop);
+              g_slice_free (BackgroundAsync, data);
+            }
+        }
+
+      g_ptr_array_free (monitors, TRUE);
+      g_object_unref (G_OBJECT (result));
+      background->task = NULL;
+
+      return;
+    }
 
   /* prepare cairo context */
   cr = gdk_cairo_create (GDK_DRAWABLE (background->pixmap));
   g_assert (cairo_status (cr) == CAIRO_STATUS_SUCCESS);
 
   /* cache the old surface for the fade animation */
+  fade_animation = data->fade_animation;
   if (fade_animation
       && xfconf_channel_get_bool (background->settings, "/background/fade-animation", TRUE))
     start_surface = thunar_desktop_background_get_surface (background, cr);
   else
     start_surface = NULL;
 
-  /* screen info */
-  screen = gdk_window_get_screen (background->source_window);
-  screen_num = gdk_screen_get_number (screen);
-  n_monitors = gdk_screen_get_n_monitors (screen);
-
-  /* if the screen has a bit depth of less than 24bpp, using bilinear
-   * filtering looks crappy (mainly with gradients). */
-  if (gdk_drawable_get_depth (GDK_DRAWABLE (background->source_window)) < 24)
-    interp = GDK_INTERP_HYPER;
-  else
-    interp = GDK_INTERP_BILINEAR;
-
-  /* draw each monitor */
-  for (n = 0; n < n_monitors; n++)
+  for (n = 0; n < monitors->len; n++)
     {
-      /* get the monitor name */
-      monitor_name = thunar_desktop_background_get_monitor_name (screen, n);
-
-      base_prop = g_strdup_printf ("/background/screen-%d/%s", screen_num, monitor_name);
-
-      /* get background style */
-      g_snprintf (prop, sizeof (prop), "%s/style", base_prop);
-      bg_style = thunar_desktop_background_settings_enum (background->settings,
-                                                          THUNAR_TYPE_BACKGROUND_STYLE,
-                                                          prop, DEFAULT_BACKGROUND_STYLE);
-
-      /* spanning works only on settings of the 1st monitor */
-      if (bg_style == THUNAR_BACKGROUND_STYLE_SPANNED)
-        {
-          area.x = area.y = 0;
-          area.width = gdk_screen_get_width (screen);
-          area.height = gdk_screen_get_height (screen);
-        }
-      else
-        {
-          /* get area of the monitor */
-          gdk_screen_get_monitor_geometry (screen, n, &area);
-        }
-
-      pixbuf = NULL;
-
-      if (bg_style != THUNAR_BACKGROUND_STYLE_NONE)
-        {
-          /* get file name */
-          g_snprintf (prop, sizeof (prop), "%s/uri", base_prop);
-          uri = xfconf_channel_get_string (background->settings, prop, DEFAULT_BACKGROUND_URI);
-
-          /* only support local files */
-          if (G_LIKELY (uri != NULL
-              && g_str_has_prefix (uri, "file:///")))
-            {
-              filename = g_filename_from_uri (uri, NULL, NULL);
-              if (G_LIKELY (filename != NULL))
-                {
-                  /* load the image into the memory (exo uses mmap) */
-                  pixbuf = exo_gdk_pixbuf_new_from_file_at_max_size (filename, G_MAXINT, G_MAXINT, TRUE, &error);
-                  if (G_UNLIKELY (pixbuf == NULL))
-                    {
-                      g_warning ("Unable to load image \"%s\": %s",
-                                 filename, error != NULL ? error->message : "No error");
-                      g_error_free (error);
-                    }
-                  g_free (filename);
-                }
-            }
-          g_free (uri);
-        }
+      data = g_ptr_array_index (monitors, n);
+      if (data == NULL)
+        break;
 
       /* check if we should draw a background color (if we are not sure the background
        * image is not going to overlap the color anyway) */
-      if (pixbuf == NULL
-          || gdk_pixbuf_get_has_alpha (pixbuf)
-          || bg_style == THUNAR_BACKGROUND_STYLE_NONE
-          || bg_style == THUNAR_BACKGROUND_STYLE_TILED
-          || bg_style == THUNAR_BACKGROUND_STYLE_CENTERED
-          || bg_style == THUNAR_BACKGROUND_STYLE_SCALED)
+      if (data->pixbuf == NULL
+          || gdk_pixbuf_get_has_alpha (data->pixbuf)
+          || data->bg_style == THUNAR_BACKGROUND_STYLE_NONE
+          || data->bg_style == THUNAR_BACKGROUND_STYLE_TILED
+          || data->bg_style == THUNAR_BACKGROUND_STYLE_CENTERED
+          || data->bg_style == THUNAR_BACKGROUND_STYLE_SCALED)
         {
           /* get background style */
-          g_snprintf (prop, sizeof (prop), "%s/color-style", base_prop);
+          g_snprintf (prop, sizeof (prop), "%s/color-style", data->base_prop);
           color_style = thunar_desktop_background_settings_enum (background->settings,
                                                                  THUNAR_TYPE_BACKGROUND_COLOR_STYLE,
                                                                  prop, DEFAULT_BACKGROUND_COLOR_STYLE);
 
           /* load the colors */
-          g_snprintf (prop, sizeof (prop), "%s/color-start", base_prop);
+          g_snprintf (prop, sizeof (prop), "%s/color-start", data->base_prop);
           thunar_desktop_background_settings_color (background->settings, prop,
                                                     &color_start,
                                                     DEFAULT_BACKGROUND_COLOR_START);
-          g_snprintf (prop, sizeof (prop), "%s/color-end", base_prop);
-          thunar_desktop_background_settings_color (background->settings, prop,
-                                                    &color_end,
-                                                    DEFAULT_BACKGROUND_COLOR_END);
+
+          if (color_style != THUNAR_BACKGROUND_COLOR_STYLE_SOLID)
+            {
+              g_snprintf (prop, sizeof (prop), "%s/color-end", data->base_prop);
+              thunar_desktop_background_settings_color (background->settings, prop,
+                                                        &color_end,
+                                                        DEFAULT_BACKGROUND_COLOR_END);
+            }
 
           /* paint */
-          thunar_desktop_background_paint_color_fill (cr, &area, color_style, &color_start, &color_end);
+          thunar_desktop_background_paint_color_fill (cr, &data->geometry, color_style,
+                                                      &color_start, &color_end);
         }
 
-      if (G_LIKELY (pixbuf != NULL))
+      if (data->pixbuf != NULL)
         {
+          dx = data->geometry.x;
+          dy = data->geometry.y;
+
+          if (data->bg_style != THUNAR_BACKGROUND_STYLE_TILED)
+            {
+              /* center on monitor */
+              dx += (data->geometry.width - gdk_pixbuf_get_width (data->pixbuf)) / 2;
+              dy += (data->geometry.height - gdk_pixbuf_get_height (data->pixbuf)) / 2;
+            }
+
+          /* clip the drawing area */
+          cairo_save (cr);
+          gdk_cairo_rectangle (cr, &data->geometry);
+          cairo_clip (cr);
+
           /* paint the image */
-          thunar_desktop_background_paint_image (cr, &area, interp, bg_style, pixbuf);
-          g_object_unref (G_OBJECT (pixbuf));
+          thunar_gdk_cairo_set_source_pixbuf (cr, data->pixbuf, dx, dy);
+
+          if (data->bg_style == THUNAR_BACKGROUND_STYLE_TILED)
+            {
+              pattern = cairo_get_source (cr);
+              cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
+            }
+
+          cairo_paint (cr);
+          cairo_restore (cr);
+
+          /* drop the image */
+          g_object_unref (G_OBJECT (data->pixbuf));
         }
 
-      g_free (monitor_name);
-      g_free (base_prop);
-
-      /* only need to draw once for spanning */
-      if (bg_style == THUNAR_BACKGROUND_STYLE_SPANNED)
-        break;
+      /* clean the context data */
+      g_clear_object (&data->image_file);
+      g_free (data->base_prop);
+      g_slice_free (BackgroundAsync, data);
     }
 
-  /* if a fade animation was requested, start the timeout */
+  /* cleanup */
+  g_ptr_array_free (monitors, TRUE);
+
+    /* if a fade animation was requested, start the timeout */
   if (start_surface != NULL)
     {
       end_surface = thunar_desktop_background_get_surface (background, cr);
@@ -788,6 +684,254 @@ thunar_desktop_background_paint (ThunarDesktopBackground *background,
     }
 
   cairo_destroy (cr);
+
+  g_object_unref (G_OBJECT (result));
+  background->task = NULL;
+}
+
+
+
+static void
+thunar_desktop_background_paint_thread (GTask        *task,
+                                        gpointer      source_object,
+                                        gpointer      task_data,
+                                        GCancellable *cancellable)
+{
+  GPtrArray        *monitors = task_data;
+  BackgroundAsync  *data;
+  GFileInputStream *stream;
+  GError           *error = NULL;
+  gchar            *path;
+  GdkPixbuf        *pixbuf;
+  GdkPixbuf        *scaled;
+  guint             n;
+  gboolean          scale_image;
+  gint              src_w, src_h;
+  gint              dst_w, dst_h;
+  gdouble           wratio, hratio;
+
+  for (n = 0; n < monitors->len; n++)
+    {
+      data = g_ptr_array_index (monitors, n);
+      if (data == NULL)
+        break;
+
+      /* no image on this monitor */
+      if (data->image_file == NULL)
+        continue;
+
+      pixbuf = NULL;
+
+
+      /* create the input stream */
+      stream = g_file_read (data->image_file, cancellable, &error);
+      if (stream != NULL)
+        {
+          /* load the pixbuf in all its glory */
+          pixbuf = gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream), cancellable, &error);
+          g_object_unref (G_OBJECT (stream));
+
+          /* scale if needed */
+          if (pixbuf != NULL
+              && !g_cancellable_is_cancelled (cancellable))
+            {
+              src_w = gdk_pixbuf_get_width (pixbuf);
+              src_h = gdk_pixbuf_get_height (pixbuf);
+
+              dst_w = data->geometry.width;
+              dst_h = data->geometry.height;
+
+              scale_image = FALSE;
+
+              if (src_w != dst_w || src_h != dst_h)
+                {
+                  switch (data->bg_style)
+                    {
+                    case THUNAR_BACKGROUND_STYLE_TILED:
+                    case THUNAR_BACKGROUND_STYLE_CENTERED:
+                    case THUNAR_BACKGROUND_STYLE_NONE:
+                      /* no need to scale */
+                      break;
+
+                    case THUNAR_BACKGROUND_STYLE_STRETCHED:
+                      /* resize to monitor size */
+                      scale_image = TRUE;
+                      break;
+
+                    case THUNAR_BACKGROUND_STYLE_SCALED:
+                      /* calculate the new dimensions */
+                      wratio = (gdouble) src_w / (gdouble) dst_w;
+                      hratio = (gdouble) src_h / (gdouble) dst_h;
+
+                      if (hratio > wratio)
+                        dst_w = rint (src_w / hratio);
+                      else
+                        dst_h = rint (src_h / wratio);
+
+                      scale_image = TRUE;
+                      break;
+
+                    case THUNAR_BACKGROUND_STYLE_SPANNED:
+                    case THUNAR_BACKGROUND_STYLE_ZOOMED:
+                      /* calculate the new dimensions */
+                      wratio = (gdouble) src_w / (gdouble) dst_w;
+                      hratio = (gdouble) src_h / (gdouble) dst_h;
+
+                      if (hratio < wratio)
+                        dst_w = rint (src_w / hratio);
+                      else
+                        dst_h = rint (src_h / wratio);
+
+                      scale_image = TRUE;
+                      break;
+                    }
+                }
+
+              if (scale_image)
+                {
+                  /* scale now, we do this for the higher
+                   * resize quality we can get */
+                  scaled = gdk_pixbuf_scale_simple (pixbuf,
+                                                    dst_w, dst_h,
+                                                    data->image_interp);
+
+                  /* take over */
+                  g_object_unref (G_OBJECT (pixbuf));
+                  pixbuf = scaled;
+                }
+            }
+        }
+
+      if (G_UNLIKELY (error != NULL))
+        {
+          /* we don't abort the thread for this, maybe the file is
+           * removed or something like that; this does not mean
+           * we should not try to render the background for the other
+           * screens */
+          path = g_file_get_parse_name (data->image_file);
+          g_warning ("Unable to load image \"%s\": %s",
+                     path, error->message);
+          g_free (path);
+          g_error_free (error);
+        }
+      else if (!g_cancellable_is_cancelled (cancellable))
+        {
+          /* store the image */
+          data->pixbuf = g_object_ref (G_OBJECT (pixbuf));
+
+          /* prepare the cairo surface */
+          if (!g_cancellable_is_cancelled (cancellable))
+            thunar_gdk_cairo_set_source_pixbuf (NULL, data->pixbuf, 0, 0);
+        }
+
+      g_clear_object (&pixbuf);
+    }
+
+  g_task_return_pointer (task, NULL, NULL);
+}
+
+
+
+static void
+thunar_desktop_background_paint (ThunarDesktopBackground *background,
+                                 gboolean                 fade_animation)
+{
+  GdkScreen       *screen;
+  gint             n, n_monitors;
+  GdkInterpType    interp;
+  gchar           *monitor_name;
+  gint             screen_num;
+  gchar            prop[128];
+  gchar           *uri;
+  GPtrArray       *monitors;
+  BackgroundAsync *data;
+
+  _thunar_return_if_fail (THUNAR_IS_DESKTOP_BACKGROUND (background));
+  _thunar_return_if_fail (GDK_IS_DRAWABLE (background->pixmap));
+
+  /* stop pending animation */
+  if (background->fade_timeout_id != 0)
+    g_source_remove (background->fade_timeout_id);
+
+  /* stop running task */
+  if (background->task != NULL)
+    {
+      thunar_tasks_cancel (background->task);
+      background->task = NULL;
+    }
+
+  /* screen info */
+  screen = gdk_window_get_screen (background->source_window);
+  screen_num = gdk_screen_get_number (screen);
+  n_monitors = gdk_screen_get_n_monitors (screen);
+
+  /* if the screen has a bit depth of less than 24bpp, using bilinear
+   * filtering looks crappy (mainly with gradients). */
+  if (gdk_drawable_get_depth (GDK_DRAWABLE (background->source_window)) < 24)
+    interp = GDK_INTERP_HYPER;
+  else
+    interp = GDK_INTERP_BILINEAR;
+
+  /* load loading structure */
+  monitors = g_ptr_array_sized_new (n_monitors);
+
+  /* draw each monitor */
+  for (n = 0; n < n_monitors; n++)
+    {
+      /* create the data structure */
+      data = g_slice_new0 (BackgroundAsync);
+      data->fade_animation = fade_animation;
+      data->image_interp = interp;
+      g_ptr_array_add (monitors, data);
+
+      /* get the base property for xfconf */
+      monitor_name = thunar_desktop_background_get_monitor_name (screen, n);
+      data->base_prop = g_strdup_printf ("/background/screen-%d/%s", screen_num, monitor_name);
+      g_free (monitor_name);
+
+      /* get background style */
+      g_snprintf (prop, sizeof (prop), "%s/style", data->base_prop);
+      data->bg_style = thunar_desktop_background_settings_enum (background->settings,
+                                                                THUNAR_TYPE_BACKGROUND_STYLE,
+                                                                prop, DEFAULT_BACKGROUND_STYLE);
+
+      /* spanning works only on settings of the 1st monitor */
+      if (data->bg_style == THUNAR_BACKGROUND_STYLE_SPANNED)
+        {
+          data->geometry.x = data->geometry.y = 0;
+          data->geometry.width = gdk_screen_get_width (screen);
+          data->geometry.height = gdk_screen_get_height (screen);
+        }
+      else
+        {
+          /* get area of the monitor */
+          gdk_screen_get_monitor_geometry (screen, n, &data->geometry);
+        }
+
+      if (data->bg_style != THUNAR_BACKGROUND_STYLE_NONE)
+        {
+          /* get file name */
+          g_snprintf (prop, sizeof (prop), "%s/uri", data->base_prop);
+          uri = xfconf_channel_get_string (background->settings, prop, DEFAULT_BACKGROUND_URI);
+
+          if (G_LIKELY (uri != NULL))
+            {
+              /* the image we're going to load in the thread */
+              data->image_file = g_file_new_for_uri (uri);
+              g_free (uri);
+            }
+        }
+
+      /* when an image is spanned, we only draw it once */
+      if (data->bg_style == THUNAR_BACKGROUND_STYLE_SPANNED)
+        break;
+    }
+
+  /* start a thread to load and scale the images */
+  background->task = thunar_tasks_new (background, thunar_desktop_background_paint_finished, monitors);
+  g_task_set_priority (background->task, G_PRIORITY_LOW);
+  g_task_set_task_data (background->task, monitors, NULL);
+  g_task_run_in_thread (background->task, thunar_desktop_background_paint_thread);
 }
 
 

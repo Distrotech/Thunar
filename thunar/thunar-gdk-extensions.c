@@ -274,5 +274,6 @@ thunar_gdk_cairo_set_source_pixbuf (cairo_t   *cr,
     }
 
   /* apply */
-  cairo_set_source_surface (cr, surface, pixbuf_x, pixbuf_y);
+  if (cr != NULL)
+    cairo_set_source_surface (cr, surface, pixbuf_x, pixbuf_y);
 }
