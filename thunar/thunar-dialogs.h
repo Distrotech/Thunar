@@ -26,8 +26,9 @@
 
 G_BEGIN_DECLS;
 
-ThunarJob         *thunar_dialogs_show_rename_file      (gpointer              parent,
-                                                         ThunarFile           *file);
+GTask             *thunar_dialogs_show_rename_file      (gpointer              parent,
+                                                         ThunarFile           *file,
+                                                         GAsyncReadyCallback   classback);
 void               thunar_dialogs_show_about            (GtkWindow            *parent,
                                                          const gchar          *title,
                                                          const gchar          *format,

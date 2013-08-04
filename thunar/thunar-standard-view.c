@@ -2727,52 +2727,38 @@ thunar_standard_view_action_make_link (GtkAction          *action,
 
 
 static void
-thunar_standard_view_rename_error (ExoJob             *job,
-                                   GError             *error,
-                                   ThunarStandardView *standard_view)
+thunar_standard_view_rename_finished (GObject      *view,
+                                      GAsyncResult *result,
+                                      gpointer      user_data)
 {
-  GArray     *param_values;
-  ThunarFile *file;
+  GError *error = NULL;
 
-  _thunar_return_if_fail (EXO_IS_JOB (job));
-  _thunar_return_if_fail (error != NULL);
-  _thunar_return_if_fail (THUNAR_IS_STANDARD_VIEW (standard_view));
+  _thunar_return_if_fail (G_IS_TASK (result));
+  _thunar_return_if_fail (THUNAR_IS_STANDARD_VIEW (view));
+  _thunar_return_if_fail (THUNAR_IS_FILE (user_data));
 
-  param_values = thunar_simple_job_get_param_values (THUNAR_SIMPLE_JOB (job));
-  file = g_value_get_object (&g_array_index (param_values, GValue, 0));
+  g_task_propagate_pointer (G_TASK (result), &error);
+  if (error != NULL)
+    {
+      /* display an error message */
+      thunar_dialogs_show_error (GTK_WIDGET (view), error,
+                                 _("Failed to rename \"%s\""),
+                                 thunar_file_get_display_name (user_data));
+      g_error_free (error);
+    }
+  else
+    {
+      /* make sure the file is still visible */
+      thunar_view_scroll_to_file (THUNAR_VIEW (view), user_data, TRUE, FALSE, 0.0f, 0.0f);
 
-  /* display an error message */
-  thunar_dialogs_show_error (GTK_WIDGET (standard_view), error,
-                             _("Failed to rename \"%s\""),
-                             thunar_file_get_display_name (file));
-}
-
-
-
-static void
-thunar_standard_view_rename_finished (ExoJob             *job,
-                                      ThunarStandardView *standard_view)
-{
-  GArray     *param_values;
-  ThunarFile *file;
-
-  _thunar_return_if_fail (EXO_IS_JOB (job));
-  _thunar_return_if_fail (THUNAR_IS_STANDARD_VIEW (standard_view));
-
-  param_values = thunar_simple_job_get_param_values (THUNAR_SIMPLE_JOB (job));
-  file = g_value_get_object (&g_array_index (param_values, GValue, 0));
-
-  /* make sure the file is still visible */
-  thunar_view_scroll_to_file (THUNAR_VIEW (standard_view), file, TRUE, FALSE, 0.0f, 0.0f);
-
-  /* update the selection, so we get updated actions, statusbar,
-   * etc. with the new file name and probably new mime type.
-   */
-  thunar_standard_view_selection_changed (standard_view);
+      /* update the selection, so we get updated actions, statusbar,
+       * etc. with the new file name and probably new mime type.
+       */
+      thunar_standard_view_selection_changed (THUNAR_STANDARD_VIEW (view));
+    }
 
   /* destroy the job */
-  g_signal_handlers_disconnect_matched (job, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, standard_view);
-  g_object_unref (job);
+  g_object_unref (result);
 }
 
 
@@ -2782,8 +2768,6 @@ thunar_standard_view_action_rename (GtkAction          *action,
                                     ThunarStandardView *standard_view)
 {
   ThunarFile      *file;
-  GtkWidget       *window;
-  ThunarJob       *job;
   GdkModifierType  state;
   gboolean         force_bulk_renamer;
   const gchar     *accel_path;
@@ -2813,19 +2797,11 @@ thunar_standard_view_action_rename (GtkAction          *action,
   if (!force_bulk_renamer
       && standard_view->priv->selected_files->next == NULL)
     {
-      /* get the window */
-      window = gtk_widget_get_toplevel (GTK_WIDGET (standard_view));
-
       /* get the file */
       file = THUNAR_FILE (standard_view->priv->selected_files->data);
 
       /* run the rename dialog */
-      job = thunar_dialogs_show_rename_file (GTK_WINDOW (window), file);
-      if (G_LIKELY (job != NULL))
-        {
-          g_signal_connect (job, "error", G_CALLBACK (thunar_standard_view_rename_error), standard_view);
-          g_signal_connect (job, "finished", G_CALLBACK (thunar_standard_view_rename_finished), standard_view);
-        }
+      thunar_dialogs_show_rename_file (standard_view, file, thunar_standard_view_rename_finished);
     }
   else
     {

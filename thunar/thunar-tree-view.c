@@ -1742,37 +1742,27 @@ thunar_tree_view_action_delete (ThunarTreeView *view)
 
 
 static void
-thunar_tree_view_rename_error (ExoJob         *job,
-                               GError         *error,
-                               ThunarTreeView *view)
+thunar_tree_view_rename_finished (GObject      *view,
+                                  GAsyncResult *result,
+                                  gpointer      user_data)
 {
-  GArray     *param_values;
-  ThunarFile *file;
+  GError *error = NULL;
 
-  _thunar_return_if_fail (EXO_IS_JOB (job));
-  _thunar_return_if_fail (error != NULL);
+  _thunar_return_if_fail (G_IS_TASK (result));
   _thunar_return_if_fail (THUNAR_IS_TREE_VIEW (view));
+  _thunar_return_if_fail (THUNAR_IS_FILE (user_data));
 
-  param_values = thunar_simple_job_get_param_values (THUNAR_SIMPLE_JOB (job));
-  file = g_value_get_object (&g_array_index (param_values, GValue, 0));
+  g_task_propagate_pointer (G_TASK (result), &error);
+  if (error != NULL)
+    {
+      /* display an error message */
+      thunar_dialogs_show_error (GTK_WIDGET (view), error, _("Failed to rename \"%s\""),
+                                 thunar_file_get_display_name (user_data));
+      g_error_free (error);
+    }
 
-  /* display an error message */
-  thunar_dialogs_show_error (GTK_WIDGET (view), error, _("Failed to rename \"%s\""),
-                             thunar_file_get_display_name (file));
-}
-
-
-
-static void
-thunar_tree_view_rename_finished (ExoJob         *job,
-                                  ThunarTreeView *view)
-{
-  _thunar_return_if_fail (EXO_IS_JOB (job));
-  _thunar_return_if_fail (THUNAR_IS_TREE_VIEW (view));
-
-  /* destroy the job */
-  g_signal_handlers_disconnect_matched (job, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, view);
-  g_object_unref (job);
+  /* destroy the task */
+  g_object_unref (result);
 }
 
 
@@ -1781,8 +1771,6 @@ static void
 thunar_tree_view_action_rename (ThunarTreeView *view)
 {
   ThunarFile *file;
-  GtkWidget  *window;
-  ThunarJob  *job;
 
   _thunar_return_if_fail (THUNAR_IS_TREE_VIEW (view));
 
@@ -1790,16 +1778,8 @@ thunar_tree_view_action_rename (ThunarTreeView *view)
   file = thunar_tree_view_get_selected_file (view);
   if (G_LIKELY (file != NULL))
     {
-      /* get the toplevel window */
-      window = gtk_widget_get_toplevel (GTK_WIDGET (view));
-
       /* run the rename dialog */
-      job = thunar_dialogs_show_rename_file (GTK_WINDOW (window), file);
-      if (G_LIKELY (job != NULL))
-        {
-          g_signal_connect (job, "error", G_CALLBACK (thunar_tree_view_rename_error), view);
-          g_signal_connect (job, "finished", G_CALLBACK (thunar_tree_view_rename_finished), view);
-        }
+      thunar_dialogs_show_rename_file (view, file, thunar_tree_view_rename_finished);
 
       /* release the file */
       g_object_unref (file);

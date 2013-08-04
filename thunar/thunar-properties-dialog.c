@@ -46,8 +46,7 @@
 #include <thunar/thunar-gtk-extensions.h>
 #include <thunar/thunar-icon-factory.h>
 #include <thunar/thunar-image.h>
-#include <thunar/thunar-io-jobs.h>
-#include <thunar/thunar-job.h>
+#include <thunar/thunar-tasks.h>
 #include <thunar/thunar-marshal.h>
 #include <thunar/thunar-pango-extensions.h>
 #include <thunar/thunar-permissions-chooser.h>
@@ -659,32 +658,25 @@ thunar_properties_dialog_reload (ThunarPropertiesDialog *dialog)
 
 
 static void
-thunar_properties_dialog_rename_error (ExoJob                 *job,
-                                       GError                 *error,
-                                       ThunarPropertiesDialog *dialog)
+thunar_properties_dialog_rename_finished (GObject      *dialog,
+                                          GAsyncResult *result,
+                                          gpointer      user_data)
 {
-  _thunar_return_if_fail (EXO_IS_JOB (job));
-  _thunar_return_if_fail (error != NULL);
+  GError *error = NULL;
+
+  _thunar_return_if_fail (G_IS_TASK (result));
   _thunar_return_if_fail (THUNAR_IS_PROPERTIES_DIALOG (dialog));
-  _thunar_return_if_fail (g_list_length (dialog->files) == 1);
+  _thunar_return_if_fail (THUNAR_IS_FILE (user_data));
 
-  /* display an error message */
-  thunar_dialogs_show_error (GTK_WIDGET (dialog), error, _("Failed to rename \"%s\""),
-                             thunar_file_get_display_name (THUNAR_FILE (dialog->files->data)));
-}
+  g_task_propagate_pointer (G_TASK (result), &error);
+  if (error != NULL)
+    {
+      /* display an error message */
+      thunar_dialogs_show_error (GTK_WIDGET (dialog), error, _("Failed to rename \"%s\""),
+                                 thunar_file_get_display_name (THUNAR_FILE (user_data)));
+    }
 
-
-
-static void
-thunar_properties_dialog_rename_finished (ExoJob                 *job,
-                                          ThunarPropertiesDialog *dialog)
-{
-  _thunar_return_if_fail (EXO_IS_JOB (job));
-  _thunar_return_if_fail (THUNAR_IS_PROPERTIES_DIALOG (dialog));
-  _thunar_return_if_fail (g_list_length (dialog->files) == 1);
-
-  g_signal_handlers_disconnect_matched (job, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, dialog);
-  g_object_unref (job);
+  g_object_unref (result);
 }
 
 
@@ -694,7 +686,7 @@ thunar_properties_dialog_name_activate (GtkWidget              *entry,
                                         ThunarPropertiesDialog *dialog)
 {
   const gchar *old_name;
-  ThunarJob   *job;
+  GTask       *task;
   gchar       *new_name;
   ThunarFile  *file;
 
@@ -711,12 +703,8 @@ thunar_properties_dialog_name_activate (GtkWidget              *entry,
   old_name = thunar_file_get_display_name (file);
   if (g_utf8_collate (new_name, old_name) != 0)
     {
-      job = thunar_io_jobs_rename_file (file, new_name);
-      if (job != NULL)
-        {
-          g_signal_connect (job, "error", G_CALLBACK (thunar_properties_dialog_rename_error), dialog);
-          g_signal_connect (job, "finished", G_CALLBACK (thunar_properties_dialog_rename_finished), dialog);
-        }
+      task = thunar_tasks_new (dialog, thunar_properties_dialog_rename_finished, file);
+      thunar_tasks_rename_file (task, file, new_name);
     }
 }
 

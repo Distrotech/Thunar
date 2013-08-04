@@ -32,6 +32,15 @@
 
 
 
+typedef struct
+{
+  ThunarFile *file;
+  gchar      *display_name;
+}
+ThunarTaskRename;
+
+
+
 GTask *
 thunar_tasks_new (gpointer             source_object,
                   GAsyncReadyCallback  callback,
@@ -91,4 +100,56 @@ thunar_tasks_list_directory (GTask *task,
 
   g_task_set_task_data (task, g_object_ref (directory), g_object_unref);
   g_task_run_in_thread (task, thunar_tasks_list_directory_thread);
+}
+
+
+
+static void
+thunar_tasks_rename_file_thread (GTask        *task,
+                                 gpointer      source_object,
+                                 gpointer      task_data,
+                                 GCancellable *cancellable)
+{
+  ThunarTaskRename *data = task_data;
+  GError           *err = NULL;
+
+  if (g_task_return_error_if_cancelled (task))
+    return;
+
+  if (thunar_file_rename (data->file, data->display_name, cancellable, TRUE, &err))
+    g_task_return_pointer (task, NULL, NULL);
+  else
+    g_task_return_error (task, err);
+}
+
+
+
+static void
+thunar_tasks_rename_file_free (gpointer user_data)
+{
+  ThunarTaskRename *data = user_data;
+
+  g_object_unref (data->file);
+  g_free (data->display_name);
+  g_slice_free (ThunarTaskRename, data);
+}
+
+
+
+void
+thunar_tasks_rename_file (GTask       *task,
+                          ThunarFile  *file,
+                          const gchar *display_name)
+{
+  ThunarTaskRename *data;
+
+  _thunar_return_if_fail (THUNAR_IS_FILE (file));
+  _thunar_return_if_fail (G_IS_TASK (task));
+
+  data = g_slice_new0 (ThunarTaskRename);
+  data->file = g_object_ref (file);
+  data->display_name = g_strdup (display_name);
+
+  g_task_set_task_data (task, data, thunar_tasks_rename_file_free);
+  g_task_run_in_thread (task, thunar_tasks_rename_file_thread);
 }

@@ -34,8 +34,7 @@
 
 #include <thunar/thunar-dialogs.h>
 #include <thunar/thunar-icon-factory.h>
-#include <thunar/thunar-io-jobs.h>
-#include <thunar/thunar-job.h>
+#include <thunar/thunar-tasks.h>
 #include <thunar/thunar-pango-extensions.h>
 #include <thunar/thunar-preferences.h>
 #include <thunar/thunar-private.h>
@@ -55,15 +54,16 @@
  * Return value: The #ThunarJob responsible for renaming the file or
  *               %NULL if there was no renaming required.
  **/
-ThunarJob *
-thunar_dialogs_show_rename_file (gpointer    parent,
-                                 ThunarFile *file)
+GTask *
+thunar_dialogs_show_rename_file (gpointer             parent,
+                                 ThunarFile          *file,
+                                 GAsyncReadyCallback  callback)
 {
   ThunarIconFactory *icon_factory;
   GtkIconTheme      *icon_theme;
   const gchar       *filename;
   const gchar       *text;
-  ThunarJob         *job = NULL;
+  GTask             *task = NULL;
   GtkWidget         *dialog;
   GtkWidget         *entry;
   GtkWidget         *label;
@@ -80,7 +80,7 @@ thunar_dialogs_show_rename_file (gpointer    parent,
   gint               layout_offset;
   gint               parent_width = 500;
 
-  _thunar_return_val_if_fail (parent == NULL || GDK_IS_SCREEN (parent) || GTK_IS_WINDOW (parent), FALSE);
+  _thunar_return_val_if_fail (parent == NULL || GDK_IS_SCREEN (parent) || GTK_IS_WIDGET (parent), FALSE);
   _thunar_return_val_if_fail (THUNAR_IS_FILE (file), FALSE);
 
   /* parse the parent window and screen */
@@ -184,14 +184,15 @@ thunar_dialogs_show_rename_file (gpointer    parent,
       if (G_LIKELY (!exo_str_is_equal (filename, text)))
         {
           /* try to rename the file */
-          job = thunar_io_jobs_rename_file (file, text);
+          task = thunar_tasks_new (parent, callback, file);
+          thunar_tasks_rename_file (task, file, text);
         }
     }
 
   /* cleanup */
   gtk_widget_destroy (dialog);
 
-  return job;
+  return task;
 }
 
 

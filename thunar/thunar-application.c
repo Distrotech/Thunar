@@ -166,7 +166,6 @@ struct _ThunarApplication
 
 static GQuark thunar_application_screen_quark;
 static GQuark thunar_application_startup_id_quark;
-static GQuark thunar_application_file_quark;
 
 
 
@@ -185,8 +184,6 @@ thunar_application_class_init (ThunarApplicationClass *klass)
     g_quark_from_static_string ("thunar-application-screen");
   thunar_application_startup_id_quark =
     g_quark_from_static_string ("thunar-application-startup-id");
-  thunar_application_file_quark =
-    g_quark_from_static_string ("thunar-application-file");
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize = thunar_application_finalize;
@@ -1342,37 +1339,27 @@ thunar_application_is_processing (ThunarApplication *application)
 
 
 static void
-thunar_application_rename_file_error (ExoJob            *job,
-                                      GError            *error,
-                                      ThunarApplication *application)
+thunar_application_rename_file_finished (GObject      *source_object,
+                                         GAsyncResult *result,
+                                         gpointer      user_data)
 {
-  ThunarFile *file;
-  GdkScreen  *screen;
+  GError *error = NULL;
 
-  _thunar_return_if_fail (EXO_IS_JOB (job));
-  _thunar_return_if_fail (error != NULL);
-  _thunar_return_if_fail (THUNAR_IS_APPLICATION (application));
+  _thunar_return_if_fail (G_IS_TASK (result));
+  _thunar_return_if_fail (GDK_IS_SCREEN (source_object));
+  _thunar_return_if_fail (THUNAR_IS_FILE (user_data));
 
-  screen = g_object_get_qdata (G_OBJECT (job), thunar_application_screen_quark);
-  file = g_object_get_qdata (G_OBJECT (job), thunar_application_file_quark);
-
-  g_assert (screen != NULL);
-  g_assert (file != NULL);
-
-  thunar_dialogs_show_error (screen, error, _("Failed to rename \"%s\""), 
-                             thunar_file_get_display_name (file));
-}
-
-
-
-static void
-thunar_application_rename_file_finished (ExoJob  *job,
-                                         gpointer user_data)
-{
-  _thunar_return_if_fail (EXO_IS_JOB (job));
+  g_task_propagate_pointer (G_TASK (result), &error);
+  if (error != NULL)
+    {
+      thunar_dialogs_show_error (GDK_SCREEN (source_object), error,
+                                 _("Failed to rename \"%s\""), 
+                                 thunar_file_get_display_name (user_data));
+      g_error_free (error);
+    }
 
   /* destroy the job object */
-  g_object_unref (job);
+  g_object_unref (result);
 }
 
 
@@ -1394,8 +1381,6 @@ thunar_application_rename_file (ThunarApplication *application,
                                 GdkScreen         *screen,
                                 const gchar       *startup_id)
 {
-  ThunarJob *job;
-
   _thunar_return_if_fail (THUNAR_IS_APPLICATION (application));
   _thunar_return_if_fail (THUNAR_IS_FILE (file));
   _thunar_return_if_fail (GDK_IS_SCREEN (screen));
@@ -1404,22 +1389,7 @@ thunar_application_rename_file (ThunarApplication *application,
   /* TODO pass the startup ID to the rename dialog */
 
   /* run the rename dialog */
-  job = thunar_dialogs_show_rename_file (screen, file);
-  if (G_LIKELY (job != NULL))
-    {
-      /* remember the screen and file */
-      g_object_set_qdata (G_OBJECT (job), thunar_application_screen_quark, screen);
-      g_object_set_qdata_full (G_OBJECT (job), thunar_application_file_quark, 
-                               g_object_ref (file), g_object_unref);
-
-      /* handle rename errors */
-      g_signal_connect (job, "error", 
-                        G_CALLBACK (thunar_application_rename_file_error), application);
-
-      /* destroy the job when it has finished */
-      g_signal_connect (job, "finished",
-                        G_CALLBACK (thunar_application_rename_file_finished), NULL);
-    }
+  thunar_dialogs_show_rename_file (screen, file, thunar_application_rename_file_finished);
 }
 
 

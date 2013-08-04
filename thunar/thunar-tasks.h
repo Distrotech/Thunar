@@ -23,6 +23,7 @@
 #define __THUNAR_TASKS_H__
 
 #include <gio/gio.h>
+#include <thunar/thunar-file.h>
 
 G_BEGIN_DECLS
 
@@ -33,6 +34,9 @@ GTask     *thunar_tasks_new                (gpointer               source_object
 void       thunar_tasks_list_directory     (GTask                 *task,
                                             GFile                 *directory);
 
+void       thunar_tasks_rename_file        (GTask                 *task,
+                                            ThunarFile            *file,
+                                            const gchar           *display_name);
 G_END_DECLS
 
 #endif /* !__THUNAR_TASKS_H__ */
