@@ -320,7 +320,7 @@ thunar_background_style_get_type (void)
       static const GEnumValue values[] =
       {
         { THUNAR_BACKGROUND_STYLE_NONE,      "THUNAR_BACKGROUND_STYLE_NONE",      N_ ("None")      },
-        { THUNAR_BACKGROUND_STYLE_TILED,     "THUNAR_BACKGROUND_STYLE_TILED",     N_ ("Titled")    },
+        { THUNAR_BACKGROUND_STYLE_TILED,     "THUNAR_BACKGROUND_STYLE_TILED",     N_ ("Tiled")    },
         { THUNAR_BACKGROUND_STYLE_CENTERED,  "THUNAR_BACKGROUND_STYLE_CENTERED",  N_ ("Centered")  },
         { THUNAR_BACKGROUND_STYLE_STRETCHED, "THUNAR_BACKGROUND_STYLE_STRETCHED", N_ ("Stretched") },
         { THUNAR_BACKGROUND_STYLE_SCALED,    "THUNAR_BACKGROUND_STYLE_SCALED",    N_ ("Scaled")    },
