@@ -23,8 +23,6 @@
 
 #include <gio/gio.h>
 
-#include <thunar/thunar-job.h>
-
 G_BEGIN_DECLS;
 
 typedef struct _ThunarDeepCountJobPrivate ThunarDeepCountJobPrivate;
@@ -40,8 +38,14 @@ typedef struct _ThunarDeepCountJob        ThunarDeepCountJob;
 
 GType               thunar_deep_count_job_get_type (void) G_GNUC_CONST;
 
-ThunarDeepCountJob *thunar_deep_count_job_new      (GList              *files,
-                                                    GFileQueryInfoFlags flags) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+ThunarDeepCountJob *thunar_deep_count_job_new      (gpointer            source_object,
+                                                    GList              *files,
+                                                    GFileQueryInfoFlags flags,
+                                                    GAsyncReadyCallback callback) G_GNUC_MALLOC G_GNUC_WARN_UNUSED_RESULT;
+
+void                thunar_deep_count_job_run      (ThunarDeepCountJob *job);
+
+void                thunar_deep_count_job_cancel   (ThunarDeepCountJob *job);
 
 G_END_DECLS;
 
