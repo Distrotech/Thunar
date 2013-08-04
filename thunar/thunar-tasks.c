@@ -60,6 +60,21 @@ thunar_tasks_new (gpointer             source_object,
 
 
 
+void
+thunar_tasks_cancel (GTask *task)
+{
+  GCancellable *cancellable;
+
+  _thunar_return_if_fail (G_IS_TASK (task));
+
+  cancellable = g_task_get_cancellable (task);
+  g_cancellable_cancel (cancellable);
+
+  _thunar_assert (g_task_had_error (task));
+}
+
+
+
 static void
 thunar_tasks_list_directory_thread (GTask        *task,
                                     gpointer      source_object,

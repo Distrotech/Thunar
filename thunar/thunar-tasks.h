@@ -31,6 +31,8 @@ GTask     *thunar_tasks_new                (gpointer               source_object
                                             GAsyncReadyCallback    callback,
                                             gpointer               callback_data);
 
+void       thunar_tasks_cancel             (GTask                 *task);
+
 void       thunar_tasks_list_directory     (GTask                 *task,
                                             GFile                 *directory);
 

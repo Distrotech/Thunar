@@ -463,10 +463,6 @@ thunar_deep_count_job_run (ThunarDeepCountJob *job)
 void
 thunar_deep_count_job_cancel (ThunarDeepCountJob *job)
 {
-  GCancellable *cancellable;
-
   _thunar_return_if_fail (THUNAR_IS_DEEP_COUNT_JOB (job));
-
-  cancellable = g_task_get_cancellable (job->task);
-  g_cancellable_cancel (cancellable);
+  thunar_tasks_cancel (job->task);
 }
