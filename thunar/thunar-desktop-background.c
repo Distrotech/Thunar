@@ -511,6 +511,20 @@ thunar_desktop_background_fade_completed (gpointer data)
 
 
 static void
+thunar_desktop_background_paint_free (BackgroundAsync *data)
+{
+  if (G_LIKELY (data != NULL))
+    {
+      g_clear_object (&data->image_file);
+      g_clear_object (&data->pixbuf);
+      g_free (data->base_prop);
+      g_slice_free (BackgroundAsync, data);
+    }
+}
+
+
+
+static void
 thunar_desktop_background_paint_finished (GObject      *source_object,
                                           GAsyncResult *result,
                                           gpointer      user_data)
@@ -532,7 +546,7 @@ thunar_desktop_background_paint_finished (GObject      *source_object,
   gboolean                    fade_animation;
 
   _thunar_return_if_fail (THUNAR_IS_DESKTOP_BACKGROUND (background));
-  _thunar_return_if_fail (background->task == G_TASK (result));
+  _thunar_return_if_fail (G_IS_TASK (result));
 
   /* abort on an error or cancellation */
   if (g_task_had_error (G_TASK (result)))
@@ -540,20 +554,10 @@ thunar_desktop_background_paint_finished (GObject      *source_object,
       for (n = 0; n < monitors->len; n++)
         {
           data = g_ptr_array_index (monitors, n);
-          if (data != NULL)
-            {
-              g_clear_object (&data->image_file);
-              g_clear_object (&data->pixbuf);
-              g_free (data->base_prop);
-              g_slice_free (BackgroundAsync, data);
-            }
+          thunar_desktop_background_paint_free (data);
         }
 
-      g_ptr_array_free (monitors, TRUE);
-      g_object_unref (G_OBJECT (result));
-      background->task = NULL;
-
-      return;
+      goto err1;
     }
 
   /* prepare cairo context */
@@ -636,19 +640,11 @@ thunar_desktop_background_paint_finished (GObject      *source_object,
 
           cairo_paint (cr);
           cairo_restore (cr);
-
-          /* drop the image */
-          g_object_unref (G_OBJECT (data->pixbuf));
         }
 
       /* clean the context data */
-      g_clear_object (&data->image_file);
-      g_free (data->base_prop);
-      g_slice_free (BackgroundAsync, data);
+      thunar_desktop_background_paint_free (data);
     }
-
-  /* cleanup */
-  g_ptr_array_free (monitors, TRUE);
 
     /* if a fade animation was requested, start the timeout */
   if (start_surface != NULL)
@@ -685,8 +681,14 @@ thunar_desktop_background_paint_finished (GObject      *source_object,
 
   cairo_destroy (cr);
 
+  err1:
+
+  /* unset stored job if owned by this job */
+  if (background->task == G_TASK (result))
+    background->task = NULL;
+
+  g_ptr_array_free (monitors, TRUE);
   g_object_unref (G_OBJECT (result));
-  background->task = NULL;
 }
 
 
@@ -717,11 +719,11 @@ thunar_desktop_background_paint_thread (GTask        *task,
         break;
 
       /* no image on this monitor */
-      if (data->image_file == NULL)
+      if (data->image_file == NULL
+          || g_cancellable_is_cancelled (cancellable))
         continue;
 
       pixbuf = NULL;
-
 
       /* create the input stream */
       stream = g_file_read (data->image_file, cancellable, &error);
@@ -759,7 +761,7 @@ thunar_desktop_background_paint_thread (GTask        *task,
                       break;
 
                     case THUNAR_BACKGROUND_STYLE_SCALED:
-                      /* calculate the new dimensions */
+                      /* fit image inside available area */
                       wratio = (gdouble) src_w / (gdouble) dst_w;
                       hratio = (gdouble) src_h / (gdouble) dst_h;
 
@@ -773,7 +775,7 @@ thunar_desktop_background_paint_thread (GTask        *task,
 
                     case THUNAR_BACKGROUND_STYLE_SPANNED:
                     case THUNAR_BACKGROUND_STYLE_ZOOMED:
-                      /* calculate the new dimensions */
+                      /* fill available area, possibly cut edges */
                       wratio = (gdouble) src_w / (gdouble) dst_w;
                       hratio = (gdouble) src_h / (gdouble) dst_h;
 
@@ -808,11 +810,14 @@ thunar_desktop_background_paint_thread (GTask        *task,
            * removed or something like that; this does not mean
            * we should not try to render the background for the other
            * screens */
-          path = g_file_get_parse_name (data->image_file);
-          g_warning ("Unable to load image \"%s\": %s",
-                     path, error->message);
-          g_free (path);
-          g_error_free (error);
+          if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+            {
+              path = g_file_get_parse_name (data->image_file);
+              g_printerr ("Thunar: Unable to load image \"%s\": %s\n",
+                          path, error->message);
+              g_free (path);
+            }
+          g_clear_error (&error);
         }
       else if (!g_cancellable_is_cancelled (cancellable))
         {
@@ -824,6 +829,7 @@ thunar_desktop_background_paint_thread (GTask        *task,
             thunar_gdk_cairo_set_source_pixbuf (NULL, data->pixbuf, 0, 0);
         }
 
+      /* we took a ref if everything was not cancelled */
       g_clear_object (&pixbuf);
     }
 
