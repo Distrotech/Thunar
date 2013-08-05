@@ -156,12 +156,12 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
   GtkWidget    *label;
   GtkWidget    *vbox;
   GtkWidget    *hbox;
+  GtkWidget    *table;
   GtkWidget    *combo;
   GtkWidget    *button;
   GtkWidget    *button2;
   GEnumClass   *klass;
   guint         n;
-  GtkSizeGroup *size_group;
   GtkWidget    *seperator;
 
   dialog->settings = xfconf_channel_get ("thunar-desktop");
@@ -196,36 +196,32 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
   gtk_box_pack_start (GTK_BOX (vbox), dialog->view, TRUE, TRUE, 0);
   gtk_widget_show (dialog->view);
 
-  size_group = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
-
-  hbox = gtk_hbox_new (FALSE, 12);
-  gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, TRUE, 0);
-  gtk_widget_show (hbox);
+  table = gtk_table_new (2, 6, FALSE);
+  gtk_box_pack_start (GTK_BOX (vbox), table, FALSE, TRUE, 0);
+  gtk_table_set_col_spacings (GTK_TABLE (table), 12);
+  gtk_table_set_row_spacings (GTK_TABLE (table), 6);
+  gtk_widget_show (table);
 
   label = gtk_label_new_with_mnemonic ("_Folder:");
-  gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, TRUE, 0);
-  gtk_size_group_add_widget (size_group, label);
+  gtk_table_attach (GTK_TABLE (table), label, 0, 1, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
+  gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
   gtk_widget_show (label);
 
   dialog->folder_chooser = gtk_file_chooser_button_new (_("Choose a background images folder"), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
-  gtk_box_pack_start (GTK_BOX (hbox), dialog->folder_chooser, FALSE, TRUE, 0);
+  gtk_table_attach (GTK_TABLE (table), dialog->folder_chooser, 1, 4, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), dialog->folder_chooser);
   gtk_file_chooser_set_local_only (GTK_FILE_CHOOSER (dialog->folder_chooser), TRUE);
-  g_signal_connect_swapped (G_OBJECT (dialog->folder_chooser), "current-folder-changed",
+  g_signal_connect_swapped (G_OBJECT (dialog->folder_chooser), "selection-changed",
       G_CALLBACK (thunar_desktop_preferences_dialog_folder_changed), dialog);
   gtk_widget_show (dialog->folder_chooser);
 
-  /* spacer */
-  label = g_object_new (GTK_TYPE_LABEL, NULL);
-  gtk_box_pack_start (GTK_BOX (hbox), label, TRUE, TRUE, 0);
-  gtk_widget_show (label);
-
   label = gtk_label_new_with_mnemonic ("_Style:");
-  gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, TRUE, 0);
+  gtk_table_attach (GTK_TABLE (table), label, 4, 6, 0, 1, GTK_FILL | GTK_EXPAND, GTK_FILL, 0, 0);
+  gtk_misc_set_alignment (GTK_MISC (label), 1.0, 0.5);
   gtk_widget_show (label);
 
   dialog->image_style = combo = gtk_combo_box_text_new ();
-  gtk_box_pack_start (GTK_BOX (hbox), combo, FALSE, TRUE, 0);
+  gtk_table_attach (GTK_TABLE (table), combo, 6, 7, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), combo);
   gtk_widget_show (combo);
 
@@ -237,19 +233,13 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
   g_signal_connect_swapped (G_OBJECT (combo), "changed",
       G_CALLBACK (thunar_desktop_preferences_dialog_style_changed), dialog);
 
-  hbox = gtk_hbox_new (FALSE, 12);
-  gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, TRUE, 0);
-  gtk_widget_show (hbox);
-
   label = gtk_label_new_with_mnemonic ("C_olors:");
-  gtk_box_pack_start (GTK_BOX (hbox), label, FALSE, TRUE, 0);
-  gtk_size_group_add_widget (size_group, label);
+  gtk_table_attach (GTK_TABLE (table), label, 0, 1, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
+  gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
   gtk_widget_show (label);
 
-  g_object_unref (size_group);
-
   dialog->color_style = combo = gtk_combo_box_text_new ();
-  gtk_box_pack_start (GTK_BOX (hbox), combo, FALSE, TRUE, 0);
+  gtk_table_attach (GTK_TABLE (table), combo, 1, 2, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), combo);
   gtk_widget_show (combo);
 
@@ -263,14 +253,14 @@ thunar_desktop_preferences_dialog_init (ThunarDesktopPreferencesDialog *dialog)
 
   dialog->color_start = button = gtk_color_button_new ();
   gtk_color_button_set_title (GTK_COLOR_BUTTON (button), _("Start background color"));
-  gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, TRUE, 0);
+  gtk_table_attach (GTK_TABLE (table), button, 2, 3, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
   g_signal_connect (G_OBJECT (button), "color-set",
       G_CALLBACK (thunar_desktop_preferences_dialog_color_changed), dialog);
   gtk_widget_show (button);
 
   dialog->color_end = button = gtk_color_button_new ();
   gtk_color_button_set_title (GTK_COLOR_BUTTON (button), _("End background color"));
-  gtk_box_pack_start (GTK_BOX (hbox), button, FALSE, TRUE, 0);
+  gtk_table_attach (GTK_TABLE (table), button, 3, 4, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
   g_object_bind_property (combo, "active", button, "sensitive", G_BINDING_SYNC_CREATE);
   g_signal_connect (G_OBJECT (button), "color-set",
       G_CALLBACK (thunar_desktop_preferences_dialog_color_changed), dialog);
@@ -515,8 +505,8 @@ thunar_desktop_preferences_dialog_update (gpointer data)
         {
           /* set view of the directory */
           thunar_navigator_set_current_directory (THUNAR_NAVIGATOR (dialog->view), file_parent);
-          gtk_file_chooser_set_current_folder_file (GTK_FILE_CHOOSER (dialog->folder_chooser),
-                                                    thunar_file_get_file (file_parent), NULL);
+          gtk_file_chooser_set_file (GTK_FILE_CHOOSER (dialog->folder_chooser),
+                                     thunar_file_get_file (file_parent), NULL);
           g_object_unref (file_parent);
 
           /* create a fake list and select the file */
@@ -649,7 +639,7 @@ thunar_desktop_preferences_dialog_folder_changed (ThunarDesktopPreferencesDialog
   GFile      *gfile;
   ThunarFile *current_directory;
 
-  gfile = gtk_file_chooser_get_current_folder_file (GTK_FILE_CHOOSER (dialog->folder_chooser));
+  gfile = gtk_file_chooser_get_file (GTK_FILE_CHOOSER (dialog->folder_chooser));
   if (G_LIKELY (gfile != NULL))
     {
       current_directory = thunar_file_get (gfile, NULL);
