@@ -876,7 +876,7 @@ thunar_folder_reload (ThunarFolder *folder)
   if (G_UNLIKELY (folder->task != NULL))
     {
       /* stop the task */
-      g_task_return_error_if_cancelled (folder->task);
+      thunar_tasks_cancel (folder->task);
       g_object_unref (folder->task);
       folder->task = NULL;
     }
