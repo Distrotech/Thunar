@@ -276,10 +276,11 @@ thunar_folder_finalize (GObject *object)
       g_object_unref (folder->monitor);
     }
 
-  /* cancel the pending task (if any) */
+  /* cancel the pending task (if any)
+   * finished function will unref the task */
   if (G_UNLIKELY (folder->task != NULL))
     {
-      g_object_unref (folder->task);
+      thunar_tasks_cancel (folder->task);
       folder->task = NULL;
     }
 
@@ -428,21 +429,26 @@ thunar_folder_finished (GObject      *source_object,
   _thunar_return_if_fail (THUNAR_IS_FOLDER (folder));
   _thunar_return_if_fail (THUNAR_IS_FILE (folder->corresponding_file));
   _thunar_return_if_fail (folder->monitor == NULL);
-  _thunar_return_if_fail (folder->task == G_TASK (result));
+  _thunar_return_if_fail (G_TASK (result));
   _thunar_return_if_fail (folder->content_type_idle_id == 0);
 
   /* check if everything went fine */
-  new_files = g_task_propagate_pointer (folder->task, &error);
-  if (error != NULL)
+  new_files = g_task_propagate_pointer (G_TASK (result), &error);
+  if (error != NULL || g_task_had_error (G_TASK (result)))
     {
-      /* something when wrong */
-      _thunar_assert (new_files == NULL);
-      g_signal_emit (G_OBJECT (folder), folder_signals[ERROR], 0, error);
-      g_error_free (error);
+      /* make sure we don't leak anything */
+      thunar_g_file_list_free (new_files);
+
+      if (error != NULL
+          && g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        g_signal_emit (G_OBJECT (folder), folder_signals[ERROR], 0, error);
+      g_clear_error (&error);
+
+      if (folder->task == G_TASK (result))
+        folder->task = NULL;
 
       /* remove the task */
-      g_object_unref (folder->task);
-      folder->task = NULL;
+      g_object_unref (result);
 
       return;
     }
@@ -517,9 +523,11 @@ thunar_folder_finished (GObject      *source_object,
         }
     }
 
+  if (folder->task == G_TASK (result))
+    folder->task = NULL;
+
   /* we did it, the folder is loaded */
-  g_object_unref (folder->task);
-  folder->task = NULL;
+  g_object_unref (G_TASK (result));
 
   /* restart the content type idle loader */
   thunar_folder_content_type_loader (folder);
@@ -875,9 +883,8 @@ thunar_folder_reload (ThunarFolder *folder)
   /* check if we are currently connect to a job */
   if (G_UNLIKELY (folder->task != NULL))
     {
-      /* stop the task */
+      /* stop the task, finished function will unref the task */
       thunar_tasks_cancel (folder->task);
-      g_object_unref (folder->task);
       folder->task = NULL;
     }
 

@@ -60,7 +60,7 @@ thunar_tasks_new (gpointer             source_object,
 
 
 
-void
+voidq
 thunar_tasks_cancel (GTask *task)
 {
   GCancellable *cancellable;
