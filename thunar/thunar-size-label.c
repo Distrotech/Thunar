@@ -60,7 +60,8 @@ static gboolean thunar_size_label_button_press_event    (GtkWidget            *e
                                                          GdkEventButton       *event,
                                                          ThunarSizeLabel      *size_label);
 static void     thunar_size_label_files_changed         (ThunarSizeLabel      *size_label);
-static void     thunar_size_label_stop_count            (ThunarSizeLabel      *size_label);
+static void     thunar_size_label_stop_count            (ThunarSizeLabel      *size_label,
+                                                         gboolean              cancel_job);
 static void     thunar_size_label_finished              (GObject              *source_object,
                                                          GAsyncResult         *result,
                                                          gpointer              user_data);
@@ -173,7 +174,7 @@ thunar_size_label_dispose (GObject *object)
   ThunarSizeLabel *size_label = THUNAR_SIZE_LABEL (object);
 
   /* cancel the pending job (if any) */
-  thunar_size_label_stop_count (size_label);
+  thunar_size_label_stop_count (size_label, TRUE);
 
   /* reset the file property */
   thunar_size_label_set_files (size_label, NULL);
@@ -239,7 +240,7 @@ thunar_size_label_button_press_event (GtkWidget       *ebox,
   if (G_LIKELY (event->button == 1))
     {
       /* cancel the pending job (if any) */
-      thunar_size_label_stop_count (size_label);
+      thunar_size_label_stop_count (size_label, TRUE);
 
       /* tell the user that the operation was canceled */
       gtk_label_set_text (GTK_LABEL (size_label->label), _("Calculation aborted"));
@@ -264,7 +265,7 @@ thunar_size_label_files_changed (ThunarSizeLabel *size_label)
   _thunar_return_if_fail (THUNAR_IS_FILE (size_label->files->data));
 
   /* cancel the pending job (if any) */
-  thunar_size_label_stop_count (size_label);
+  thunar_size_label_stop_count (size_label, TRUE);
 
   /* check if there are multiple files or the single file is a directory */
   if (size_label->files->next != NULL
@@ -301,13 +302,15 @@ thunar_size_label_files_changed (ThunarSizeLabel *size_label)
 
 
 static void
-thunar_size_label_stop_count (ThunarSizeLabel *size_label)
+thunar_size_label_stop_count (ThunarSizeLabel *size_label,
+                              gboolean         cancel_job)
 {
   /* disconnect from the job */
   if (size_label->job != NULL)
     {
       g_signal_handlers_disconnect_matched (size_label->job, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, size_label);
-      thunar_deep_count_job_cancel (size_label->job);
+      if (cancel_job)
+        thunar_deep_count_job_cancel (size_label->job);
       size_label->job = NULL;
 
       /* stop and hide the spinner */
@@ -344,7 +347,7 @@ thunar_size_label_finished (GObject      *source_object,
     }
 
   /* stop everything */
-  thunar_size_label_stop_count (size_label);
+  thunar_size_label_stop_count (size_label, FALSE);
 
   /* release the job */
   g_object_unref (G_OBJECT (job));

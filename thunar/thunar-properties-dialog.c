@@ -1377,7 +1377,7 @@ thunar_properties_dialog_set_files (ThunarPropertiesDialog *dialog,
     }
 
   /* tell everybody that we have a new file here */
-  //_g_object_notify_by_pspec (G_OBJECT (dialog), property_pspecs[PROP_FILES]);
+  _g_object_notify_by_pspec (G_OBJECT (dialog), property_pspecs[PROP_FILES]);
 }
 
 
