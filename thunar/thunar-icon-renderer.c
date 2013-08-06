@@ -38,6 +38,7 @@ enum
   PROP_EMBLEMS,
   PROP_FOLLOW_STATE,
   PROP_SIZE,
+  N_PROPERTIES
 };
 
 
@@ -68,6 +69,10 @@ static void thunar_icon_renderer_render        (GtkCellRenderer         *rendere
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarIconRenderer, thunar_icon_renderer, GTK_TYPE_CELL_RENDERER)
 
 
@@ -93,37 +98,36 @@ thunar_icon_renderer_class_init (ThunarIconRendererClass *klass)
    * The file which should be rendered in the drop
    * accept state.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_DROP_FILE,
-                                   g_param_spec_object ("drop-file",
-                                                        "drop-file",
-                                                        "drop-file",
-                                                        THUNAR_TYPE_FILE,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_DROP_FILE] =
+      g_param_spec_object ("drop-file",
+                           "drop-file",
+                           "drop-file",
+                           THUNAR_TYPE_FILE,
+                           EXO_PARAM_READWRITE);
 
   /**
    * ThunarIconRenderer:file:
    *
    * The file whose icon to render.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FILE,
-                                   g_param_spec_object ("file", "file", "file",
-                                                        THUNAR_TYPE_FILE,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FILE] =
+      g_param_spec_object ("file",
+                           "file",
+                           "file",
+                           THUNAR_TYPE_FILE,
+                           EXO_PARAM_READWRITE);
 
   /**
    * ThunarIconRenderer:emblems:
    *
    * Specifies whether to render emblems in addition to the file icons.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_EMBLEMS,
-                                   g_param_spec_boolean ("emblems",
-                                                         "emblems",
-                                                         "emblems",
-                                                         TRUE,
-                                                         G_PARAM_CONSTRUCT | EXO_PARAM_READWRITE));
+  property_pspecs[PROP_EMBLEMS] =
+      g_param_spec_boolean ("emblems",
+                            "emblems",
+                            "emblems",
+                            TRUE,
+                            G_PARAM_CONSTRUCT | EXO_PARAM_READWRITE);
 
   /**
    * ThunarIconRenderer:follow-state:
@@ -133,13 +137,12 @@ thunar_icon_renderer_class_init (ThunarIconRendererClass *klass)
    * for #ExoIconView, which doesn't draw any item state indicators
    * itself.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FOLLOW_STATE,
-                                   g_param_spec_boolean ("follow-state",
-                                                         "follow-state",
-                                                         "follow-state",
-                                                         FALSE,
-                                                         EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FOLLOW_STATE] =
+      g_param_spec_boolean ("follow-state",
+                            "follow-state",
+                            "follow-state",
+                            FALSE,
+                            EXO_PARAM_READWRITE);
 
   /**
    * ThunarIconRenderer:size:
@@ -147,12 +150,15 @@ thunar_icon_renderer_class_init (ThunarIconRendererClass *klass)
    * The size at which icons should be rendered by this
    * #ThunarIconRenderer instance.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_SIZE,
-                                   g_param_spec_enum ("size", "size", "size",
-                                                      THUNAR_TYPE_ICON_SIZE,
-                                                      THUNAR_ICON_SIZE_SMALL,
-                                                      G_PARAM_CONSTRUCT | EXO_PARAM_READWRITE));
+  property_pspecs[PROP_SIZE] =
+      g_param_spec_enum ("size",
+                         "size",
+                         "size",
+                         THUNAR_TYPE_ICON_SIZE,
+                         THUNAR_ICON_SIZE_SMALL,
+                         G_PARAM_CONSTRUCT | EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 

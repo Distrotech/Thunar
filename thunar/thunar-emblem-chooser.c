@@ -39,6 +39,7 @@ enum
 {
   PROP_0,
   PROP_FILES,
+  N_PROPERTIES
 };
 
 
@@ -84,6 +85,10 @@ struct _ThunarEmblemChooser
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarEmblemChooser, thunar_emblem_chooser, GTK_TYPE_SCROLLED_WINDOW)
 
 
@@ -108,11 +113,14 @@ thunar_emblem_chooser_class_init (ThunarEmblemChooserClass *klass)
    *
    * The file for which emblems should be choosen.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FILES,
-                                   g_param_spec_boxed ("files", "files", "files",
-                                                       THUNARX_TYPE_FILE_INFO_LIST,
-                                                       EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FILES] =
+      g_param_spec_boxed ("files",
+                          "files",
+                          "files",
+                          THUNARX_TYPE_FILE_INFO_LIST,
+                          EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 

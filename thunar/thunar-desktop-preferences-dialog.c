@@ -35,6 +35,7 @@ enum
 {
   PROP_0,
   PROP_CYCLE_TIME,
+  N_PROPERTIES
 };
 
 
@@ -113,6 +114,10 @@ default_cycle_times[] =
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarDesktopPreferencesDialog, thunar_desktop_preferences_dialog, XFCE_TYPE_TITLED_DIALOG)
 
 
@@ -138,13 +143,16 @@ thunar_desktop_preferences_dialog_class_init (ThunarDesktopPreferencesDialogClas
   gtkdialog_class = GTK_DIALOG_CLASS (klass);
   gtkdialog_class->response = thunar_desktop_preferences_dialog_response;
 
-  g_object_class_install_property (gobject_class,
-                                   PROP_CYCLE_TIME,
-                                   g_param_spec_uint ("cycle-time",
-                                                      NULL, NULL,
-                                                      0, 86400,
-                                                      DEFAULT_BACKGROUND_CYCLE_TIME,
-                                                      EXO_PARAM_READWRITE));
+  property_pspecs[PROP_CYCLE_TIME] =
+      g_param_spec_uint ("cycle-time",
+                         NULL,
+                         NULL,
+                         0,
+                         86400,
+                         DEFAULT_BACKGROUND_CYCLE_TIME,
+                         EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -718,7 +726,7 @@ thunar_desktop_preferences_dialog_cycle_time_changed (ThunarDesktopPreferencesDi
   dialog->cycle_time_sec = default_cycle_times[active].seconds;
 
   /* save xfconf setting */
-  g_object_notify (G_OBJECT (dialog), "cycle-time");
+  _g_object_notify_by_pspec (G_OBJECT (dialog), property_pspecs[PROP_CYCLE_TIME]);
 }
 
 

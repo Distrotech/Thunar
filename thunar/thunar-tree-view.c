@@ -61,6 +61,7 @@ enum
   PROP_0,
   PROP_CURRENT_DIRECTORY,
   PROP_SHOW_HIDDEN,
+  N_PROPERTIES
 };
 
 /* Signal identifiers */
@@ -274,7 +275,8 @@ static const GtkTargetEntry drop_targets[] = {
 
 
 
-static guint tree_view_signals[LAST_SIGNAL];
+static guint       tree_view_signals[LAST_SIGNAL];
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -290,6 +292,7 @@ thunar_tree_view_class_init (ThunarTreeViewClass *klass)
   GtkWidgetClass   *gtkwidget_class;
   GtkBindingSet    *binding_set;
   GObjectClass     *gobject_class;
+  gpointer          g_iface;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize = thunar_tree_view_finalize;
@@ -315,7 +318,10 @@ thunar_tree_view_class_init (ThunarTreeViewClass *klass)
   klass->delete_selected_files = thunar_tree_view_delete_selected_files;
 
   /* Override ThunarNavigator's properties */
-  g_object_class_override_property (gobject_class, PROP_CURRENT_DIRECTORY, "current-directory");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_NAVIGATOR);
+  property_pspecs[PROP_CURRENT_DIRECTORY] =
+      g_param_spec_override ("current-directory",
+                             g_object_interface_find_property (g_iface, "current-directory"));
 
   /**
    * ThunarTreeView:show-hidden:
@@ -323,13 +329,14 @@ thunar_tree_view_class_init (ThunarTreeViewClass *klass)
    * Whether to display hidden and backup folders
    * in this #ThunarTreeView.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_SHOW_HIDDEN,
-                                   g_param_spec_boolean ("show-hidden",
-                                                         "show-hidden",
-                                                         "show-hidden",
-                                                         FALSE,
-                                                         EXO_PARAM_READWRITE));
+  property_pspecs[PROP_SHOW_HIDDEN] =
+      g_param_spec_boolean ("show-hidden",
+                            "show-hidden",
+                            "show-hidden",
+                            FALSE,
+                            EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   /**
    * ThunarTreeView::delete-selected-files:
@@ -643,7 +650,7 @@ thunar_tree_view_set_current_directory (ThunarNavigator *navigator,
     thunar_tree_model_refilter (view->model);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (view), "current-directory");
+  _g_object_notify_by_pspec (G_OBJECT (view), property_pspecs[PROP_CURRENT_DIRECTORY]);
 }
 
 
@@ -2619,7 +2626,7 @@ thunar_tree_view_set_show_hidden (ThunarTreeView *view,
       thunar_tree_model_refilter (view->model);
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (view), "show-hidden");
+      _g_object_notify_by_pspec (G_OBJECT (view), property_pspecs[PROP_SHOW_HIDDEN]);
     }
 }
 

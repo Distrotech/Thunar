@@ -53,6 +53,7 @@ enum
   PROP_CURRENT_DIRECTORY,
   PROP_SELECTED_FILES,
   PROP_STANDALONE,
+  N_PROPERTIES
 };
 
 /* Identifiers for DnD target types */
@@ -211,6 +212,10 @@ static const GtkTargetEntry drag_targets[] = {
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarRenamerDialog, thunar_renamer_dialog, THUNAR_TYPE_ABSTRACT_DIALOG)
 
 
@@ -244,13 +249,12 @@ thunar_renamer_dialog_class_init (ThunarRenamerDialogClass *klass)
    * current directory of the file manager process will
    * be used.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_CURRENT_DIRECTORY,
-                                   g_param_spec_object ("current-directory",
-                                                        "current-directory",
-                                                        "current-directory",
-                                                        THUNAR_TYPE_FILE,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_CURRENT_DIRECTORY] =
+      g_param_spec_object ("current-directory",
+                           "current-directory",
+                           "current-directory",
+                           THUNAR_TYPE_FILE,
+                           EXO_PARAM_READWRITE);
 
   /**
    * ThunarRenamerDialog:selected-files:
@@ -258,13 +262,12 @@ thunar_renamer_dialog_class_init (ThunarRenamerDialogClass *klass)
    * The list of currently selected #ThunarFile<!---->s
    * in this #ThunarRenamerDialog.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_SELECTED_FILES,
-                                   g_param_spec_boxed ("selected-files",
-                                                       "selected-files",
-                                                       "selected-files",
-                                                       THUNARX_TYPE_FILE_INFO_LIST,
-                                                       EXO_PARAM_READABLE));
+  property_pspecs[PROP_SELECTED_FILES] =
+      g_param_spec_boxed ("selected-files",
+                          "selected-files",
+                          "selected-files",
+                          THUNARX_TYPE_FILE_INFO_LIST,
+                          EXO_PARAM_READABLE);
 
   /**
    * ThunarRenamerDialog:standalone:
@@ -276,13 +279,14 @@ thunar_renamer_dialog_class_init (ThunarRenamerDialogClass *klass)
    * If the #ThunarRenamerDialog is opened from within
    * Thunar this property will always be %FALSE.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_STANDALONE,
-                                   g_param_spec_boolean ("standalone",
-                                                         "standalone",
-                                                         "standalone",
-                                                         FALSE,
-                                                         EXO_PARAM_READWRITE));
+  property_pspecs[PROP_STANDALONE] =
+      g_param_spec_boolean ("standalone",
+                            "standalone",
+                            "standalone",
+                            FALSE,
+                            EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -1699,7 +1703,7 @@ thunar_renamer_dialog_selection_changed (GtkTreeSelection    *selection,
   gtk_action_set_sensitive (action, n_selected_files > 0);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (renamer_dialog), "selected-files");
+  _g_object_notify_by_pspec (G_OBJECT (renamer_dialog), property_pspecs[PROP_SELECTED_FILES]);
 }
 
 
@@ -1757,7 +1761,7 @@ thunar_renamer_dialog_set_current_directory (ThunarRenamerDialog *renamer_dialog
     g_object_ref (G_OBJECT (current_directory));
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (renamer_dialog), "current-directory");
+  _g_object_notify_by_pspec (G_OBJECT (renamer_dialog), property_pspecs[PROP_CURRENT_DIRECTORY]);
 }
 
 
@@ -1841,7 +1845,7 @@ thunar_renamer_dialog_set_standalone (ThunarRenamerDialog *renamer_dialog,
         }
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (renamer_dialog), "standalone");
+      _g_object_notify_by_pspec (G_OBJECT (renamer_dialog), property_pspecs[PROP_STANDALONE]);
     }
 }
 

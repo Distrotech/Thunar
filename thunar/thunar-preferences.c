@@ -93,7 +93,7 @@ enum
   PROP_SHORTCUTS_ICON_SIZE,
   PROP_TREE_ICON_EMBLEMS,
   PROP_TREE_ICON_SIZE,
-  N_PROPERTIES,
+  N_PROPERTIES
 };
 
 
@@ -140,7 +140,7 @@ G_DEFINE_TYPE (ThunarPreferences, thunar_preferences, G_TYPE_OBJECT)
 
 
 
-static GParamSpec *preferences_props[N_PROPERTIES] = { NULL, };
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -161,7 +161,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * view pane in new #ThunarWindow<!---->s or "void" to use the
    * last selected view from the "last-view" preference.
    **/
-  preferences_props[PROP_DEFAULT_VIEW] =
+  property_pspecs[PROP_DEFAULT_VIEW] =
       g_param_spec_string ("default-view",
                            "DefaultView",
                            NULL,
@@ -174,7 +174,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * List of URI's that are hidden in the bookmarks (obtained from ~/.gtk-bookmarks).
    * If an URI is not in the bookmarks file it will be removed from this list.
    **/
-  preferences_props[PROP_HIDDEN_BOOKMARKS] =
+  property_pspecs[PROP_HIDDEN_BOOKMARKS] =
       g_param_spec_boxed ("hidden-bookmarks",
                           NULL,
                           NULL,
@@ -188,7 +188,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * Visibility of the device can be obtained with
    * thunar_device_get_hidden().
    **/
-  preferences_props[PROP_HIDDEN_DEVICES] =
+  property_pspecs[PROP_HIDDEN_DEVICES] =
       g_param_spec_boxed ("hidden-devices",
                           NULL,
                           NULL,
@@ -200,7 +200,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * The last selected #ThunarZoomLevel for the #ThunarCompactView.
    **/
-  preferences_props[PROP_LAST_COMPACT_VIEW_ZOOM_LEVEL] =
+  property_pspecs[PROP_LAST_COMPACT_VIEW_ZOOM_LEVEL] =
       g_param_spec_enum ("last-compact-view-zoom-level",
                          "LastCompactViewZoomLevel",
                          NULL,
@@ -215,7 +215,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * The comma separated list of columns that specifies the order of the
    * columns in the #ThunarDetailsView.
    **/
-  preferences_props[PROP_LAST_DETAILS_VIEW_COLUMN_ORDER] =
+  property_pspecs[PROP_LAST_DETAILS_VIEW_COLUMN_ORDER] =
       g_param_spec_string ("last-details-view-column-order",
                            "LastDetailsViewColumnOrder",
                            NULL,
@@ -228,7 +228,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * The comma separated list of column widths used for fixed width
    * #ThunarDetailsView<!---->s.
    **/
-  preferences_props[PROP_LAST_DETAILS_VIEW_COLUMN_WIDTHS] =
+  property_pspecs[PROP_LAST_DETAILS_VIEW_COLUMN_WIDTHS] =
       g_param_spec_string ("last-details-view-column-widths",
                            "LastDetailsViewColumnWidths",
                            NULL,
@@ -241,7 +241,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * %TRUE to use fixed column widths in the #ThunarDetailsView. Else the
    * column widths will be automatically determined from the model contents.
    **/
-  preferences_props[PROP_LAST_DETAILS_VIEW_FIXED_COLUMNS] =
+  property_pspecs[PROP_LAST_DETAILS_VIEW_FIXED_COLUMNS] =
       g_param_spec_boolean ("last-details-view-fixed-columns",
                             "LastDetailsViewFixedColumns",
                             NULL,
@@ -253,7 +253,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * The comma separated list of visible columns in the #ThunarDetailsView.
    **/
-  preferences_props[PROP_LAST_DETAILS_VIEW_VISIBLE_COLUMNS] =
+  property_pspecs[PROP_LAST_DETAILS_VIEW_VISIBLE_COLUMNS] =
       g_param_spec_string ("last-details-view-visible-columns",
                            "LastDetailsViewVisibleColumns",
                            NULL,
@@ -265,7 +265,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * The last selected #ThunarZoomLevel for the #ThunarDetailsView.
    **/
-  preferences_props[PROP_LAST_DETAILS_VIEW_ZOOM_LEVEL] =
+  property_pspecs[PROP_LAST_DETAILS_VIEW_ZOOM_LEVEL] =
       g_param_spec_enum ("last-details-view-zoom-level",
                          "LastDetailsViewZoomLevel",
                          NULL,
@@ -278,7 +278,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * The last selected #ThunarZoomLevel for the #ThunarIconView.
    **/
-  preferences_props[PROP_LAST_ICON_VIEW_ZOOM_LEVEL] =
+  property_pspecs[PROP_LAST_ICON_VIEW_ZOOM_LEVEL] =
       g_param_spec_enum ("last-icon-view-zoom-level",
                          "LastIconViewZoomLevel",
                          NULL,
@@ -293,7 +293,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * location bar in #ThunarWindow<!---->s or "void" to hide the
    * location bar.
    **/
-  preferences_props[PROP_LAST_LOCATION_BAR] =
+  property_pspecs[PROP_LAST_LOCATION_BAR] =
       g_param_spec_string ("last-location-bar",
                            "LastLocationBar",
                            NULL,
@@ -305,7 +305,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * Whether to display a menubar in new windows by default.
    **/
-  preferences_props[PROP_LAST_MENUBAR_VISIBLE] =
+  property_pspecs[PROP_LAST_MENUBAR_VISIBLE] =
       g_param_spec_boolean ("last-menubar-visible",
                             "LastMenubarVisible",
                             NULL,
@@ -318,7 +318,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * The last position of the gutter in the main window,
    * which separates the side pane from the main view.
    **/
-  preferences_props[PROP_LAST_SEPARATOR_POSITION] =
+  property_pspecs[PROP_LAST_SEPARATOR_POSITION] =
       g_param_spec_int ("last-separator-position",
                         "LastSeparatorPosition",
                         NULL,
@@ -330,7 +330,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * Whether to show hidden files by default in new windows.
    **/
-  preferences_props[PROP_LAST_SHOW_HIDDEN] =
+  property_pspecs[PROP_LAST_SHOW_HIDDEN] =
       g_param_spec_boolean ("last-show-hidden",
                             "LastShowHidden",
                             NULL,
@@ -344,7 +344,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * side pane in #ThunarWindow<!---->s or "void" to hide the
    * side pane completely.
    **/
-  preferences_props[PROP_LAST_SIDE_PANE] =
+  property_pspecs[PROP_LAST_SIDE_PANE] =
       g_param_spec_string ("last-side-pane",
                            "LastSidePane",
                            NULL,
@@ -356,7 +356,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * The default sort column for new views.
    **/
-  preferences_props[PROP_LAST_SORT_COLUMN] =
+  property_pspecs[PROP_LAST_SORT_COLUMN] =
       g_param_spec_enum ("last-sort-column",
                          "LastSortColumn",
                          NULL,
@@ -369,7 +369,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * The default sort order for new views.
    **/
-  preferences_props[PROP_LAST_SORT_ORDER] =
+  property_pspecs[PROP_LAST_SORT_ORDER] =
       g_param_spec_enum ("last-sort-order",
                          "LastSortOrder",
                          NULL,
@@ -381,7 +381,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * Whether to display a statusbar in new windows by default.
    **/
-  preferences_props[PROP_LAST_STATUSBAR_VISIBLE] =
+  property_pspecs[PROP_LAST_STATUSBAR_VISIBLE] =
       g_param_spec_boolean ("last-statusbar-visible",
                             "LastStatusbarVisible",
                             NULL,
@@ -394,7 +394,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * The name of the widget class, which should be used for the
    * main view component in #ThunarWindow<!---->s.
    **/
-  preferences_props[PROP_LAST_VIEW] =
+  property_pspecs[PROP_LAST_VIEW] =
       g_param_spec_string ("last-view",
                            "LastView",
                            NULL,
@@ -407,7 +407,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * The last known height of a #ThunarWindow, which will be used as
    * default height for newly created windows.
    **/
-  preferences_props[PROP_LAST_WINDOW_HEIGHT] =
+  property_pspecs[PROP_LAST_WINDOW_HEIGHT] =
       g_param_spec_int ("last-window-height",
                         "LastWindowHeight",
                         NULL,
@@ -420,7 +420,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * The last known width of a #ThunarWindow, which will be used as
    * default width for newly created windows.
    **/
-  preferences_props[PROP_LAST_WINDOW_WIDTH] =
+  property_pspecs[PROP_LAST_WINDOW_WIDTH] =
       g_param_spec_int ("last-window-width",
                         "LastWindowWidth",
                         NULL,
@@ -433,7 +433,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * The last known maximized state of a #ThunarWindow, which will be used as
    * default width for newly created windows.
    **/
-  preferences_props[PROP_LAST_WINDOW_FULLSCREEN] =
+  property_pspecs[PROP_LAST_WINDOW_FULLSCREEN] =
       g_param_spec_boolean ("last-window-maximized",
                             "LastWindowMaximized",
                             NULL,
@@ -445,7 +445,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * If the view tabs should always be visible.
    **/
-  preferences_props[PROP_MISC_ALWAYS_SHOW_TABS] =
+  property_pspecs[PROP_MISC_ALWAYS_SHOW_TABS] =
       g_param_spec_boolean ("misc-always-show-tabs",
                             NULL,
                             NULL,
@@ -458,7 +458,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * Whether to enable volume management capabilities (requires HAL and the
    * thunar-volman package).
    **/
-  preferences_props[PROP_MISC_VOLUME_MANAGEMENT] =
+  property_pspecs[PROP_MISC_VOLUME_MANAGEMENT] =
       g_param_spec_boolean ("misc-volume-management",
                             "MiscVolumeManagement",
                             NULL,
@@ -470,7 +470,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * Whether to use case-sensitive sort.
    **/
-  preferences_props[PROP_MISC_CASE_SENSITIVE] =
+  property_pspecs[PROP_MISC_CASE_SENSITIVE] =
       g_param_spec_boolean ("misc-case-sensitive",
                             "MiscCaseSensitive",
                             NULL,
@@ -482,7 +482,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * The style used to display dates in the user interface.
    **/
-  preferences_props[PROP_MISC_DATE_STYLE] =
+  property_pspecs[PROP_MISC_DATE_STYLE] =
       g_param_spec_enum ("misc-date-style",
                          "MiscDateStyle",
                          NULL,
@@ -495,7 +495,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * Whether to sort folders before files.
    **/
-  preferences_props[PROP_MISC_FOLDERS_FIRST] =
+  property_pspecs[PROP_MISC_FOLDERS_FIRST] =
       g_param_spec_boolean ("misc-folders-first",
                             "MiscFoldersFirst",
                             NULL,
@@ -508,7 +508,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * Show the full directory path in the window title, instead of
    * only the directory name.
    **/
-  preferences_props[PROP_MISC_FULL_PATH_IN_TITLE] =
+  property_pspecs[PROP_MISC_FULL_PATH_IN_TITLE] =
       g_param_spec_boolean ("misc-full-path-in-title",
                             "MiscFullPathInTitle",
                             NULL,
@@ -521,7 +521,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * Whether the horizontal mouse wheel is used to navigate
    * forth and back within a Thunar view.
    **/
-  preferences_props[PROP_MISC_HORIZONTAL_WHEEL_NAVIGATES] =
+  property_pspecs[PROP_MISC_HORIZONTAL_WHEEL_NAVIGATES] =
       g_param_spec_boolean ("misc-horizontal-wheel-navigates",
                             "MiscHorizontalWheelNavigates",
                             NULL,
@@ -535,7 +535,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * in the statusbar. This heavily increases I/O in image
    * folders when moving the selection across files.
    **/
-  preferences_props[PROP_MISC_IMAGE_SIZE_IN_STATUSBAR] =
+  property_pspecs[PROP_MISC_IMAGE_SIZE_IN_STATUSBAR] =
       g_param_spec_boolean ("misc-image-size-in-statusbar",
                             "MiscImageSizeInStatusbar",
                             NULL,
@@ -547,7 +547,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * If middle click opens a folder in a new window (FALSE) or in a new window (TRUE);
    **/
-  preferences_props[PROP_MISC_MIDDLE_CLICK_IN_TAB] =
+  property_pspecs[PROP_MISC_MIDDLE_CLICK_IN_TAB] =
       g_param_spec_boolean ("misc-middle-click-in-tab",
                             NULL,
                             NULL,
@@ -560,7 +560,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * Whether to apply permissions recursively everytime the
    * permissions are altered by the user.
    **/
-  preferences_props[PROP_MISC_RECURSIVE_PERMISSIONS] =
+  property_pspecs[PROP_MISC_RECURSIVE_PERMISSIONS] =
       g_param_spec_enum ("misc-recursive-permissions",
                          "MiscRecursivePermissions",
                          NULL,
@@ -577,7 +577,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * %FALSE the user may specify the start size in "last-window-with"
    * and "last-window-height".
    **/
-  preferences_props[PROP_MISC_REMEMBER_GEOMETRY] =
+  property_pspecs[PROP_MISC_REMEMBER_GEOMETRY] =
       g_param_spec_boolean ("misc-remember-geometry",
                             "MiscRememberGeometry",
                             NULL,
@@ -590,7 +590,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * Whether to display the "About Templates" dialog, when opening the
    * Templates folder from the Go menu.
    **/
-  preferences_props[PROP_MISC_SHOW_ABOUT_TEMPLATES] =
+  property_pspecs[PROP_MISC_SHOW_ABOUT_TEMPLATES] =
       g_param_spec_boolean ("misc-show-about-templates",
                             "MiscShowAboutTemplates",
                             NULL,
@@ -602,7 +602,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * Whether to use single click navigation.
    **/
-  preferences_props[PROP_MISC_SINGLE_CLICK] =
+  property_pspecs[PROP_MISC_SINGLE_CLICK] =
       g_param_spec_boolean ("misc-single-click",
                             "MiscSingleClick",
                             NULL,
@@ -617,7 +617,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * will be selected automatically. A value of %0 disables the
    * automatic selection.
    **/
-  preferences_props[PROP_MISC_SINGLE_CLICK_TIMEOUT] =
+  property_pspecs[PROP_MISC_SINGLE_CLICK_TIMEOUT] =
       g_param_spec_uint ("misc-single-click-timeout",
                          "MiscSingleClickTimeout",
                          NULL,
@@ -629,7 +629,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * Use small icons on the toolbar instead of the default toolbar size.
    **/
-  preferences_props[PROP_MISC_SMALL_TOOLBAR_ICONS] =
+  property_pspecs[PROP_MISC_SMALL_TOOLBAR_ICONS] =
       g_param_spec_boolean ("misc-small-toolbar-icons",
                             NULL,
                             NULL,
@@ -642,7 +642,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * Whether to close tabs when the tab label is clicked with the 2nd
    * mouse button.
    **/
-  preferences_props[PROP_MISC_TAB_CLOSE_MIDDLE_CLICK] =
+  property_pspecs[PROP_MISC_TAB_CLOSE_MIDDLE_CLICK] =
       g_param_spec_boolean ("misc-tab-close-middle-click",
                             NULL,
                             NULL,
@@ -655,7 +655,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * Whether the icon view should display the file names beside the
    * file icons instead of below the file icons.
    **/
-  preferences_props[PROP_MISC_TEXT_BESIDE_ICONS] =
+  property_pspecs[PROP_MISC_TEXT_BESIDE_ICONS] =
       g_param_spec_boolean ("misc-text-beside-icons",
                             "MiscTextBesideIcons",
                             NULL,
@@ -667,7 +667,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    *
    * Whether to generate and display thumbnails for previewable files.
    **/
-  preferences_props[PROP_MISC_THUMBNAIL_MODE] =
+  property_pspecs[PROP_MISC_THUMBNAIL_MODE] =
       g_param_spec_enum ("misc-thumbnail-mode",
                          NULL,
                          NULL,
@@ -681,7 +681,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * Whether to display emblems for file icons (if defined) in the
    * shortcuts side pane.
    **/
-  preferences_props[PROP_SHORTCUTS_ICON_EMBLEMS] =
+  property_pspecs[PROP_SHORTCUTS_ICON_EMBLEMS] =
       g_param_spec_boolean ("shortcuts-icon-emblems",
                             "ShortcutsIconEmblems",
                             NULL,
@@ -694,7 +694,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * The icon size to use for the icons displayed in the
    * shortcuts side pane.
    **/
-  preferences_props[PROP_SHORTCUTS_ICON_SIZE] =
+  property_pspecs[PROP_SHORTCUTS_ICON_SIZE] =
       g_param_spec_enum ("shortcuts-icon-size",
                          "ShortcutsIconSize",
                          NULL,
@@ -708,7 +708,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * Whether to display emblems for file icons (if defined) in the
    * tree side pane.
    **/
-  preferences_props[PROP_TREE_ICON_EMBLEMS] =
+  property_pspecs[PROP_TREE_ICON_EMBLEMS] =
       g_param_spec_boolean ("tree-icon-emblems",
                             "TreeIconEmblems",
                             NULL,
@@ -721,7 +721,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
    * The icon size to use for the icons displayed in the
    * tree side pane.
    **/
-  preferences_props[PROP_TREE_ICON_SIZE] =
+  property_pspecs[PROP_TREE_ICON_SIZE] =
       g_param_spec_enum ("tree-icon-size",
                          "TreeIconSize",
                          NULL,
@@ -730,7 +730,7 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
                          EXO_PARAM_READWRITE);
 
   /* install all properties */
-  g_object_class_install_properties (gobject_class, N_PROPERTIES, preferences_props);
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -883,7 +883,7 @@ thunar_preferences_prop_changed (XfconfChannel     *channel,
   /* check if the property exists and emit change */
   pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (preferences), prop_name + 1);
   if (G_LIKELY (pspec != NULL))
-    g_object_notify_by_pspec (G_OBJECT (preferences), pspec);
+    _g_object_notify_by_pspec (G_OBJECT (preferences), pspec);
 }
 
 

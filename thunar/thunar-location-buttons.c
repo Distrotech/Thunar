@@ -50,6 +50,7 @@ enum
   PROP_CURRENT_DIRECTORY,
   PROP_SELECTED_FILES,
   PROP_UI_MANAGER,
+  N_PROPERTIES
 };
 
 
@@ -183,6 +184,10 @@ static const GtkActionEntry action_entries[] =
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE_WITH_CODE (ThunarLocationButtons, thunar_location_buttons, GTK_TYPE_CONTAINER,
     G_IMPLEMENT_INTERFACE (THUNAR_TYPE_NAVIGATOR, thunar_location_buttons_navigator_init)
     G_IMPLEMENT_INTERFACE (THUNAR_TYPE_COMPONENT, thunar_location_buttons_component_init)
@@ -196,6 +201,7 @@ thunar_location_buttons_class_init (ThunarLocationButtonsClass *klass)
   GtkContainerClass *gtkcontainer_class;
   GtkWidgetClass    *gtkwidget_class;
   GObjectClass      *gobject_class;
+  gpointer           g_iface;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize = thunar_location_buttons_finalize;
@@ -215,11 +221,22 @@ thunar_location_buttons_class_init (ThunarLocationButtonsClass *klass)
   gtkcontainer_class->forall = thunar_location_buttons_forall;
 
   /* Override ThunarNavigator's properties */
-  g_object_class_override_property (gobject_class, PROP_CURRENT_DIRECTORY, "current-directory");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_NAVIGATOR);
+  property_pspecs[PROP_CURRENT_DIRECTORY] =
+      g_param_spec_override ("current-directory",
+                             g_object_interface_find_property (g_iface, "current-directory"));
 
   /* Override ThunarComponent's properties */
-  g_object_class_override_property (gobject_class, PROP_SELECTED_FILES, "selected-files");
-  g_object_class_override_property (gobject_class, PROP_UI_MANAGER, "ui-manager");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_COMPONENT);
+  property_pspecs[PROP_SELECTED_FILES] =
+      g_param_spec_override ("selected-files",
+                             g_object_interface_find_property (g_iface, "selected-files"));
+
+  property_pspecs[PROP_UI_MANAGER] =
+      g_param_spec_override ("ui-manager",
+                             g_object_interface_find_property (g_iface, "ui-manager"));
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   /**
    * ThunarLocationButtons:spacing:
@@ -436,7 +453,7 @@ thunar_location_buttons_set_ui_manager (ThunarComponent *component,
     }
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (buttons), "ui-manager");
+  _g_object_notify_by_pspec (G_OBJECT (buttons), property_pspecs[PROP_UI_MANAGER]);
 }
 
 
@@ -523,7 +540,7 @@ thunar_location_buttons_set_current_directory (ThunarNavigator *navigator,
         }
     }
 
-  g_object_notify (G_OBJECT (buttons), "current-directory");
+  _g_object_notify_by_pspec (G_OBJECT (buttons), property_pspecs[PROP_CURRENT_DIRECTORY]);
 }
 
 

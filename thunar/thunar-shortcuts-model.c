@@ -62,7 +62,8 @@ typedef struct _ThunarShortcut ThunarShortcut;
 enum
 {
   PROP_0,
-  PROP_HIDDEN_BOOKMARKS
+  PROP_HIDDEN_BOOKMARKS,
+  N_PROPERTIES
 };
 
 
@@ -203,6 +204,10 @@ struct _ThunarShortcut
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE_WITH_CODE (ThunarShortcutsModel, thunar_shortcuts_model, G_TYPE_OBJECT,
     G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL, thunar_shortcuts_model_tree_model_init)
     G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_DRAG_SOURCE, thunar_shortcuts_model_drag_source_init))
@@ -219,13 +224,14 @@ thunar_shortcuts_model_class_init (ThunarShortcutsModelClass *klass)
   gobject_class->get_property = thunar_shortcuts_model_get_property;
   gobject_class->set_property = thunar_shortcuts_model_set_property;
 
-  g_object_class_install_property (gobject_class,
-                                   PROP_HIDDEN_BOOKMARKS,
-                                   g_param_spec_boxed ("hidden-bookmarks",
-                                                       NULL,
-                                                       NULL,
-                                                       G_TYPE_STRV,
-                                                       EXO_PARAM_READWRITE));
+  property_pspecs[PROP_HIDDEN_BOOKMARKS] =
+      g_param_spec_boxed ("hidden-bookmarks",
+                          NULL,
+                          NULL,
+                          G_TYPE_STRV,
+                          EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 

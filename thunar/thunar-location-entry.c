@@ -45,6 +45,7 @@ enum
   PROP_CURRENT_DIRECTORY,
   PROP_SELECTED_FILES,
   PROP_UI_MANAGER,
+  N_PROPERTIES
 };
 
 /* Signal identifiers */
@@ -104,6 +105,10 @@ struct _ThunarLocationEntry
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE_WITH_CODE (ThunarLocationEntry, thunar_location_entry, GTK_TYPE_HBOX,
   G_IMPLEMENT_INTERFACE (THUNAR_TYPE_BROWSER, NULL)
   G_IMPLEMENT_INTERFACE (THUNAR_TYPE_NAVIGATOR, thunar_location_entry_navigator_init)
@@ -117,6 +122,7 @@ thunar_location_entry_class_init (ThunarLocationEntryClass *klass)
 {
   GtkBindingSet *binding_set;
   GObjectClass  *gobject_class;
+  gpointer       g_iface;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize = thunar_location_entry_finalize;
@@ -126,11 +132,22 @@ thunar_location_entry_class_init (ThunarLocationEntryClass *klass)
   klass->reset = thunar_location_entry_reset;
 
   /* override ThunarNavigator's properties */
-  g_object_class_override_property (gobject_class, PROP_CURRENT_DIRECTORY, "current-directory");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_NAVIGATOR);
+  property_pspecs[PROP_CURRENT_DIRECTORY] =
+      g_param_spec_override ("current-directory",
+                             g_object_interface_find_property (g_iface, "current-directory"));
 
   /* override ThunarComponent's properties */
-  g_object_class_override_property (gobject_class, PROP_SELECTED_FILES, "selected-files");
-  g_object_class_override_property (gobject_class, PROP_UI_MANAGER, "ui-manager");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_COMPONENT);
+  property_pspecs[PROP_SELECTED_FILES] =
+      g_param_spec_override ("selected-files",
+                             g_object_interface_find_property (g_iface, "selected-files"));
+
+  property_pspecs[PROP_UI_MANAGER] =
+      g_param_spec_override ("ui-manager",
+                             g_object_interface_find_property (g_iface, "ui-manager"));
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   /**
    * ThunarLocationEntry::reset:
@@ -307,7 +324,7 @@ thunar_location_entry_set_current_directory (ThunarNavigator *navigator,
     g_object_ref (G_OBJECT (current_directory));
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (location_entry), "current-directory");
+  _g_object_notify_by_pspec (G_OBJECT (location_entry), property_pspecs[PROP_CURRENT_DIRECTORY]);
 }
 
 

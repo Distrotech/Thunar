@@ -35,6 +35,7 @@ enum
 {
   PROP_0,
   PROP_TEXT,
+  N_PROPERTIES
 };
 
 
@@ -60,6 +61,10 @@ struct _ThunarStatusbar
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarStatusbar, thunar_statusbar, GTK_TYPE_STATUSBAR)
 
 
@@ -80,13 +85,14 @@ thunar_statusbar_class_init (ThunarStatusbarClass *klass)
    * The main text to be displayed in the statusbar. This property
    * can only be written.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_TEXT,
-                                   g_param_spec_string ("text",
-                                                        "text",
-                                                        "text",
-                                                        NULL,
-                                                        EXO_PARAM_WRITABLE));
+  property_pspecs[PROP_TEXT] =
+      g_param_spec_string ("text",
+                           "text",
+                           "text",
+                           NULL,
+                           EXO_PARAM_WRITABLE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   if (!style_initialized)
     {

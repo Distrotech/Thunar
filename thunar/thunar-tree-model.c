@@ -54,6 +54,7 @@ enum
 {
   PROP_0,
   PROP_CASE_SENSITIVE,
+  N_PROPERTIES
 };
 
 
@@ -220,6 +221,10 @@ typedef struct
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE_WITH_CODE (ThunarTreeModel, thunar_tree_model, G_TYPE_OBJECT,
     G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL, thunar_tree_model_tree_model_init))
 
@@ -241,13 +246,14 @@ thunar_tree_model_class_init (ThunarTreeModelClass *klass)
    * Whether the sorting of the folder items will be done
    * in a case-sensitive manner.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_CASE_SENSITIVE,
-                                   g_param_spec_boolean ("case-sensitive",
-                                                         "case-sensitive",
-                                                         "case-sensitive",
-                                                         TRUE,
-                                                         EXO_PARAM_READWRITE));
+  property_pspecs[PROP_CASE_SENSITIVE] =
+      g_param_spec_boolean ("case-sensitive",
+                            "case-sensitive",
+                            "case-sensitive",
+                            TRUE,
+                            EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -1865,7 +1871,7 @@ thunar_tree_model_set_case_sensitive (ThunarTreeModel *model,
       g_node_traverse (model->root, G_POST_ORDER, G_TRAVERSE_NON_LEAVES, -1, thunar_tree_model_node_traverse_sort, model);
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (model), "case-sensitive");
+      _g_object_notify_by_pspec (G_OBJECT (model), property_pspecs[PROP_CASE_SENSITIVE]);
     }
 }
 

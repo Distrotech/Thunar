@@ -56,6 +56,7 @@ enum
 {
   PROP_0,
   PROP_CURRENT_FILE,
+  N_PROPERTIES
 };
 
 
@@ -149,6 +150,7 @@ static const GtkTargetEntry drag_targets[] =
 
 
 static GtkEditableClass *thunar_path_entry_editable_parent_iface;
+static GParamSpec       *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -184,13 +186,14 @@ thunar_path_entry_class_init (ThunarPathEntryClass *klass)
    *
    * The #ThunarFile currently displayed by the path entry or %NULL.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_CURRENT_FILE,
-                                   g_param_spec_object ("current-file",
-                                                        "current-file",
-                                                        "current-file",
-                                                        THUNAR_TYPE_FILE,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_CURRENT_FILE] =
+      g_param_spec_object ("current-file",
+                           "current-file",
+                           "current-file",
+                           THUNAR_TYPE_FILE,
+                           EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   /**
    * ThunarPathEntry:icon-size:
@@ -638,7 +641,7 @@ thunar_path_entry_changed (GtkEditable *editable)
           g_object_ref (G_OBJECT (current_file));
           g_signal_connect_swapped (G_OBJECT (current_file), "changed", G_CALLBACK (thunar_path_entry_set_current_file), path_entry);
         }
-      g_object_notify (G_OBJECT (path_entry), "current-file");
+      _g_object_notify_by_pspec (G_OBJECT (path_entry), property_pspecs[PROP_CURRENT_FILE]);
 
       /* we most likely need a new icon */
       update_icon = TRUE;

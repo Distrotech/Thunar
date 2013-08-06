@@ -52,6 +52,7 @@ enum
   PROP_FORMAT,
   PROP_OFFSET,
   PROP_OFFSET_MODE,
+  N_PROPERTIES
 };
 
 
@@ -95,6 +96,10 @@ struct _ThunarSbrDateRenamer
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 THUNARX_DEFINE_TYPE (ThunarSbrDateRenamer, thunar_sbr_date_renamer, THUNARX_TYPE_RENAMER);
 
 
@@ -118,54 +123,52 @@ thunar_sbr_date_renamer_class_init (ThunarSbrDateRenamerClass *klass)
    *
    * The #ThunarSbrDateMode to use.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_MODE,
-                                   g_param_spec_enum ("mode",
-                                                      "mode",
-                                                      "mode",
-                                                      THUNAR_SBR_TYPE_DATE_MODE,
-                                                      THUNAR_SBR_DATE_MODE_NOW,
-                                                      G_PARAM_READWRITE));
+  property_pspecs[PROP_MODE] =
+      g_param_spec_enum ("mode",
+                         "mode",
+                         "mode",
+                         THUNAR_SBR_TYPE_DATE_MODE,
+                         THUNAR_SBR_DATE_MODE_NOW,
+                         G_PARAM_READWRITE);
 
   /**
    * ThunarSbrDateRenamer:format:
    *
    * The date format to insert.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FORMAT,
-                                   g_param_spec_string ("format",
-                                                        "format",
-                                                        "format",
-                                                        "%Y%m%d",
-                                                        G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+  property_pspecs[PROP_FORMAT] =
+      g_param_spec_string ("format",
+                           "format",
+                           "format",
+                           "%Y%m%d",
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 
   /**
    * ThunarSbrDateRenamer:offset:
    *
    * The starting offset at which to insert/overwrite.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_OFFSET,
-                                   g_param_spec_uint ("offset",
-                                                      "offset",
-                                                      "offset",
-                                                      0, G_MAXUINT, 0,
-                                                      G_PARAM_READWRITE));
+  property_pspecs[PROP_OFFSET] =
+      g_param_spec_uint ("offset",
+                         "offset",
+                         "offset",
+                         0, G_MAXUINT, 0,
+                         G_PARAM_READWRITE);
 
   /**
    * ThunarSbrDateRenamer:offset-mode:
    *
    * The offset mode for the renamer.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_OFFSET_MODE,
-                                   g_param_spec_enum ("offset-mode",
-                                                      "offset-mode",
-                                                      "offset-mode",
-                                                      THUNAR_SBR_TYPE_OFFSET_MODE,
-                                                      THUNAR_SBR_OFFSET_MODE_LEFT,
-                                                      G_PARAM_READWRITE));
+  property_pspecs[PROP_OFFSET_MODE] =
+      g_param_spec_enum ("offset-mode",
+                         "offset-mode",
+                         "offset-mode",
+                         THUNAR_SBR_TYPE_OFFSET_MODE,
+                         THUNAR_SBR_OFFSET_MODE_LEFT,
+                         G_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -636,7 +639,7 @@ thunar_sbr_date_renamer_set_mode (ThunarSbrDateRenamer *date_renamer,
       thunarx_renamer_changed (THUNARX_RENAMER (date_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (date_renamer), "mode");
+      g_object_notify_by_pspec (G_OBJECT (date_renamer), property_pspecs[PROP_MODE]);
     }
 }
 
@@ -684,7 +687,7 @@ thunar_sbr_date_renamer_set_format (ThunarSbrDateRenamer *date_renamer,
       thunarx_renamer_changed (THUNARX_RENAMER (date_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (date_renamer), "format");
+      g_object_notify_by_pspec (G_OBJECT (date_renamer), property_pspecs[PROP_FORMAT]);
     }
 }
 
@@ -730,7 +733,7 @@ thunar_sbr_date_renamer_set_offset (ThunarSbrDateRenamer *date_renamer,
       thunarx_renamer_changed (THUNARX_RENAMER (date_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (date_renamer), "offset");
+      g_object_notify_by_pspec (G_OBJECT (date_renamer), property_pspecs[PROP_OFFSET]);
     }
 }
 
@@ -776,6 +779,6 @@ thunar_sbr_date_renamer_set_offset_mode (ThunarSbrDateRenamer *date_renamer,
       thunarx_renamer_changed (THUNARX_RENAMER (date_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (date_renamer), "offset-mode");
+      g_object_notify_by_pspec (G_OBJECT (date_renamer), property_pspecs[PROP_OFFSET_MODE]);
     }
 }

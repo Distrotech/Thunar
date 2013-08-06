@@ -40,6 +40,7 @@ enum
 {
   PROP_0,
   PROP_FILE,
+  N_PROPERTIES
 };
 
 
@@ -96,6 +97,10 @@ struct _ThunarChooserButton
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarChooserButton, thunar_chooser_button, GTK_TYPE_COMBO_BOX)
 
 
@@ -120,11 +125,14 @@ thunar_chooser_button_class_init (ThunarChooserButtonClass *klass)
    * The #ThunarFile for which a preferred application should
    * be chosen.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FILE,
-                                   g_param_spec_object ("file", "file", "file",
-                                                        THUNAR_TYPE_FILE,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FILE] =
+      g_param_spec_object ("file",
+                           "file",
+                           "file",
+                           THUNAR_TYPE_FILE,
+                           EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -575,7 +583,7 @@ thunar_chooser_button_set_file (ThunarChooserButton *chooser_button,
     }
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (chooser_button), "file");
+  _g_object_notify_by_pspec (G_OBJECT (chooser_button), property_pspecs[PROP_FILE]);
 }
 
 

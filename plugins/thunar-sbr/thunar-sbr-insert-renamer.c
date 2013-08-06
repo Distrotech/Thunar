@@ -36,6 +36,7 @@ enum
   PROP_OFFSET,
   PROP_OFFSET_MODE,
   PROP_TEXT,
+  N_PROPERTIES
 };
 
 
@@ -72,6 +73,10 @@ struct _ThunarSbrInsertRenamer
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 THUNARX_DEFINE_TYPE (ThunarSbrInsertRenamer, thunar_sbr_insert_renamer, THUNARX_TYPE_RENAMER);
 
 
@@ -95,52 +100,52 @@ thunar_sbr_insert_renamer_class_init (ThunarSbrInsertRenamerClass *klass)
    *
    * The #ThunarSbrInsertMode to use.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_MODE,
-                                   g_param_spec_enum ("mode", "mode", "mode",
-                                                      THUNAR_SBR_TYPE_INSERT_MODE,
-                                                      THUNAR_SBR_INSERT_MODE_INSERT,
-                                                      G_PARAM_READWRITE));
+  property_pspecs[PROP_MODE] =
+      g_param_spec_enum ("mode",
+                         "mode",
+                         "mode",
+                         THUNAR_SBR_TYPE_INSERT_MODE,
+                         THUNAR_SBR_INSERT_MODE_INSERT,
+                         G_PARAM_READWRITE);
 
   /**
    * ThunarSbrInsertRenamer:offset:
    *
    * The starting offset at which to insert/overwrite.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_OFFSET,
-                                   g_param_spec_uint ("offset",
-                                                      "offset",
-                                                      "offset",
-                                                      0, G_MAXUINT, 1,
-                                                      G_PARAM_READWRITE));
+  property_pspecs[PROP_OFFSET] =
+      g_param_spec_uint ("offset",
+                         "offset",
+                         "offset",
+                         0, G_MAXUINT, 1,
+                         G_PARAM_READWRITE);
 
   /**
    * ThunarSbrInsertRenamer:offset-mode:
    *
    * The offset mode for the renamer.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_OFFSET_MODE,
-                                   g_param_spec_enum ("offset-mode",
-                                                      "offset-mode",
-                                                      "offset-mode",
-                                                      THUNAR_SBR_TYPE_OFFSET_MODE,
-                                                      THUNAR_SBR_OFFSET_MODE_LEFT,
-                                                      G_PARAM_READWRITE));
+  property_pspecs[PROP_OFFSET_MODE] =
+      g_param_spec_enum ("offset-mode",
+                         "offset-mode",
+                         "offset-mode",
+                         THUNAR_SBR_TYPE_OFFSET_MODE,
+                         THUNAR_SBR_OFFSET_MODE_LEFT,
+                         G_PARAM_READWRITE);
 
   /**
    * ThunarSbrInsertRenamer:text:
    *
    * The text to insert/overwrite.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_TEXT,
-                                   g_param_spec_string ("text",
-                                                        "text",
-                                                        "text",
-                                                        NULL,
-                                                        G_PARAM_READWRITE));
+  property_pspecs[PROP_TEXT] =
+      g_param_spec_string ("text",
+                           "text",
+                           "text",
+                           NULL,
+                           G_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -428,7 +433,7 @@ thunar_sbr_insert_renamer_set_mode (ThunarSbrInsertRenamer *insert_renamer,
       thunarx_renamer_changed (THUNARX_RENAMER (insert_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (insert_renamer), "mode");
+      g_object_notify_by_pspec (G_OBJECT (insert_renamer), property_pspecs[PROP_MODE]);
     }
 }
 
@@ -474,7 +479,7 @@ thunar_sbr_insert_renamer_set_offset (ThunarSbrInsertRenamer *insert_renamer,
       thunarx_renamer_changed (THUNARX_RENAMER (insert_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (insert_renamer), "offset");
+      g_object_notify_by_pspec (G_OBJECT (insert_renamer), property_pspecs[PROP_OFFSET]);
     }
 }
 
@@ -520,7 +525,7 @@ thunar_sbr_insert_renamer_set_offset_mode (ThunarSbrInsertRenamer *insert_rename
       thunarx_renamer_changed (THUNARX_RENAMER (insert_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (insert_renamer), "offset-mode");
+      g_object_notify_by_pspec (G_OBJECT (insert_renamer), property_pspecs[PROP_OFFSET_MODE]);
     }
 }
 
@@ -567,7 +572,7 @@ thunar_sbr_insert_renamer_set_text (ThunarSbrInsertRenamer *insert_renamer,
       thunarx_renamer_changed (THUNARX_RENAMER (insert_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (insert_renamer), "text");
+      g_object_notify_by_pspec (G_OBJECT (insert_renamer), property_pspecs[PROP_TEXT]);
     }
 }
 

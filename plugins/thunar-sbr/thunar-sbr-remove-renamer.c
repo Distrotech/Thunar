@@ -36,6 +36,7 @@ enum
   PROP_END_OFFSET_MODE,
   PROP_START_OFFSET,
   PROP_START_OFFSET_MODE,
+  N_PROPERTIES
 };
 
 
@@ -75,6 +76,10 @@ struct _ThunarSbrRemoveRenamer
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 THUNARX_DEFINE_TYPE (ThunarSbrRemoveRenamer, thunar_sbr_remove_renamer, THUNARX_TYPE_RENAMER);
 
 
@@ -101,54 +106,52 @@ thunar_sbr_remove_renamer_class_init (ThunarSbrRemoveRenamerClass *klass)
    *
    * The end offset for the character removal.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_END_OFFSET,
-                                   g_param_spec_uint ("end-offset",
-                                                      "end-offset",
-                                                      "end-offset",
-                                                      0, G_MAXUINT, 1,
-                                                      G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+  property_pspecs[PROP_END_OFFSET] =
+      g_param_spec_uint ("end-offset",
+                         "end-offset",
+                         "end-offset",
+                         0, G_MAXUINT, 1,
+                         G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 
   /**
    * ThunarSbrRemoveRenamer:end-offset-mode:
    *
    * The end offset mode for the character removal.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_END_OFFSET_MODE,
-                                   g_param_spec_enum ("end-offset-mode",
-                                                      "end-offset-mode",
-                                                      "end-offset-mode",
-                                                      THUNAR_SBR_TYPE_OFFSET_MODE,
-                                                      THUNAR_SBR_OFFSET_MODE_LEFT,
-                                                      G_PARAM_READWRITE));
+  property_pspecs[PROP_END_OFFSET_MODE] =
+      g_param_spec_enum ("end-offset-mode",
+                         "end-offset-mode",
+                         "end-offset-mode",
+                         THUNAR_SBR_TYPE_OFFSET_MODE,
+                         THUNAR_SBR_OFFSET_MODE_LEFT,
+                         G_PARAM_READWRITE);
 
   /**
    * ThunarSbrRemoveRenamer:start-offset:
    *
    * The start offset for the character removal.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_START_OFFSET,
-                                   g_param_spec_uint ("start-offset",
-                                                      "start-offset",
-                                                      "start-offset",
-                                                      0, G_MAXUINT, 0,
-                                                      G_PARAM_READWRITE));
+  property_pspecs[PROP_START_OFFSET] =
+      g_param_spec_uint ("start-offset",
+                         "start-offset",
+                         "start-offset",
+                         0, G_MAXUINT, 0,
+                         G_PARAM_READWRITE);
 
   /**
    * ThunarSbrRemoveRenamer:start-offset-mode:
    *
    * The start offset mode for the character removal.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_START_OFFSET_MODE,
-                                   g_param_spec_enum ("start-offset-mode",
-                                                      "start-offset-mode",
-                                                      "start-offset-mode",
-                                                      THUNAR_SBR_TYPE_OFFSET_MODE,
-                                                      THUNAR_SBR_OFFSET_MODE_LEFT,
-                                                      G_PARAM_READWRITE));
+  property_pspecs[PROP_START_OFFSET_MODE] =
+      g_param_spec_enum ("start-offset-mode",
+                         "start-offset-mode",
+                         "start-offset-mode",
+                         THUNAR_SBR_TYPE_OFFSET_MODE,
+                         THUNAR_SBR_OFFSET_MODE_LEFT,
+                         G_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -469,7 +472,7 @@ thunar_sbr_remove_renamer_set_end_offset (ThunarSbrRemoveRenamer *remove_renamer
       thunar_sbr_remove_renamer_update (remove_renamer);
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (remove_renamer), "end-offset");
+      g_object_notify_by_pspec (G_OBJECT (remove_renamer), property_pspecs[PROP_END_OFFSET]);
     }
 }
 
@@ -515,7 +518,7 @@ thunar_sbr_remove_renamer_set_end_offset_mode (ThunarSbrRemoveRenamer *remove_re
       thunar_sbr_remove_renamer_update (remove_renamer);
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (remove_renamer), "end-offset-mode");
+      g_object_notify_by_pspec (G_OBJECT (remove_renamer), property_pspecs[PROP_END_OFFSET_MODE]);
     }
 }
 
@@ -561,7 +564,7 @@ thunar_sbr_remove_renamer_set_start_offset (ThunarSbrRemoveRenamer *remove_renam
       thunar_sbr_remove_renamer_update (remove_renamer);
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (remove_renamer), "start-offset");
+      g_object_notify_by_pspec (G_OBJECT (remove_renamer), property_pspecs[PROP_START_OFFSET]);
     }
 }
 
@@ -607,7 +610,7 @@ thunar_sbr_remove_renamer_set_start_offset_mode (ThunarSbrRemoveRenamer *remove_
       thunar_sbr_remove_renamer_update (remove_renamer);
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (remove_renamer), "start-offset-mode");
+      g_object_notify_by_pspec (G_OBJECT (remove_renamer), property_pspecs[PROP_START_OFFSET_MODE]);
     }
 }
 

@@ -39,6 +39,7 @@ enum
   PROP_SELECTED_FILES,
   PROP_SHOW_HIDDEN,
   PROP_UI_MANAGER,
+  N_PROPERTIES
 };
 
 
@@ -100,6 +101,10 @@ static const GtkActionEntry action_entries[] =
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE_WITH_CODE (ThunarShortcutsPane, thunar_shortcuts_pane, GTK_TYPE_SCROLLED_WINDOW,
     G_IMPLEMENT_INTERFACE (THUNAR_TYPE_NAVIGATOR, thunar_shortcuts_pane_navigator_init)
     G_IMPLEMENT_INTERFACE (THUNAR_TYPE_COMPONENT, thunar_shortcuts_pane_component_init)
@@ -111,6 +116,7 @@ static void
 thunar_shortcuts_pane_class_init (ThunarShortcutsPaneClass *klass)
 {
   GObjectClass *gobject_class;
+  gpointer      g_iface;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->dispose = thunar_shortcuts_pane_dispose;
@@ -119,14 +125,28 @@ thunar_shortcuts_pane_class_init (ThunarShortcutsPaneClass *klass)
   gobject_class->set_property = thunar_shortcuts_pane_set_property;
 
   /* override ThunarNavigator's properties */
-  g_object_class_override_property (gobject_class, PROP_CURRENT_DIRECTORY, "current-directory");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_NAVIGATOR);
+  property_pspecs[PROP_CURRENT_DIRECTORY] =
+      g_param_spec_override ("current-directory",
+                             g_object_interface_find_property (g_iface, "current-directory"));
 
   /* override ThunarComponent's properties */
-  g_object_class_override_property (gobject_class, PROP_SELECTED_FILES, "selected-files");
-  g_object_class_override_property (gobject_class, PROP_UI_MANAGER, "ui-manager");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_COMPONENT);
+  property_pspecs[PROP_SELECTED_FILES] =
+      g_param_spec_override ("selected-files",
+                             g_object_interface_find_property (g_iface, "selected-files"));
+
+  property_pspecs[PROP_UI_MANAGER] =
+      g_param_spec_override ("ui-manager",
+                             g_object_interface_find_property (g_iface, "ui-manager"));
 
   /* override ThunarSidePane's properties */
-  g_object_class_override_property (gobject_class, PROP_SHOW_HIDDEN, "show-hidden");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_SIDE_PANE);
+  property_pspecs[PROP_SHOW_HIDDEN] =
+      g_param_spec_override ("show-hidden",
+                             g_object_interface_find_property (g_iface, "show-hidden"));
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -338,7 +358,7 @@ thunar_shortcuts_pane_set_current_directory (ThunarNavigator *navigator,
     }
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (shortcuts_pane), "current-directory");
+  _g_object_notify_by_pspec (G_OBJECT (shortcuts_pane), property_pspecs[PROP_CURRENT_DIRECTORY]);
 }
 
 
@@ -404,7 +424,7 @@ thunar_shortcuts_pane_set_selected_files (ThunarComponent *component,
     }
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (shortcuts_pane), "selected-files");
+  _g_object_notify_by_pspec (G_OBJECT (shortcuts_pane), property_pspecs[PROP_SELECTED_FILES]);
 }
 
 
@@ -459,7 +479,7 @@ thunar_shortcuts_pane_set_ui_manager (ThunarComponent *component,
     }
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (shortcuts_pane), "ui-manager");
+  _g_object_notify_by_pspec (G_OBJECT (shortcuts_pane), property_pspecs[PROP_UI_MANAGER]);
 }
 
 

@@ -49,6 +49,7 @@ enum
   PROP_FROZEN,
   PROP_MODE,
   PROP_RENAMER,
+  N_PROPERTIES
 };
 
 typedef struct
@@ -174,6 +175,10 @@ struct _ThunarRenamerModelItem
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE_WITH_CODE (ThunarRenamerModel, thunar_renamer_model, G_TYPE_OBJECT,
     G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL, thunar_renamer_model_tree_model_init))
 
@@ -196,13 +201,12 @@ thunar_renamer_model_class_init (ThunarRenamerModelClass *klass)
    * can be renamed. This is %TRUE if atleast one file
    * is in the model and no conflict is present.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_CAN_RENAME,
-                                   g_param_spec_boolean ("can-rename",
-                                                         "can-rename",
-                                                         "can-rename",
-                                                         FALSE,
-                                                         EXO_PARAM_READABLE));
+  property_pspecs[PROP_CAN_RENAME] =
+      g_param_spec_boolean ("can-rename",
+                            "can-rename",
+                            "can-rename",
+                            FALSE,
+                            EXO_PARAM_READABLE);
 
   /**
    * ThunarRenamerModel:frozen:
@@ -211,13 +215,12 @@ thunar_renamer_model_class_init (ThunarRenamerModelClass *klass)
    * be processed for the model and the "can-rename"
    * property will always be %FALSE.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FROZEN,
-                                   g_param_spec_boolean ("frozen",
-                                                         "frozen",
-                                                         "frozen",
-                                                         FALSE,
-                                                         EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FROZEN] =
+      g_param_spec_boolean ("frozen",
+                            "frozen",
+                            "frozen",
+                            FALSE,
+                            EXO_PARAM_READWRITE);
 
   /**
    * ThunarRenamerModel:mode:
@@ -225,12 +228,13 @@ thunar_renamer_model_class_init (ThunarRenamerModelClass *klass)
    * The #ThunarRenamerMode used by this
    * #ThunarRenamerModel.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_MODE,
-                                   g_param_spec_enum ("mode", "mode", "mode",
-                                                      THUNAR_TYPE_RENAMER_MODE,
-                                                      THUNAR_RENAMER_MODE_NAME,
-                                                      EXO_PARAM_READWRITE));
+  property_pspecs[PROP_MODE] =
+      g_param_spec_enum ("mode",
+                         "mode",
+                         "mode",
+                         THUNAR_TYPE_RENAMER_MODE,
+                         THUNAR_RENAMER_MODE_NAME,
+                         EXO_PARAM_READWRITE);
 
   /**
    * ThunarRenamerModel:renamer:
@@ -238,13 +242,14 @@ thunar_renamer_model_class_init (ThunarRenamerModelClass *klass)
    * The #ThunarxRenamer that should be used by this
    * #ThunarRenamerModel.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_RENAMER,
-                                   g_param_spec_object ("renamer",
-                                                        "renamer",
-                                                        "renamer",
-                                                        THUNARX_TYPE_RENAMER,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_RENAMER] =
+      g_param_spec_object ("renamer",
+                           "renamer",
+                           "renamer",
+                           THUNARX_TYPE_RENAMER,
+                           EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -721,7 +726,7 @@ thunar_renamer_model_invalidate_item (ThunarRenamerModel     *renamer_model,
                                                        renamer_model, thunar_renamer_model_update_idle_destroy);
 
       /* notify listeners that we're updating */
-      g_object_notify (G_OBJECT (renamer_model), "can-rename");
+      _g_object_notify_by_pspec (G_OBJECT (renamer_model), property_pspecs[PROP_CAN_RENAME]);
     }
 }
 
@@ -976,7 +981,7 @@ thunar_renamer_model_update_idle_destroy (gpointer user_data)
   THUNAR_RENAMER_MODEL (user_data)->update_idle_id = 0;
 
   /* ...and notify listeners */
-  g_object_notify (G_OBJECT (user_data), "can-rename");
+  _g_object_notify_by_pspec (G_OBJECT (user_data), property_pspecs[PROP_CAN_RENAME]);
 }
 
 
@@ -1162,8 +1167,8 @@ thunar_renamer_model_set_frozen (ThunarRenamerModel *renamer_model,
 
       /* notify listeners */
       g_object_freeze_notify (G_OBJECT (renamer_model));
-      g_object_notify (G_OBJECT (renamer_model), "can-rename");
-      g_object_notify (G_OBJECT (renamer_model), "frozen");
+      _g_object_notify_by_pspec (G_OBJECT (renamer_model), property_pspecs[PROP_CAN_RENAME]);
+      _g_object_notify_by_pspec (G_OBJECT (renamer_model), property_pspecs[PROP_FROZEN]);
       g_object_thaw_notify (G_OBJECT (renamer_model));
     }
 }
@@ -1213,7 +1218,7 @@ thunar_renamer_model_set_mode (ThunarRenamerModel *renamer_model,
   thunar_renamer_model_invalidate_all (renamer_model);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (renamer_model), "mode");
+  _g_object_notify_by_pspec (G_OBJECT (renamer_model), property_pspecs[PROP_MODE]);
 }
 
 
@@ -1276,7 +1281,7 @@ thunar_renamer_model_set_renamer (ThunarRenamerModel *renamer_model,
   thunar_renamer_model_invalidate_all (renamer_model);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (renamer_model), "renamer");
+  _g_object_notify_by_pspec (G_OBJECT (renamer_model), property_pspecs[PROP_RENAMER]);
 }
 
 

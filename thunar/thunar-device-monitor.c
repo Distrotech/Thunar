@@ -46,7 +46,8 @@ enum
 enum
 {
   PROP_0,
-  PROP_HIDDEN_DEVICES
+  PROP_HIDDEN_DEVICES,
+  N_PROPERTIES
 };
 
 
@@ -122,7 +123,8 @@ struct _ThunarDeviceMonitor
 
 
 
-static guint device_monitor_signals[LAST_SIGNAL];
+static guint       device_monitor_signals[LAST_SIGNAL];
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -140,13 +142,14 @@ thunar_device_monitor_class_init (ThunarDeviceMonitorClass *klass)
   gobject_class->get_property = thunar_device_monitor_get_property;
   gobject_class->set_property = thunar_device_monitor_set_property;
 
-  g_object_class_install_property (gobject_class,
-                                   PROP_HIDDEN_DEVICES,
-                                   g_param_spec_boxed ("hidden-devices",
-                                                       NULL,
-                                                       NULL,
-                                                       G_TYPE_STRV,
-                                                       EXO_PARAM_READWRITE));
+  property_pspecs[PROP_HIDDEN_DEVICES] =
+      g_param_spec_boxed ("hidden-devices",
+                          NULL,
+                          NULL,
+                          G_TYPE_STRV,
+                          EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   device_monitor_signals[DEVICE_ADDED] =
       g_signal_new (I_("device-added"),

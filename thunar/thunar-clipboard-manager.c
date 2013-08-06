@@ -42,6 +42,7 @@ enum
 {
   PROP_0,
   PROP_CAN_PASTE,
+  N_PROPERTIES
 };
 
 enum
@@ -124,8 +125,11 @@ static const GtkTargetEntry clipboard_targets[] =
   { "UTF8_STRING", 0, TARGET_UTF8_STRING }
 };
 
-static GQuark thunar_clipboard_manager_quark = 0;
-static guint  manager_signals[LAST_SIGNAL];
+
+
+static GQuark      thunar_clipboard_manager_quark = 0;
+static guint       manager_signals[LAST_SIGNAL];
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -150,11 +154,14 @@ thunar_clipboard_manager_class_init (ThunarClipboardManagerClass *klass)
    * this #ThunarClipboardManager can be pasted into a folder
    * displayed by a #ThunarView.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_CAN_PASTE,
-                                   g_param_spec_boolean ("can-paste", "can-pase", "can-paste",
-                                                         FALSE,
-                                                         EXO_PARAM_READABLE));
+  property_pspecs[PROP_CAN_PASTE] =
+      g_param_spec_boolean ("can-paste",
+                            "can-pase",
+                            "can-paste",
+                            FALSE,
+                            EXO_PARAM_READABLE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   /**
    * ThunarClipboardManager::changed:
@@ -398,7 +405,7 @@ thunar_clipboard_manager_targets_received (GtkClipboard     *clipboard,
 
   /* notify listeners that we have a new clipboard state */
   g_signal_emit (manager, manager_signals[CHANGED], 0);
-  g_object_notify (G_OBJECT (manager), "can-paste");
+  _g_object_notify_by_pspec (G_OBJECT (manager), property_pspecs[PROP_CAN_PASTE]);
 
   /* drop the reference taken for the callback */
   g_object_unref (manager);

@@ -23,6 +23,7 @@
 
 #include <thunar/thunar-tree-pane.h>
 #include <thunar/thunar-tree-view.h>
+#include <thunar/thunar-private.h>
 
 
 
@@ -34,6 +35,7 @@ enum
   PROP_SELECTED_FILES,
   PROP_SHOW_HIDDEN,
   PROP_UI_MANAGER,
+  N_PROPERTIES
 };
 
 
@@ -75,6 +77,10 @@ struct _ThunarTreePane
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE_WITH_CODE (ThunarTreePane, thunar_tree_pane, GTK_TYPE_SCROLLED_WINDOW,
     G_IMPLEMENT_INTERFACE (THUNAR_TYPE_NAVIGATOR, thunar_tree_pane_navigator_init)
     G_IMPLEMENT_INTERFACE (THUNAR_TYPE_COMPONENT, thunar_tree_pane_component_init)
@@ -86,6 +92,7 @@ static void
 thunar_tree_pane_class_init (ThunarTreePaneClass *klass)
 {
   GObjectClass *gobject_class;
+  gpointer      g_iface;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->dispose = thunar_tree_pane_dispose;
@@ -93,14 +100,28 @@ thunar_tree_pane_class_init (ThunarTreePaneClass *klass)
   gobject_class->set_property = thunar_tree_pane_set_property;
 
   /* override ThunarNavigator's properties */
-  g_object_class_override_property (gobject_class, PROP_CURRENT_DIRECTORY, "current-directory");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_NAVIGATOR);
+  property_pspecs[PROP_CURRENT_DIRECTORY] =
+      g_param_spec_override ("current-directory",
+                             g_object_interface_find_property (g_iface, "current-directory"));
 
   /* override ThunarComponent's properties */
-  g_object_class_override_property (gobject_class, PROP_SELECTED_FILES, "selected-files");
-  g_object_class_override_property (gobject_class, PROP_UI_MANAGER, "ui-manager");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_COMPONENT);
+  property_pspecs[PROP_SELECTED_FILES] =
+      g_param_spec_override ("selected-files",
+                             g_object_interface_find_property (g_iface, "selected-files"));
+
+  property_pspecs[PROP_UI_MANAGER] =
+      g_param_spec_override ("ui-manager",
+                             g_object_interface_find_property (g_iface, "ui-manager"));
 
   /* override ThunarSidePane's properties */
-  g_object_class_override_property (gobject_class, PROP_SHOW_HIDDEN, "show-hidden");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_SIDE_PANE);
+  property_pspecs[PROP_SHOW_HIDDEN] =
+      g_param_spec_override ("show-hidden",
+                             g_object_interface_find_property (g_iface, "show-hidden"));
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -259,7 +280,7 @@ thunar_tree_pane_set_current_directory (ThunarNavigator *navigator,
     g_object_ref (G_OBJECT (current_directory));
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (tree_pane), "current-directory");
+  _g_object_notify_by_pspec (G_OBJECT (tree_pane), property_pspecs[PROP_CURRENT_DIRECTORY]);
 }
 
 
@@ -287,7 +308,7 @@ thunar_tree_pane_set_show_hidden (ThunarSidePane *side_pane,
       tree_pane->show_hidden = show_hidden;
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (tree_pane), "show-hidden");
+      _g_object_notify_by_pspec (G_OBJECT (tree_pane), property_pspecs[PROP_SHOW_HIDDEN]);
     }
 }
 

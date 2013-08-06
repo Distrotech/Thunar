@@ -35,6 +35,7 @@ enum
 {
   PROP_0,
   PROP_RESIDENT,
+  N_PROPERTIES
 };
 
 
@@ -76,6 +77,10 @@ struct _ThunarxProviderModule
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE_WITH_CODE (ThunarxProviderModule, thunarx_provider_module, G_TYPE_TYPE_MODULE,
     G_IMPLEMENT_INTERFACE (THUNARX_TYPE_PROVIDER_PLUGIN, thunarx_provider_module_plugin_init))
 
@@ -86,6 +91,7 @@ thunarx_provider_module_class_init (ThunarxProviderModuleClass *klass)
 {
   GTypeModuleClass *gtype_module_class;
   GObjectClass     *gobject_class;
+  gpointer          g_iface;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->get_property = thunarx_provider_module_get_property;
@@ -96,9 +102,12 @@ thunarx_provider_module_class_init (ThunarxProviderModuleClass *klass)
   gtype_module_class->unload = thunarx_provider_module_unload;
 
   /* overload ThunarxProviderPlugin's properties */
-  g_object_class_override_property (gobject_class,
-                                    PROP_RESIDENT,
-                                    "resident");
+  g_iface = g_type_default_interface_peek (THUNARX_TYPE_PROVIDER_PLUGIN);
+  property_pspecs[PROP_RESIDENT] =
+      g_param_spec_override ("resident",
+                             g_object_interface_find_property (g_iface, "resident"));
+  
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -247,7 +256,7 @@ thunarx_provider_module_set_resident (ThunarxProviderPlugin *plugin,
   if (G_LIKELY (module->resident != resident))
     {
       module->resident = resident;
-      g_object_notify (G_OBJECT (module), "resident");
+      g_object_notify_by_pspec (G_OBJECT (module), property_pspecs[PROP_RESIDENT]);
     }
 }
 

@@ -47,6 +47,7 @@ enum
   PROP_PATTERN,
   PROP_REPLACEMENT,
   PROP_REGEXP,
+  N_PROPERTIES
 };
 
 
@@ -99,6 +100,10 @@ struct _ThunarSbrReplaceRenamer
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 THUNARX_DEFINE_TYPE (ThunarSbrReplaceRenamer, thunar_sbr_replace_renamer, THUNARX_TYPE_RENAMER);
 
 
@@ -126,52 +131,50 @@ thunar_sbr_replace_renamer_class_init (ThunarSbrReplaceRenamerClass *klass)
    *
    * Whether to use case sensitive search and replace.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_CASE_SENSITIVE,
-                                   g_param_spec_boolean ("case-sensitive",
-                                                         "case-sensitive",
-                                                         "case-sensitive",
-                                                         FALSE,
-                                                         G_PARAM_READWRITE));
+  property_pspecs[PROP_CASE_SENSITIVE] =
+      g_param_spec_boolean ("case-sensitive",
+                            "case-sensitive",
+                            "case-sensitive",
+                            FALSE,
+                            G_PARAM_READWRITE);
 
   /**
    * ThunarSbrReplaceRenamer:pattern:
    *
    * The search pattern.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_PATTERN,
-                                   g_param_spec_string ("pattern",
-                                                        "pattern",
-                                                        "pattern",
-                                                        NULL,
-                                                        G_PARAM_READWRITE));
+  property_pspecs[PROP_PATTERN] =
+      g_param_spec_string ("pattern",
+                           "pattern",
+                           "pattern",
+                           NULL,
+                           G_PARAM_READWRITE);
 
   /**
    * ThunarSbrReplaceRenamer:replacement:
    *
    * The replacement text.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_REPLACEMENT,
-                                   g_param_spec_string ("replacement",
-                                                        "replacement",
-                                                        "replacement",
-                                                        NULL,
-                                                        G_PARAM_READWRITE));
+  property_pspecs[PROP_REPLACEMENT] =
+      g_param_spec_string ("replacement",
+                           "replacement",
+                           "replacement",
+                           NULL,
+                           G_PARAM_READWRITE);
 
   /**
    * ThunarSbrReplaceRenamer:regexp:
    *
    * Whether to use regular expressions.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_REGEXP,
-                                   g_param_spec_boolean ("regexp",
-                                                         "regexp",
-                                                         "regexp",
-                                                         FALSE,
-                                                         G_PARAM_READWRITE));
+  property_pspecs[PROP_REGEXP] =
+      g_param_spec_boolean ("regexp",
+                            "regexp",
+                            "regexp",
+                            FALSE,
+                            G_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -713,7 +716,7 @@ thunar_sbr_replace_renamer_set_case_sensitive (ThunarSbrReplaceRenamer *replace_
       thunarx_renamer_changed (THUNARX_RENAMER (replace_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (replace_renamer), "case-sensitive");
+      g_object_notify_by_pspec (G_OBJECT (replace_renamer), property_pspecs[PROP_CASE_SENSITIVE]);
     }
 }
 
@@ -766,7 +769,7 @@ thunar_sbr_replace_renamer_set_pattern (ThunarSbrReplaceRenamer *replace_renamer
       thunarx_renamer_changed (THUNARX_RENAMER (replace_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (replace_renamer), "pattern");
+      g_object_notify_by_pspec (G_OBJECT (replace_renamer), property_pspecs[PROP_PATTERN]);
     }
 }
 
@@ -822,7 +825,7 @@ thunar_sbr_replace_renamer_set_regexp (ThunarSbrReplaceRenamer *replace_renamer,
       thunarx_renamer_changed (THUNARX_RENAMER (replace_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (replace_renamer), "regexp");
+      g_object_notify_by_pspec (G_OBJECT (replace_renamer), property_pspecs[PROP_REGEXP]);
     }
 }
 
@@ -870,7 +873,7 @@ thunar_sbr_replace_renamer_set_replacement (ThunarSbrReplaceRenamer *replace_ren
       thunarx_renamer_changed (THUNARX_RENAMER (replace_renamer));
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (replace_renamer), "replacement");
+      g_object_notify_by_pspec (G_OBJECT (replace_renamer), property_pspecs[PROP_REPLACEMENT]);
     }
 }
 

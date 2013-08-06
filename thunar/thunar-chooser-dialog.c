@@ -47,6 +47,7 @@ enum
   PROP_0,
   PROP_FILE,
   PROP_OPEN,
+  N_PROPERTIES
 };
 
 
@@ -124,6 +125,10 @@ struct _ThunarChooserDialog
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarChooserDialog, thunar_chooser_dialog, THUNAR_TYPE_ABSTRACT_DIALOG)
 
 
@@ -151,22 +156,26 @@ thunar_chooser_dialog_class_init (ThunarChooserDialogClass *klass)
    *
    * The #ThunarFile for which an application should be chosen.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FILE,
-                                   g_param_spec_object ("file", "file", "file",
-                                                        THUNAR_TYPE_FILE,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FILE] =
+      g_param_spec_object ("file",
+                           "file",
+                           "file",
+                           THUNAR_TYPE_FILE,
+                           EXO_PARAM_READWRITE);
 
   /**
    * ThunarChooserDialog::open:
    *
    * Whether the chooser should open the specified file.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_OPEN,
-                                   g_param_spec_boolean ("open", "open", "open",
-                                                         FALSE,
-                                                         G_PARAM_CONSTRUCT | EXO_PARAM_READWRITE));
+  property_pspecs[PROP_OPEN] =
+      g_param_spec_boolean ("open",
+                            "open",
+                            "open",
+                            FALSE,
+                            G_PARAM_CONSTRUCT | EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -1118,7 +1127,7 @@ thunar_chooser_dialog_set_file (ThunarChooserDialog *dialog,
     thunar_chooser_dialog_update_header (dialog);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (dialog), "file");
+  _g_object_notify_by_pspec (G_OBJECT (dialog), property_pspecs[PROP_FILE]);
 }
 
 
@@ -1160,7 +1169,7 @@ thunar_chooser_dialog_set_open (ThunarChooserDialog *dialog,
   gtk_button_set_label (GTK_BUTTON (dialog->accept_button), open ? GTK_STOCK_OPEN : GTK_STOCK_OK);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (dialog), "open");
+  _g_object_notify_by_pspec (G_OBJECT (dialog), property_pspecs[PROP_OPEN]);
 }
 
 

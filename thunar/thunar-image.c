@@ -42,6 +42,7 @@ enum
 {
   PROP_0,
   PROP_FILE,
+  N_PROPERTIES
 };
 
 
@@ -81,6 +82,10 @@ struct _ThunarImagePrivate
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarImage, thunar_image, GTK_TYPE_IMAGE);
 
 
@@ -97,12 +102,14 @@ thunar_image_class_init (ThunarImageClass *klass)
   gobject_class->get_property = thunar_image_get_property;
   gobject_class->set_property = thunar_image_set_property;
 
-  g_object_class_install_property (gobject_class, PROP_FILE,
-                                   g_param_spec_object ("file",
-                                                        "file",
-                                                        "file",
-                                                        THUNAR_TYPE_FILE,
-                                                        G_PARAM_READWRITE));
+  property_pspecs[PROP_FILE] =
+      g_param_spec_object ("file",
+                           "file",
+                           "file",
+                           THUNAR_TYPE_FILE,
+                           G_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -249,5 +256,5 @@ thunar_image_set_file (ThunarImage *image,
 
   thunar_image_update (image);
 
-  g_object_notify (G_OBJECT (image), "file");
+  _g_object_notify_by_pspec (G_OBJECT (image), property_pspecs[PROP_FILE]);
 }

@@ -75,6 +75,7 @@ enum
 {
   PROP_0,
   PROP_DAEMON,
+  N_PROPERTIES
 };
 
 
@@ -165,8 +166,9 @@ struct _ThunarApplication
 
 
 
-static GQuark thunar_application_screen_quark;
-static GQuark thunar_application_startup_id_quark;
+static GQuark      thunar_application_screen_quark;
+static GQuark      thunar_application_startup_id_quark;
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -199,13 +201,14 @@ thunar_application_class_init (ThunarApplicationClass *klass)
    * application should terminate once the last window is
    * closed.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_boolean ("daemon",
-                                                         "daemon",
-                                                         "daemon",
-                                                         FALSE,
-                                                         EXO_PARAM_READWRITE));
+  property_pspecs[PROP_DAEMON] =
+      g_param_spec_boolean ("daemon",
+                            "daemon",
+                            "daemon",
+                            FALSE,
+                            EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -870,7 +873,7 @@ thunar_application_set_daemon (ThunarApplication *application,
   if (application->daemon != daemonize)
     {
       application->daemon = daemonize;
-      g_object_notify (G_OBJECT (application), "daemon");
+      _g_object_notify_by_pspec (G_OBJECT (application), property_pspecs[PROP_DAEMON]);
     }
 }
 

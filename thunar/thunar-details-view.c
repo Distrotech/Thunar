@@ -38,6 +38,7 @@ enum
 {
   PROP_0,
   PROP_FIXED_COLUMNS,
+  N_PROPERTIES
 };
 
 
@@ -136,6 +137,10 @@ static const GtkActionEntry action_entries[] =
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarDetailsView, thunar_details_view, THUNAR_TYPE_STANDARD_VIEW)
 
 
@@ -175,13 +180,14 @@ thunar_details_view_class_init (ThunarDetailsViewClass *klass)
    *
    * %TRUE to use fixed column widths.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FIXED_COLUMNS,
-                                   g_param_spec_boolean ("fixed-columns",
-                                                         "fixed-columns",
-                                                         "fixed-columns",
-                                                         FALSE,
-                                                         EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FIXED_COLUMNS] =
+      g_param_spec_boolean ("fixed-columns",
+                            "fixed-columns",
+                            "fixed-columns",
+                            FALSE,
+                            EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -938,6 +944,6 @@ thunar_details_view_set_fixed_columns (ThunarDetailsView *details_view,
       gtk_tree_view_set_fixed_height_mode (GTK_TREE_VIEW (GTK_BIN (details_view)->child), fixed_columns);
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (details_view), "fixed-columns");
+      _g_object_notify_by_pspec (G_OBJECT (details_view), property_pspecs[PROP_FIXED_COLUMNS]);
     }
 }

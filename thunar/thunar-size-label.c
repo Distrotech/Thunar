@@ -42,12 +42,12 @@ enum
 {
   PROP_0,
   PROP_FILES,
+  N_PROPERTIES
 };
 
 
 
 static void     thunar_size_label_dispose               (GObject              *object);
-static void     thunar_size_label_finalize              (GObject              *object);
 static void     thunar_size_label_get_property          (GObject              *object,
                                                          guint                 prop_id,
                                                          GValue               *value,
@@ -95,6 +95,10 @@ struct _ThunarSizeLabel
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarSizeLabel, thunar_size_label, GTK_TYPE_HBOX)
 
 
@@ -105,7 +109,6 @@ thunar_size_label_class_init (ThunarSizeLabelClass *klass)
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  gobject_class->finalize = thunar_size_label_finalize;
   gobject_class->dispose = thunar_size_label_dispose;
   gobject_class->get_property = thunar_size_label_get_property;
   gobject_class->set_property = thunar_size_label_set_property;
@@ -116,11 +119,14 @@ thunar_size_label_class_init (ThunarSizeLabelClass *klass)
    * The #ThunarFile whose size should be displayed
    * by this #ThunarSizeLabel.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FILES,
-                                   g_param_spec_boxed ("files", "files", "files",
-                                                       THUNARX_TYPE_FILE_INFO_LIST,
-                                                       EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FILES] =
+      g_param_spec_boxed ("files",
+                          "files",
+                          "files",
+                          THUNARX_TYPE_FILE_INFO_LIST,
+                          EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -169,20 +175,10 @@ thunar_size_label_dispose (GObject *object)
   /* cancel the pending job (if any) */
   thunar_size_label_stop_count (size_label);
 
-  (*G_OBJECT_CLASS (thunar_size_label_parent_class)->dispose) (object);
-}
-
-
-
-static void
-thunar_size_label_finalize (GObject *object)
-{
-  ThunarSizeLabel *size_label = THUNAR_SIZE_LABEL (object);
-
   /* reset the file property */
   thunar_size_label_set_files (size_label, NULL);
 
-  (*G_OBJECT_CLASS (thunar_size_label_parent_class)->finalize) (object);
+  (*G_OBJECT_CLASS (thunar_size_label_parent_class)->dispose) (object);
 }
 
 
@@ -244,7 +240,7 @@ thunar_size_label_button_press_event (GtkWidget       *ebox,
     {
       /* cancel the pending job (if any) */
       thunar_size_label_stop_count (size_label);
-g_message ("aborted");
+
       /* tell the user that the operation was canceled */
       gtk_label_set_text (GTK_LABEL (size_label->label), _("Calculation aborted"));
 
@@ -460,7 +456,7 @@ thunar_size_label_set_files (ThunarSizeLabel *size_label,
     thunar_size_label_files_changed (size_label);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (size_label), "files");
+  _g_object_notify_by_pspec (G_OBJECT (size_label), property_pspecs[PROP_FILES]);
 }
 
 

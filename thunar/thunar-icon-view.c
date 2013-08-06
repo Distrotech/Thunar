@@ -31,6 +31,7 @@ enum
 {
   PROP_0,
   PROP_TEXT_BESIDE_ICONS,
+  N_PROPERTIES
 };
 
 
@@ -53,6 +54,10 @@ struct _ThunarIconView
 {
   ThunarAbstractIconView __parent__;
 };
+
+
+
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -82,13 +87,14 @@ thunar_icon_view_class_init (ThunarIconViewClass *klass)
    * Write-only property to specify whether text should be
    * display besides the icon rather than below.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_TEXT_BESIDE_ICONS,
-                                   g_param_spec_boolean ("text-beside-icons",
-                                                         "text-beside-icons",
-                                                         "text-beside-icons",
-                                                         FALSE,
-                                                         EXO_PARAM_WRITABLE));
+  property_pspecs[PROP_TEXT_BESIDE_ICONS] =
+      g_param_spec_boolean ("text-beside-icons",
+                            "text-beside-icons",
+                            "text-beside-icons",
+                            FALSE,
+                            EXO_PARAM_WRITABLE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 

@@ -187,7 +187,7 @@ static GQuark thunar_launcher_handler_quark;
 
 
 
-static GParamSpec *launcher_props[N_PROPERTIES] = { NULL, };
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -218,7 +218,7 @@ thunar_launcher_class_init (ThunarLauncherClass *klass)
    *
    * The #GtkWidget with which this launcher is associated.
    **/
-  launcher_props[PROP_WIDGET] =
+  property_pspecs[PROP_WIDGET] =
       g_param_spec_object ("widget",
                            "widget",
                            "widget",
@@ -227,22 +227,22 @@ thunar_launcher_class_init (ThunarLauncherClass *klass)
 
   /* Override ThunarNavigator's properties */
   g_iface = g_type_default_interface_peek (THUNAR_TYPE_NAVIGATOR);
-  launcher_props[PROP_CURRENT_DIRECTORY] =
+  property_pspecs[PROP_CURRENT_DIRECTORY] =
       g_param_spec_override ("current-directory",
                              g_object_interface_find_property (g_iface, "current-directory"));
 
   /* Override ThunarComponent's properties */
   g_iface = g_type_default_interface_peek (THUNAR_TYPE_COMPONENT);
-  launcher_props[PROP_SELECTED_FILES] =
+  property_pspecs[PROP_SELECTED_FILES] =
       g_param_spec_override ("selected-files",
                              g_object_interface_find_property (g_iface, "selected-files"));
 
-  launcher_props[PROP_UI_MANAGER] =
+  property_pspecs[PROP_UI_MANAGER] =
       g_param_spec_override ("ui-manager",
                              g_object_interface_find_property (g_iface, "ui-manager"));
 
   /* install properties */
-  g_object_class_install_properties (gobject_class, N_PROPERTIES, launcher_props);
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -438,7 +438,7 @@ thunar_launcher_set_current_directory (ThunarNavigator *navigator,
     g_object_ref (G_OBJECT (current_directory));
 
   /* notify listeners */
-  g_object_notify_by_pspec (G_OBJECT (launcher), launcher_props[PROP_CURRENT_DIRECTORY]);
+  _g_object_notify_by_pspec (G_OBJECT (launcher), property_pspecs[PROP_CURRENT_DIRECTORY]);
 }
 
 
@@ -477,7 +477,7 @@ thunar_launcher_set_selected_files (ThunarComponent *component,
       thunar_launcher_update (launcher);
 
       /* notify listeners */
-      g_object_notify_by_pspec (G_OBJECT (launcher), launcher_props[PROP_SELECTED_FILES]);
+      _g_object_notify_by_pspec (G_OBJECT (launcher), property_pspecs[PROP_SELECTED_FILES]);
     }
 }
 
@@ -543,7 +543,7 @@ thunar_launcher_set_ui_manager (ThunarComponent *component,
     }
 
   /* notify listeners */
-  g_object_notify_by_pspec (G_OBJECT (launcher), launcher_props[PROP_UI_MANAGER]);
+  _g_object_notify_by_pspec (G_OBJECT (launcher), property_pspecs[PROP_UI_MANAGER]);
 }
 
 
@@ -1886,7 +1886,7 @@ thunar_launcher_set_widget (ThunarLauncher *launcher,
     }
 
   /* notify listeners */
-  g_object_notify_by_pspec (G_OBJECT (launcher), launcher_props[PROP_WIDGET]);
+  _g_object_notify_by_pspec (G_OBJECT (launcher), property_pspecs[PROP_WIDGET]);
 }
 
 

@@ -46,6 +46,7 @@ enum
   PROP_0,
   PROP_ACTIVE,
   PROP_FILE,
+  N_PROPERTIES
 };
 
 /* Signal identifiers */
@@ -157,7 +158,10 @@ static const GtkTargetEntry drag_targets[] =
   { "text/uri-list", 0, 0 },
 };
 
-static guint location_button_signals[LAST_SIGNAL];
+
+
+static guint       location_button_signals[LAST_SIGNAL];
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -184,26 +188,26 @@ thunar_location_button_class_init (ThunarLocationButtonClass *klass)
    *
    * Whether the location button is currently active.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_ACTIVE,
-                                   g_param_spec_boolean ("active",
-                                                         "active",
-                                                         "active",
-                                                         FALSE,
-                                                         EXO_PARAM_READWRITE));
+  property_pspecs[PROP_ACTIVE] =
+      g_param_spec_boolean ("active",
+                            "active",
+                            "active",
+                            FALSE,
+                            EXO_PARAM_READWRITE);
 
   /**
    * ThunarLocationButton:file:
    *
    * The #ThunarFile represented by this location button.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FILE,
-                                   g_param_spec_object ("file",
-                                                        "file",
-                                                        "file",
-                                                        THUNAR_TYPE_FILE,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FILE] =
+      g_param_spec_object ("file",
+                           "file",
+                           "file",
+                           THUNAR_TYPE_FILE,
+                           EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   /**
    * ThunarLocationButton::clicked:
@@ -917,7 +921,7 @@ thunar_location_button_set_active (ThunarLocationButton *location_button,
   gtk_label_set_attributes (GTK_LABEL (location_button->label), active ? thunar_pango_attr_list_bold () : NULL);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (location_button), "active");
+  _g_object_notify_by_pspec (G_OBJECT (location_button), property_pspecs[PROP_ACTIVE]);
 }
 
 
@@ -991,7 +995,7 @@ thunar_location_button_set_file (ThunarLocationButton *location_button,
     }
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (location_button), "file");
+  _g_object_notify_by_pspec (G_OBJECT (location_button), property_pspecs[PROP_FILE]);
 }
 
 

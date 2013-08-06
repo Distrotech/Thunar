@@ -49,6 +49,7 @@ enum
   PROP_0,
   PROP_ICON_THEME,
   PROP_THUMBNAIL_MODE,
+  N_PROPERTIES
 };
 
 
@@ -134,8 +135,9 @@ ThunarIconStore;
 
 
 
-static GQuark thunar_icon_factory_quark = 0;
-static GQuark thunar_icon_factory_store_quark = 0;
+static GQuark      thunar_icon_factory_quark = 0;
+static GQuark      thunar_icon_factory_store_quark = 0;
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -162,13 +164,12 @@ thunar_icon_factory_class_init (ThunarIconFactoryClass *klass)
    * The #GtkIconTheme on which the given #ThunarIconFactory instance operates
    * on.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_ICON_THEME,
-                                   g_param_spec_object ("icon-theme",
-                                                        "icon-theme",
-                                                        "icon-theme",
-                                                        GTK_TYPE_ICON_THEME,
-                                                        EXO_PARAM_READABLE));
+  property_pspecs[PROP_ICON_THEME] =
+      g_param_spec_object ("icon-theme",
+                           "icon-theme",
+                           "icon-theme",
+                           GTK_TYPE_ICON_THEME,
+                           EXO_PARAM_READABLE);
 
   /**
    * ThunarIconFactory:thumbnail-mode:
@@ -176,14 +177,15 @@ thunar_icon_factory_class_init (ThunarIconFactoryClass *klass)
    * Whether this #ThunarIconFactory will try to generate and load thumbnails
    * when loading icons for #ThunarFile<!---->s.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_THUMBNAIL_MODE,
-                                   g_param_spec_enum ("thumbnail-mode",
-                                                      "thumbnail-mode",
-                                                      "thumbnail-mode",
-                                                      THUNAR_TYPE_THUMBNAIL_MODE,
-                                                      THUNAR_THUMBNAIL_MODE_ONLY_LOCAL,
-                                                      EXO_PARAM_READWRITE));
+  property_pspecs[PROP_THUMBNAIL_MODE] =
+      g_param_spec_enum ("thumbnail-mode",
+                         "thumbnail-mode",
+                         "thumbnail-mode",
+                         THUNAR_TYPE_THUMBNAIL_MODE,
+                         THUNAR_THUMBNAIL_MODE_ONLY_LOCAL,
+                         EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 

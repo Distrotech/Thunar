@@ -60,6 +60,11 @@ G_BEGIN_DECLS;
 #define g_value_get_object(v)   (((const GValue *) (v))->data[0].v_pointer)
 #endif
 
+/* bug in gobject (bug 705570) */
+#define _g_object_notify_by_pspec(object,pspec) \
+  if (g_atomic_int_get (&(object)->ref_count) > 0) \
+    g_object_notify_by_pspec (object, pspec)
+
 /* support macros for the GtkTreeModel implementations */
 #ifndef NDEBUG
 #define GTK_TREE_ITER_INIT(iter, iter_stamp, iter_user_data)  \

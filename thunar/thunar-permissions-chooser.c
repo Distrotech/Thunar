@@ -61,6 +61,7 @@ enum
   PROP_0,
   PROP_FILES,
   PROP_MUTABLE,
+  N_PROPERTIES
 };
 
 /* Column identifiers for the group combo box */
@@ -151,6 +152,10 @@ struct _ThunarPermissionsChooser
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarPermissionsChooser, thunar_permissions_chooser, GTK_TYPE_VBOX)
 
 
@@ -170,11 +175,12 @@ thunar_permissions_chooser_class_init (ThunarPermissionsChooserClass *klass)
    *
    * The #ThunarFile whose permissions will be edited/viewed.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FILES,
-                                   g_param_spec_boxed ("files", "files", "files",
-                                                       THUNARX_TYPE_FILE_INFO_LIST,
-                                                       EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FILES] =
+      g_param_spec_boxed ("files",
+                          "files",
+                          "files",
+                          THUNARX_TYPE_FILE_INFO_LIST,
+                          EXO_PARAM_READWRITE);
 
   /**
    * ThunarPermissionsChooser:mutable:
@@ -182,13 +188,14 @@ thunar_permissions_chooser_class_init (ThunarPermissionsChooserClass *klass)
    * Whether the current #ThunarFile<!---->s permissions are
    * mutable.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_MUTABLE,
-                                   g_param_spec_boolean ("mutable",
-                                                         "mutable",
-                                                         "mutable",
-                                                         FALSE,
-                                                         EXO_PARAM_READABLE));
+  property_pspecs[PROP_MUTABLE] =
+      g_param_spec_boolean ("mutable",
+                            "mutable",
+                            "mutable",
+                            FALSE,
+                            EXO_PARAM_READABLE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -1036,7 +1043,7 @@ thunar_permissions_chooser_file_changed (ThunarPermissionsChooser *chooser)
   g_object_unref (G_OBJECT (store));
 
   /* emit notification on "mutable", so all widgets update their sensitivity */
-  g_object_notify (G_OBJECT (chooser), "mutable");
+  _g_object_notify_by_pspec (G_OBJECT (chooser), property_pspecs[PROP_MUTABLE]);
 }
 
 
@@ -1392,7 +1399,7 @@ thunar_permissions_chooser_set_files (ThunarPermissionsChooser *chooser,
     thunar_permissions_chooser_file_changed (chooser);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (chooser), "files");
+  _g_object_notify_by_pspec (G_OBJECT (chooser), property_pspecs[PROP_FILES]);
 }
 
 

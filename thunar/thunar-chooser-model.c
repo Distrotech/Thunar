@@ -41,6 +41,7 @@ enum
 {
   PROP_0,
   PROP_CONTENT_TYPE,
+  N_PROPERTIES
 };
 
 
@@ -74,6 +75,10 @@ struct _ThunarChooserModel
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarChooserModel, thunar_chooser_model, GTK_TYPE_TREE_STORE)
 
 
@@ -94,14 +99,15 @@ thunar_chooser_model_class_init (ThunarChooserModelClass *klass)
    *
    * The content type for the model.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_CONTENT_TYPE,
-                                   g_param_spec_string ("content-type", 
-                                                        "content-type", 
-                                                        "content-type",
-                                                        NULL,
-                                                        G_PARAM_CONSTRUCT_ONLY | 
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_CONTENT_TYPE] =
+      g_param_spec_string ("content-type", 
+                           "content-type", 
+                           "content-type",
+                           NULL,
+                           G_PARAM_CONSTRUCT_ONLY | 
+                           EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 

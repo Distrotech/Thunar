@@ -32,6 +32,7 @@ enum
 {
   PROP_0,
   PROP_FILE,
+  N_PROPERTIES
 };
 
 /* Signal identifiers */
@@ -57,7 +58,8 @@ static void thunar_apr_abstract_page_file_changed (ThunarAprAbstractPage      *a
 
 
 
-static guint abstract_page_signals[LAST_SIGNAL];
+static guint       abstract_page_signals[LAST_SIGNAL];
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -83,11 +85,14 @@ thunar_apr_abstract_page_class_init (ThunarAprAbstractPageClass *klass)
    * The #ThunarxFileInfo for the file being displayed by
    * this property page.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FILE,
-                                   g_param_spec_object ("file", "file", "file",
-                                                        THUNARX_TYPE_FILE_INFO,
-                                                        G_PARAM_READWRITE));
+  property_pspecs[PROP_FILE] =
+      g_param_spec_object ("file",
+                           "file",
+                           "file",
+                           THUNARX_TYPE_FILE_INFO,
+                           G_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   /**
    * ThunarAprAbstractPage::file-changed:
@@ -246,7 +251,7 @@ thunar_apr_abstract_page_set_file (ThunarAprAbstractPage *abstract_page,
     }
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (abstract_page), "file");
+  g_object_notify_by_pspec (G_OBJECT (abstract_page), property_pspecs[PROP_FILE]);
 }
 
 

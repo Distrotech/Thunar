@@ -33,6 +33,7 @@ enum
 {
   PROP_0,
   PROP_MODE,
+  N_PROPERTIES
 };
 
 
@@ -65,6 +66,10 @@ struct _ThunarSbrCaseRenamer
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 THUNARX_DEFINE_TYPE (ThunarSbrCaseRenamer, thunar_sbr_case_renamer, THUNARX_TYPE_RENAMER);
 
 
@@ -88,12 +93,15 @@ thunar_sbr_case_renamer_class_init (ThunarSbrCaseRenamerClass *klass)
    * The #ThunarSbrCaseRenamerMode for this
    * #ThunarSbrCaseRenamer instance.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_MODE,
-                                   g_param_spec_enum ("mode", "mode", "mode",
-                                                      THUNAR_SBR_TYPE_CASE_RENAMER_MODE,
-                                                      THUNAR_SBR_CASE_RENAMER_MODE_LOWER,
-                                                      G_PARAM_READWRITE));
+  property_pspecs[PROP_MODE] =
+      g_param_spec_enum ("mode",
+                         "mode",
+                         "mode",
+                         THUNAR_SBR_TYPE_CASE_RENAMER_MODE,
+                         THUNAR_SBR_CASE_RENAMER_MODE_LOWER,
+                         G_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -310,7 +318,7 @@ thunar_sbr_case_renamer_set_mode (ThunarSbrCaseRenamer    *case_renamer,
   case_renamer->mode = mode;
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (case_renamer), "mode");
+  g_object_notify_by_pspec (G_OBJECT (case_renamer), property_pspecs[PROP_MODE]);
 
   /* emit the "changed" signal */
   thunarx_renamer_changed (THUNARX_RENAMER (case_renamer));

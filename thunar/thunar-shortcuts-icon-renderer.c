@@ -39,6 +39,7 @@ enum
   PROP_0,
   PROP_DEVICE,
   PROP_GICON,
+  N_PROPERTIES
 };
 
 
@@ -77,6 +78,10 @@ struct _ThunarShortcutsIconRenderer
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarShortcutsIconRenderer, thunar_shortcuts_icon_renderer, THUNAR_TYPE_ICON_RENDERER)
 
 
@@ -101,11 +106,12 @@ thunar_shortcuts_icon_renderer_class_init (ThunarShortcutsIconRendererClass *kla
    * The #ThunarDevice for which to render an icon or %NULL to fallback
    * to the default icon renderering (see #ThunarIconRenderer).
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_DEVICE,
-                                   g_param_spec_object ("device", "device", "device",
-                                                        THUNAR_TYPE_DEVICE,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_DEVICE] =
+      g_param_spec_object ("device",
+                           "device",
+                           "device",
+                           THUNAR_TYPE_DEVICE,
+                           EXO_PARAM_READWRITE);
 
   /**
    * ThunarIconRenderer:gicon:
@@ -113,11 +119,14 @@ thunar_shortcuts_icon_renderer_class_init (ThunarShortcutsIconRendererClass *kla
    * The GIcon to render, this property has preference over the the icon returned
    * by the ThunarFile property.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_GICON,
-                                   g_param_spec_object ("gicon", "gicon", "gicon",
-                                                        G_TYPE_ICON,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_GICON] =
+      g_param_spec_object ("gicon",
+                           "gicon",
+                           "gicon",
+                           G_TYPE_ICON,
+                           EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 

@@ -38,6 +38,7 @@ enum
   PROP_0,
   PROP_CORRESPONDING_FILE,
   PROP_LOADING,
+  N_PROPERTIES
 };
 
 /* signal identifiers */
@@ -112,8 +113,9 @@ struct _ThunarFolder
 
 
 
-static guint  folder_signals[LAST_SIGNAL];
-static GQuark thunar_folder_quark;
+static guint       folder_signals[LAST_SIGNAL];
+static GQuark      thunar_folder_quark;
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -139,15 +141,14 @@ thunar_folder_class_init (ThunarFolderClass *klass)
    *
    * The #ThunarFile referring to the #ThunarFolder.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_CORRESPONDING_FILE,
-                                   g_param_spec_object ("corresponding-file",
-                                                        "corresponding-file",
-                                                        "corresponding-file",
-                                                        THUNAR_TYPE_FILE,
-                                                        G_PARAM_READABLE
-                                                        | G_PARAM_WRITABLE
-                                                        | G_PARAM_CONSTRUCT_ONLY));
+  property_pspecs[PROP_CORRESPONDING_FILE] =
+      g_param_spec_object ("corresponding-file",
+                           "corresponding-file",
+                           "corresponding-file",
+                           THUNAR_TYPE_FILE,
+                           G_PARAM_READABLE
+                           | G_PARAM_WRITABLE
+                           | G_PARAM_CONSTRUCT_ONLY);
 
   /**
    * ThunarFolder::loading:
@@ -155,13 +156,15 @@ thunar_folder_class_init (ThunarFolderClass *klass)
    * Tells whether the contents of the #ThunarFolder are
    * currently being loaded.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_LOADING,
-                                   g_param_spec_boolean ("loading",
-                                                         "loading",
-                                                         "loading",
-                                                         FALSE,
-                                                         EXO_PARAM_READABLE));
+  property_pspecs[PROP_LOADING] =
+      g_param_spec_boolean ("loading",
+                            "loading",
+                            "loading",
+                            FALSE,
+                            EXO_PARAM_READABLE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
+
   /**
    * ThunarFolder::destroy:
    * @folder : a #ThunarFolder.
@@ -539,7 +542,7 @@ thunar_folder_finished (GObject      *source_object,
     g_signal_connect (folder->monitor, "changed", G_CALLBACK (thunar_folder_monitor), folder);
 
   /* tell the consumers that we have loaded the directory */
-  g_object_notify (G_OBJECT (folder), "loading");
+  _g_object_notify_by_pspec (G_OBJECT (folder), property_pspecs[PROP_LOADING]);
 }
 
 
@@ -902,5 +905,5 @@ thunar_folder_reload (ThunarFolder *folder)
   thunar_tasks_list_directory (folder->task, thunar_file_get_file (folder->corresponding_file));
 
   /* tell all consumers that we're loading */
-  g_object_notify (G_OBJECT (folder), "loading");
+  _g_object_notify_by_pspec (G_OBJECT (folder), property_pspecs[PROP_LOADING]);
 }

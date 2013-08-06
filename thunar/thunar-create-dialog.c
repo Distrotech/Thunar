@@ -39,6 +39,7 @@ enum
   PROP_0,
   PROP_FILENAME,
   PROP_CONTENT_TYPE,
+  N_PROPERTIES
 };
 
 
@@ -81,6 +82,10 @@ struct _ThunarCreateDialog
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarCreateDialog, thunar_create_dialog, THUNAR_TYPE_ABSTRACT_DIALOG)
 
 
@@ -104,26 +109,26 @@ thunar_create_dialog_class_init (ThunarCreateDialogClass *klass)
    *
    * The filename entered in the dialog's entry box.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FILENAME,
-                                   g_param_spec_string ("filename", 
-                                                        "filename", 
-                                                        "filename",
-                                                        NULL,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FILENAME] =
+      g_param_spec_string ("filename", 
+                           "filename", 
+                           "filename",
+                           NULL,
+                           EXO_PARAM_READWRITE);
 
   /**
    * ThunarCreateDialog::content-type:
    *
    * The content type of the file to create.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_CONTENT_TYPE,
-                                   g_param_spec_string ("content-type", 
-                                                        "content-type", 
-                                                        "content-type",
-                                                       NULL,
-                                                       EXO_PARAM_READWRITE));
+  property_pspecs[PROP_CONTENT_TYPE] =
+      g_param_spec_string ("content-type", 
+                           "content-type", 
+                           "content-type",
+                           NULL,
+                           EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -352,7 +357,7 @@ thunar_create_dialog_set_filename (ThunarCreateDialog *dialog,
     }
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (dialog), "filename");
+  _g_object_notify_by_pspec (G_OBJECT (dialog), property_pspecs[PROP_FILENAME]);
 }
 
 
@@ -381,7 +386,7 @@ thunar_create_dialog_set_content_type (ThunarCreateDialog *dialog,
     thunar_create_dialog_update_image (dialog);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (dialog), "content-type");
+  _g_object_notify_by_pspec (G_OBJECT (dialog), property_pspecs[PROP_CONTENT_TYPE]);
 }
 
 

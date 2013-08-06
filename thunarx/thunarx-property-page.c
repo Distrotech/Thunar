@@ -39,6 +39,7 @@ enum
   PROP_0,
   PROP_LABEL,
   PROP_LABEL_WIDGET,
+  N_PROPERTIES
 };
 
 
@@ -63,6 +64,10 @@ struct _ThunarxPropertyPagePrivate
 {
   GtkWidget *label_widget;
 };
+
+
+
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -96,26 +101,26 @@ thunarx_property_page_class_init (ThunarxPropertyPageClass *klass)
    *
    * Text of the page's label.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_LABEL,
-                                   g_param_spec_string ("label",
-                                                        _("Label"),
-                                                        _("Text of the page's label"),
-                                                        NULL,
-                                                        G_PARAM_READWRITE));
+  property_pspecs[PROP_LABEL] =
+      g_param_spec_string ("label",
+                           _("Label"),
+                           _("Text of the page's label"),
+                           NULL,
+                           G_PARAM_READWRITE);
 
   /**
    * ThunarxPropertyPage::label-widget:
    *
    * A widget to display in place of the usual page label.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_LABEL_WIDGET,
-                                   g_param_spec_object ("label-widget",
-                                                        _("Label widget"),
-                                                        _("A widget to display in place of the usual page label"),
-                                                        GTK_TYPE_WIDGET,
-                                                        G_PARAM_READWRITE));
+  property_pspecs[PROP_LABEL_WIDGET] =
+      g_param_spec_object ("label-widget",
+                           _("Label widget"),
+                           _("A widget to display in place of the usual page label"),
+                           GTK_TYPE_WIDGET,
+                           G_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -385,7 +390,7 @@ thunarx_property_page_set_label_widget (ThunarxPropertyPage *property_page,
 
   /* notify listeners */
   g_object_freeze_notify (G_OBJECT (property_page));
-  g_object_notify (G_OBJECT (property_page), "label");
-  g_object_notify (G_OBJECT (property_page), "label-widget");
+  g_object_notify_by_pspec (G_OBJECT (property_page), property_pspecs[PROP_LABEL]);
+  g_object_notify_by_pspec (G_OBJECT (property_page), property_pspecs[PROP_LABEL_WIDGET]);
   g_object_thaw_notify (G_OBJECT (property_page));
 }

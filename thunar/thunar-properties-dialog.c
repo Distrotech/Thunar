@@ -64,6 +64,7 @@ enum
 {
   PROP_0,
   PROP_FILES,
+  N_PROPERTIES
 };
 
 /* Signal identifiers */
@@ -145,6 +146,10 @@ struct _ThunarPropertiesDialog
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarPropertiesDialog, thunar_properties_dialog, THUNAR_TYPE_ABSTRACT_DIALOG)
 
 
@@ -174,11 +179,14 @@ thunar_properties_dialog_class_init (ThunarPropertiesDialogClass *klass)
    * this #ThunarPropertiesDialog. This property may also be %NULL
    * in which case nothing is displayed.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_FILES,
-                                   g_param_spec_boxed ("files", "files", "files",
-                                                        THUNARX_TYPE_FILE_INFO_LIST,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_FILES] =
+      g_param_spec_boxed ("files",
+                          "files",
+                          "files",
+                          THUNARX_TYPE_FILE_INFO_LIST,
+                          EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   /**
    * ThunarPropertiesDialog::reload:
@@ -1369,7 +1377,7 @@ thunar_properties_dialog_set_files (ThunarPropertiesDialog *dialog,
     }
 
   /* tell everybody that we have a new file here */
-  g_object_notify (G_OBJECT (dialog), "files");
+  //_g_object_notify_by_pspec (G_OBJECT (dialog), property_pspecs[PROP_FILES]);
 }
 
 

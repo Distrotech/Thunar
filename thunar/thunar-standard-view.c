@@ -1273,7 +1273,7 @@ thunar_standard_view_set_ui_manager (ThunarComponent *component,
     }
 
   /* let others know that we have a new manager */
-  g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_UI_MANAGER]);
+  _g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_UI_MANAGER]);
 }
 
 
@@ -1483,11 +1483,11 @@ thunar_standard_view_set_current_directory (ThunarNavigator *navigator,
   /* NOTE: quickly after this we always trigger a size allocate wich will handle this */
 
   /* notify all listeners about the new/old current directory */
-  g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_CURRENT_DIRECTORY]);
+  _g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_CURRENT_DIRECTORY]);
 
   /* update tab label and tooltip */
-  g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_DISPLAY_NAME]);
-  g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_TOOLTIP_TEXT]);
+  _g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_DISPLAY_NAME]);
+  _g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_TOOLTIP_TEXT]);
 
   /* restore the selection from the history */
   thunar_standard_view_restore_selection_from_history (standard_view);
@@ -1608,7 +1608,7 @@ thunar_standard_view_set_loading (ThunarStandardView *standard_view,
 
   /* notify listeners */
   g_object_freeze_notify (G_OBJECT (standard_view));
-  g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_LOADING]);
+  _g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_LOADING]);
   thunar_standard_view_update_statusbar_text (standard_view);
   g_object_thaw_notify (G_OBJECT (standard_view));
 }
@@ -1679,7 +1679,7 @@ thunar_standard_view_set_zoom_level (ThunarView     *view,
   if (G_LIKELY (standard_view->priv->zoom_level != zoom_level))
     {
       standard_view->priv->zoom_level = zoom_level;
-      g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_ZOOM_LEVEL]);
+      _g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_ZOOM_LEVEL]);
     }
 }
 
@@ -2118,7 +2118,7 @@ thunar_standard_view_update_statusbar_text_idle (gpointer data)
   standard_view->priv->statusbar_text_idle_id = 0;
 
   /* tell everybody that the statusbar text may have changed */
-  g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_STATUSBAR_TEXT]);
+  _g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_STATUSBAR_TEXT]);
 
   GDK_THREADS_LEAVE ();
 
@@ -2233,8 +2233,8 @@ thunar_standard_view_current_directory_changed (ThunarFile         *current_dire
   _thunar_return_if_fail (standard_view->priv->current_directory == current_directory);
 
   /* update tab label and tooltip */
-  g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_DISPLAY_NAME]);
-  g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_TOOLTIP_TEXT]);
+  _g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_DISPLAY_NAME]);
+  _g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_TOOLTIP_TEXT]);
 
   /* directory is possibly moved, schedule a thumbnail update */
   thunar_standard_view_schedule_thumbnail_timeout (standard_view);
@@ -3759,7 +3759,7 @@ thunar_standard_view_loading_unbound (gpointer user_data)
     {
       standard_view->loading = FALSE;
       g_object_freeze_notify (G_OBJECT (standard_view));
-      g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_LOADING]);
+      _g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_LOADING]);
       thunar_standard_view_update_statusbar_text (standard_view);
       g_object_thaw_notify (G_OBJECT (standard_view));
     }
@@ -4370,6 +4370,6 @@ thunar_standard_view_selection_changed (ThunarStandardView *standard_view)
   thunar_standard_view_update_statusbar_text (standard_view);
 
   /* emit notification for "selected-files" */
-  g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_SELECTED_FILES]);
+  _g_object_notify_by_pspec (G_OBJECT (standard_view), standard_view_props[PROP_SELECTED_FILES]);
 }
 

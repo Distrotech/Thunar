@@ -41,6 +41,7 @@ enum
   PROP_JOB,
   PROP_ICON_NAME,
   PROP_TITLE,
+  N_PROPERTIES
 };
 
 
@@ -102,6 +103,10 @@ struct _ThunarProgressView
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarProgressView, thunar_progress_view, GTK_TYPE_VBOX)
 
 
@@ -123,27 +128,28 @@ thunar_progress_view_class_init (ThunarProgressViewClass *klass)
    * The #ThunarJob, whose progress is displayed by this view, or
    * %NULL if no job is set.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_JOB,
-                                   g_param_spec_object ("job", "job", "job",
-                                                        THUNAR_TYPE_JOB,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_JOB] =
+      g_param_spec_object ("job",
+                           "job",
+                           "job",
+                           THUNAR_TYPE_JOB,
+                           EXO_PARAM_READWRITE);
 
-  g_object_class_install_property (gobject_class,
-                                   PROP_ICON_NAME,
-                                   g_param_spec_string ("icon-name",
-                                                        "icon-name",
-                                                        "icon-name",
-                                                        NULL,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_ICON_NAME] =
+      g_param_spec_string ("icon-name",
+                           "icon-name",
+                           "icon-name",
+                           NULL,
+                           EXO_PARAM_READWRITE);
 
-  g_object_class_install_property (gobject_class,
-                                   PROP_TITLE,
-                                   g_param_spec_string ("title",
-                                                        "title",
-                                                        "title",
-                                                        NULL,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_TITLE] =
+      g_param_spec_string ("title",
+                           "title",
+                           "title",
+                           NULL,
+                           EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   g_signal_new ("need-attention",
                 THUNAR_TYPE_PROGRESS_VIEW,
@@ -565,7 +571,7 @@ thunar_progress_view_set_job (ThunarProgressView *view,
       g_signal_connect_swapped (job, "percent", G_CALLBACK (thunar_progress_view_percent), view);
     }
 
-  g_object_notify (G_OBJECT (view), "job");
+  _g_object_notify_by_pspec (G_OBJECT (view), property_pspecs[PROP_JOB]);
 }
 
 
@@ -582,7 +588,7 @@ thunar_progress_view_set_icon_name (ThunarProgressView *view,
   g_free (view->icon_name);
   view->icon_name = g_strdup (icon_name);
 
-  g_object_notify (G_OBJECT (view), "icon-name");
+  _g_object_notify_by_pspec (G_OBJECT (view), property_pspecs[PROP_ICON_NAME]);
 }
 
 
@@ -599,5 +605,5 @@ thunar_progress_view_set_title (ThunarProgressView *view,
   g_free (view->title);
   view->title = g_strdup (title);
 
-  g_object_notify (G_OBJECT (view), "title");
+  _g_object_notify_by_pspec (G_OBJECT (view), property_pspecs[PROP_TITLE]);
 }

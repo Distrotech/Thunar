@@ -48,6 +48,7 @@ enum
 {
   PROP_0,
   PROP_SOURCE_WINDOW,
+  N_PROPERTIES
 };
 
 
@@ -136,6 +137,10 @@ BackgroundAsync;
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarDesktopBackground, thunar_desktop_background, G_TYPE_OBJECT)
 
 
@@ -151,12 +156,15 @@ thunar_desktop_background_class_init (ThunarDesktopBackgroundClass *klass)
   gobject_class->get_property = thunar_desktop_background_get_property;
   gobject_class->set_property = thunar_desktop_background_set_property;
 
-  g_object_class_install_property (gobject_class,
-                                   PROP_SOURCE_WINDOW,
-                                   g_param_spec_object ("source-window", NULL, NULL,
-                                                        GDK_TYPE_WINDOW,
-                                                        EXO_PARAM_READWRITE
-                                                        | G_PARAM_CONSTRUCT_ONLY));
+  property_pspecs[PROP_SOURCE_WINDOW] =
+      g_param_spec_object ("source-window",
+                           NULL,
+                           NULL,
+                           GDK_TYPE_WINDOW,
+                           EXO_PARAM_READWRITE
+                           | G_PARAM_CONSTRUCT_ONLY);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 

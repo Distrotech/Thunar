@@ -39,6 +39,7 @@ enum
   PROP_0,
   PROP_HELP_URL,
   PROP_NAME,
+  N_PROPERTIES
 };
 
 /* Signal identifiers */
@@ -84,7 +85,8 @@ struct _ThunarxRenamerPrivate
 
 
 
-static guint renamer_signals[LAST_SIGNAL];
+static guint       renamer_signals[LAST_SIGNAL];
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -124,13 +126,12 @@ thunarx_renamer_class_init (ThunarxRenamerClass *klass)
    * documentation will be shown when the user clicks the "Help"
    * button.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_HELP_URL,
-                                   g_param_spec_string ("help-url",
-                                                        _("Help URL"),
-                                                        _("The URL to the documentation of the renamer"),
-                                                        NULL,
-                                                        G_PARAM_READWRITE));
+  property_pspecs[PROP_HELP_URL] =
+      g_param_spec_string ("help-url",
+                           _("Help URL"),
+                           _("The URL to the documentation of the renamer"),
+                           NULL,
+                           G_PARAM_READWRITE);
 
   /**
    * ThunarxRenamer:name:
@@ -139,13 +140,14 @@ thunarx_renamer_class_init (ThunarxRenamerClass *klass)
    * in the bulk rename dialog of the file manager. Derived
    * classes should set a useful name.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_NAME,
-                                   g_param_spec_string ("name",
-                                                        _("Name"),
-                                                        _("The user visible name of the renamer"),
-                                                        NULL,
-                                                        G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+  property_pspecs[PROP_NAME] =
+      g_param_spec_string ("name",
+                           _("Name"),
+                           _("The user visible name of the renamer"),
+                           NULL,
+                           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   /**
    * ThunarxRenamer::changed:
@@ -437,7 +439,7 @@ thunarx_renamer_set_help_url (ThunarxRenamer *renamer,
   renamer->priv->help_url = g_strdup (help_url);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (renamer), "help-url");
+  g_object_notify_by_pspec (G_OBJECT (renamer), property_pspecs[PROP_HELP_URL]);
 }
 
 
@@ -482,7 +484,7 @@ thunarx_renamer_set_name (ThunarxRenamer *renamer,
   renamer->priv->name = g_strdup (name);
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (renamer), "name");
+  g_object_notify_by_pspec (G_OBJECT (renamer), property_pspecs[PROP_NAME]);
 }
 
 

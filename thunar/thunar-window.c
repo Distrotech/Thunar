@@ -74,6 +74,7 @@ enum
   PROP_SHOW_HIDDEN,
   PROP_UI_MANAGER,
   PROP_ZOOM_LEVEL,
+  N_PROPERTIES
 };
 
 /* Signal identifiers */
@@ -388,7 +389,8 @@ static const GtkToggleActionEntry toggle_action_entries[] =
 
 
 
-static guint window_signals[LAST_SIGNAL];
+static guint       window_signals[LAST_SIGNAL];
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -431,26 +433,24 @@ thunar_window_class_init (ThunarWindowClass *klass)
    * The directory currently displayed within this #ThunarWindow
    * or %NULL.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_CURRENT_DIRECTORY,
-                                   g_param_spec_object ("current-directory",
-                                                        "current-directory",
-                                                        "current-directory",
-                                                        THUNAR_TYPE_FILE,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_CURRENT_DIRECTORY] =
+      g_param_spec_object ("current-directory",
+                           "current-directory",
+                           "current-directory",
+                           THUNAR_TYPE_FILE,
+                           EXO_PARAM_READWRITE);
 
   /**
    * ThunarWindow:show-hidden:
    *
    * Whether to show hidden files in the current window.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_SHOW_HIDDEN,
-                                   g_param_spec_boolean ("show-hidden",
-                                                         "show-hidden",
-                                                         "show-hidden",
-                                                         FALSE,
-                                                         EXO_PARAM_READABLE));
+  property_pspecs[PROP_SHOW_HIDDEN] =
+      g_param_spec_boolean ("show-hidden",
+                            "show-hidden",
+                            "show-hidden",
+                            FALSE,
+                            EXO_PARAM_READABLE);
 
   /**
    * ThunarWindow:ui-manager:
@@ -459,13 +459,12 @@ thunar_window_class_init (ThunarWindowClass *klass)
    * can only be read and is garantied to always contain a valid
    * #GtkUIManager instance (thus it's never %NULL).
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_UI_MANAGER,
-                                   g_param_spec_object ("ui-manager",
-                                                        "ui-manager",
-                                                        "ui-manager",
-                                                        GTK_TYPE_UI_MANAGER,
-                                                        EXO_PARAM_READABLE));
+  property_pspecs[PROP_UI_MANAGER] =
+      g_param_spec_object ("ui-manager",
+                           "ui-manager",
+                           "ui-manager",
+                           GTK_TYPE_UI_MANAGER,
+                           EXO_PARAM_READABLE);
 
   /**
    * ThunarWindow:zoom-level:
@@ -473,14 +472,15 @@ thunar_window_class_init (ThunarWindowClass *klass)
    * The #ThunarZoomLevel applied to the #ThunarView currently
    * shown within this window.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_ZOOM_LEVEL,
-                                   g_param_spec_enum ("zoom-level",
-                                                      "zoom-level",
-                                                      "zoom-level",
-                                                      THUNAR_TYPE_ZOOM_LEVEL,
-                                                      THUNAR_ZOOM_LEVEL_NORMAL,
-                                                      EXO_PARAM_READWRITE));
+  property_pspecs[PROP_ZOOM_LEVEL] =
+      g_param_spec_enum ("zoom-level",
+                         "zoom-level",
+                         "zoom-level",
+                         THUNAR_TYPE_ZOOM_LEVEL,
+                         THUNAR_ZOOM_LEVEL_NORMAL,
+                         EXO_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 
   /**
    * ThunarWindow::back:
@@ -3178,7 +3178,7 @@ thunar_window_action_show_hidden (GtkToggleAction *action,
   /* just emit the "notify" signal for the "show-hidden"
    * signal and the view will automatically sync its state.
    */
-  g_object_notify (G_OBJECT (window), "show-hidden");
+  _g_object_notify_by_pspec (G_OBJECT (window), property_pspecs[PROP_SHOW_HIDDEN]);
 
   if (gtk_widget_get_visible (GTK_WIDGET (window)))
     g_object_set (G_OBJECT (window->preferences), "last-show-hidden",
@@ -3627,7 +3627,7 @@ thunar_window_set_zoom_level (ThunarWindow   *window,
       window->zoom_level = zoom_level;
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (window), "zoom-level");
+      _g_object_notify_by_pspec (G_OBJECT (window), property_pspecs[PROP_ZOOM_LEVEL]);
     }
 
   /* update the "Zoom In" and "Zoom Out" actions */
@@ -3729,7 +3729,7 @@ thunar_window_set_current_directory (ThunarWindow *window,
    * we do this first so other widgets display the new
    * state already while the folder view is loading.
    */
-  g_object_notify (G_OBJECT (window), "current-directory");
+  _g_object_notify_by_pspec (G_OBJECT (window), property_pspecs[PROP_CURRENT_DIRECTORY]);
 }
 
 

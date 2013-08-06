@@ -46,6 +46,7 @@ enum
   PROP_START,
   PROP_TEXT,
   PROP_TEXT_MODE,
+  N_PROPERTIES
 };
 
 
@@ -87,6 +88,10 @@ struct _ThunarSbrNumberRenamer
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 THUNARX_DEFINE_TYPE (ThunarSbrNumberRenamer, thunar_sbr_number_renamer, THUNARX_TYPE_RENAMER);
 
 
@@ -114,52 +119,52 @@ thunar_sbr_number_renamer_class_init (ThunarSbrNumberRenamerClass *klass)
    *
    * The #ThunarSbrNumberMode to use.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_MODE,
-                                   g_param_spec_enum ("mode", "mode", "mode",
-                                                      THUNAR_SBR_TYPE_NUMBER_MODE,
-                                                      THUNAR_SBR_NUMBER_MODE_123,
-                                                      G_PARAM_READWRITE));
+  property_pspecs[PROP_MODE] =
+      g_param_spec_enum ("mode",
+                         "mode",
+                         "mode",
+                         THUNAR_SBR_TYPE_NUMBER_MODE,
+                         THUNAR_SBR_NUMBER_MODE_123,
+                         G_PARAM_READWRITE);
 
   /**
    * ThunarSbrNumberRenamer:start:
    *
    * The starting value according to the #ThunarSbrNumberMode.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_START,
-                                   g_param_spec_string ("start",
-                                                        "start",
-                                                        "start",
-                                                        "1",
-                                                        G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+  property_pspecs[PROP_START] =
+      g_param_spec_string ("start",
+                           "start",
+                           "start",
+                           "1",
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 
   /**
    * ThunarSbrNumberRenamer:text:
    *
    * The additional text, depending on the #ThunarSbrTextMode.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_TEXT,
-                                   g_param_spec_string ("text",
-                                                        "text",
-                                                        "text",
-                                                        ". ",
-                                                        G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+  property_pspecs[PROP_TEXT] =
+      g_param_spec_string ("text",
+                           "text",
+                           "text",
+                           ". ",
+                           G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 
   /**
    * ThunarSbrNumberRenamer:text-mode:
    *
    * The text mode for the renamer.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_TEXT_MODE,
-                                   g_param_spec_enum ("text-mode",
-                                                      "text-mode",
-                                                      "text-mode",
-                                                      THUNAR_SBR_TYPE_TEXT_MODE,
-                                                      THUNAR_SBR_TEXT_MODE_NTO,
-                                                      G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+  property_pspecs[PROP_TEXT_MODE] =
+      g_param_spec_enum ("text-mode",
+                         "text-mode",
+                         "text-mode",
+                         THUNAR_SBR_TYPE_TEXT_MODE,
+                         THUNAR_SBR_TEXT_MODE_NTO,
+                         G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -575,7 +580,7 @@ thunar_sbr_number_renamer_set_mode (ThunarSbrNumberRenamer *number_renamer,
       thunar_sbr_number_renamer_update (number_renamer);
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (number_renamer), "mode");
+      g_object_notify_by_pspec (G_OBJECT (number_renamer), property_pspecs[PROP_MODE]);
     }
 }
 
@@ -622,7 +627,7 @@ thunar_sbr_number_renamer_set_start (ThunarSbrNumberRenamer *number_renamer,
       thunar_sbr_number_renamer_update (number_renamer);
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (number_renamer), "start");
+      g_object_notify_by_pspec (G_OBJECT (number_renamer), property_pspecs[PROP_START]);
     }
 }
 
@@ -669,7 +674,7 @@ thunar_sbr_number_renamer_set_text (ThunarSbrNumberRenamer *number_renamer,
       thunar_sbr_number_renamer_update (number_renamer);
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (number_renamer), "text");
+      g_object_notify_by_pspec (G_OBJECT (number_renamer), property_pspecs[PROP_TEXT]);
     }
 }
 
@@ -715,7 +720,7 @@ thunar_sbr_number_renamer_set_text_mode (ThunarSbrNumberRenamer *number_renamer,
       thunar_sbr_number_renamer_update (number_renamer);
 
       /* notify listeners */
-      g_object_notify (G_OBJECT (number_renamer), "text-mode");
+      g_object_notify_by_pspec (G_OBJECT (number_renamer), property_pspecs[PROP_TEXT_MODE]);
     }
 }
 

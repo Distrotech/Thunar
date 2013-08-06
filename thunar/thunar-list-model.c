@@ -1262,7 +1262,7 @@ thunar_list_model_files_added (ThunarFolder    *folder,
   gtk_tree_path_free (path);
 
   /* number of visible files may have changed */
-  g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_NUM_FILES]);
+  _g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_NUM_FILES]);
 }
 
 
@@ -1323,7 +1323,7 @@ thunar_list_model_files_removed (ThunarFolder    *folder,
     }
 
   /* this probably changed */
-  g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_NUM_FILES]);
+  _g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_NUM_FILES]);
 }
 
 
@@ -1662,7 +1662,7 @@ thunar_list_model_set_case_sensitive (ThunarListModel *store,
       thunar_list_model_sort (store);
 
       /* notify listeners */
-      g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_CASE_SENSITIVE]);
+      _g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_CASE_SENSITIVE]);
     }
 }
 
@@ -1706,7 +1706,7 @@ thunar_list_model_set_date_style (ThunarListModel *store,
       store->date_style = date_style;
 
       /* notify listeners */
-      g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_DATE_STYLE]);
+      _g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_DATE_STYLE]);
 
       /* emit a "changed" signal for each row, so the display is reloaded with the new date style */
       gtk_tree_model_foreach (GTK_TREE_MODEL (store), (GtkTreeModelForeachFunc) gtk_tree_model_row_changed, NULL);
@@ -1823,8 +1823,8 @@ thunar_list_model_set_folder (ThunarListModel *store,
     }
 
   /* notify listeners that we have a new folder */
-  g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_FOLDER]);
-  g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_NUM_FILES]);
+  _g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_FOLDER]);
+  _g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_NUM_FILES]);
   g_object_thaw_notify (G_OBJECT (store));
 }
 
@@ -1883,7 +1883,7 @@ thunar_list_model_set_folders_first (ThunarListModel *store,
 
   /* apply the new setting (re-sorting the store) */
   store->sort_folders_first = folders_first;
-  g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_FOLDERS_FIRST]);
+  _g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_FOLDERS_FIRST]);
   thunar_list_model_sort (store);
 }
 
@@ -1985,8 +1985,8 @@ thunar_list_model_set_show_hidden (ThunarListModel *store,
 
   /* notify listeners about the new setting */
   g_object_freeze_notify (G_OBJECT (store));
-  g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_NUM_FILES]);
-  g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_SHOW_HIDDEN]);
+  _g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_NUM_FILES]);
+  _g_object_notify_by_pspec (G_OBJECT (store), list_model_props[PROP_SHOW_HIDDEN]);
   g_object_thaw_notify (G_OBJECT (store));
 }
 

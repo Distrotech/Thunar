@@ -37,6 +37,7 @@ enum
   PROP_0,
   PROP_ACTION_GROUP,
   PROP_CURRENT_DIRECTORY,
+  N_PROPERTIES
 };
 
 
@@ -102,8 +103,9 @@ G_DEFINE_TYPE_WITH_CODE (ThunarHistory, thunar_history, G_TYPE_OBJECT,
 
 
 
-static GQuark thunar_history_display_name_quark;
-static GQuark thunar_history_gfile_quark;
+static GQuark      thunar_history_display_name_quark;
+static GQuark      thunar_history_gfile_quark;
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
 
 
 
@@ -111,6 +113,7 @@ static void
 thunar_history_class_init (ThunarHistoryClass *klass)
 {
   GObjectClass *gobject_class;
+  gpointer      g_iface;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->dispose = thunar_history_dispose;
@@ -127,22 +130,24 @@ thunar_history_class_init (ThunarHistoryClass *klass)
    * The #GtkActionGroup to which the #ThunarHistory<!---->s
    * actions "back" and "forward" should be connected.
    **/
-  g_object_class_install_property (gobject_class,
-                                   PROP_ACTION_GROUP,
-                                   g_param_spec_object ("action-group",
-                                                        "action-group",
-                                                        "action-group",
-                                                        GTK_TYPE_ACTION_GROUP,
-                                                        EXO_PARAM_READWRITE));
+  property_pspecs[PROP_ACTION_GROUP] =
+      g_param_spec_object ("action-group",
+                           "action-group",
+                           "action-group",
+                           GTK_TYPE_ACTION_GROUP,
+                           EXO_PARAM_READWRITE);
 
   /**
    * ThunarHistory::current-directory:
    *
    * Inherited from #ThunarNavigator.
    **/
-  g_object_class_override_property (gobject_class,
-                                    PROP_CURRENT_DIRECTORY,
-                                    "current-directory");
+  g_iface = g_type_default_interface_peek (THUNAR_TYPE_NAVIGATOR);
+  property_pspecs[PROP_CURRENT_DIRECTORY] =
+      g_param_spec_override ("current-directory",
+                             g_object_interface_find_property (g_iface, "current-directory"));
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
@@ -337,7 +342,7 @@ thunar_history_set_current_directory (ThunarNavigator *navigator,
     }
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (history), "current-directory");
+  _g_object_notify_by_pspec (G_OBJECT (history), property_pspecs[PROP_CURRENT_DIRECTORY]);
 }
 
 
@@ -735,7 +740,7 @@ thunar_history_set_action_group (ThunarHistory  *history,
     }
 
   /* notify listeners */
-  g_object_notify (G_OBJECT (history), "action-group");
+  _g_object_notify_by_pspec (G_OBJECT (history), property_pspecs[PROP_ACTION_GROUP]);
 }
 
 

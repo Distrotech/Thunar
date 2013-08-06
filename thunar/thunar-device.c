@@ -39,7 +39,8 @@ enum
   PROP_0,
   PROP_DEVICE,
   PROP_HIDDEN,
-  PROP_KIND
+  PROP_KIND,
+  N_PROPERTIES
 };
 
 
@@ -93,6 +94,10 @@ ThunarDeviceOperation;
 
 
 
+static GParamSpec *property_pspecs[N_PROPERTIES] = { NULL, };
+
+
+
 G_DEFINE_TYPE (ThunarDevice, thunar_device, G_TYPE_OBJECT)
 
 
@@ -107,33 +112,32 @@ thunar_device_class_init (ThunarDeviceClass *klass)
   gobject_class->get_property = thunar_device_get_property;
   gobject_class->set_property = thunar_device_set_property;
 
-  g_object_class_install_property (gobject_class,
-                                   PROP_DEVICE,
-                                   g_param_spec_object ("device",
-                                                        "device",
-                                                        "device",
-                                                        G_TYPE_OBJECT,
-                                                        EXO_PARAM_READWRITE
-                                                        | G_PARAM_CONSTRUCT_ONLY));
+  property_pspecs[PROP_DEVICE] =
+      g_param_spec_object ("device",
+                           "device",
+                           "device",
+                           G_TYPE_OBJECT,
+                           EXO_PARAM_READWRITE
+                           | G_PARAM_CONSTRUCT_ONLY);
 
-  g_object_class_install_property (gobject_class,
-                                   PROP_HIDDEN,
-                                   g_param_spec_boolean ("hidden",
-                                                         "hidden",
-                                                         "hidden",
-                                                         FALSE,
-                                                         EXO_PARAM_READWRITE));
+  property_pspecs[PROP_HIDDEN] =
+      g_param_spec_boolean ("hidden",
+                            "hidden",
+                            "hidden",
+                            FALSE,
+                            EXO_PARAM_READWRITE);
 
-  g_object_class_install_property (gobject_class,
-                                   PROP_KIND,
-                                   g_param_spec_uint ("kind",
-                                                      "kind",
-                                                      "kind",
-                                                      THUNAR_DEVICE_KIND_VOLUME,
-                                                      THUNAR_DEVICE_KIND_MOUNT_REMOTE,
-                                                      THUNAR_DEVICE_KIND_VOLUME,
-                                                      EXO_PARAM_READWRITE
-                                                      | G_PARAM_CONSTRUCT_ONLY));
+  property_pspecs[PROP_KIND] =
+      g_param_spec_uint ("kind",
+                         "kind",
+                         "kind",
+                         THUNAR_DEVICE_KIND_VOLUME,
+                         THUNAR_DEVICE_KIND_MOUNT_REMOTE,
+                         THUNAR_DEVICE_KIND_VOLUME,
+                         EXO_PARAM_READWRITE
+                         | G_PARAM_CONSTRUCT_ONLY);
+
+  g_object_class_install_properties (gobject_class, N_PROPERTIES, property_pspecs);
 }
 
 
