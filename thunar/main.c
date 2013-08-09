@@ -50,7 +50,6 @@
 
 /* --- globals --- */
 static gboolean opt_bulk_rename = FALSE;
-static gboolean opt_desktop = FALSE;
 static gboolean opt_daemon = FALSE;
 static gchar   *opt_sm_client_id = NULL;
 static gboolean opt_quit = FALSE;
@@ -62,7 +61,6 @@ static gboolean opt_version = FALSE;
 static GOptionEntry option_entries[] =
 {
   { "bulk-rename", 'B', 0, G_OPTION_ARG_NONE, &opt_bulk_rename, N_ ("Open the bulk rename dialog"), NULL, },
-  { "desktop", 0, 0, G_OPTION_ARG_NONE, &opt_desktop, N_ ("Let Thunar manage the desktop"), NULL, },
 #ifdef HAVE_DBUS
   { "daemon", 0, 0, G_OPTION_ARG_NONE, &opt_daemon, N_ ("Run in daemon mode"), NULL, },
 #else
@@ -224,7 +222,7 @@ main (int argc, char **argv)
       filenames = g_new (gchar *, 1);
       filenames[0] = NULL;
     }
-  else if (!opt_daemon && !opt_desktop)
+  else if (!opt_daemon)
     {
       /* use the current working directory */
       filenames = g_new (gchar *, 2);
@@ -236,8 +234,6 @@ main (int argc, char **argv)
   /* check if we can reuse an existing instance */
   if (opt_bulk_rename)
     result = thunar_dbus_client_bulk_rename (working_directory, filenames, TRUE, NULL, startup_id, NULL);
-  else if (opt_desktop)
-    result = thunar_dbus_client_manage_desktop (NULL);
   else if (filenames != NULL)
     result = thunar_dbus_client_launch_files (working_directory, filenames, NULL, startup_id, NULL);
   else
@@ -260,7 +256,7 @@ main (int argc, char **argv)
 
 #ifdef HAVE_DBUS
   /* setup daemon mode if requested and supported */
-  thunar_application_set_daemon (application, opt_daemon || opt_desktop);
+  thunar_application_set_daemon (application, opt_daemon);
 #endif
 
   /* use the Thunar icon as default for new windows */
@@ -272,11 +268,6 @@ main (int argc, char **argv)
       /* try to open the bulk rename dialog */
       if (!thunar_application_bulk_rename (application, working_directory, filenames, TRUE, NULL, startup_id, &error))
         goto error0;
-    }
-  else if (G_UNLIKELY (opt_desktop))
-    {
-      /* show desktop windows */
-      thunar_desktop_window_show_all ();
     }
   else if (filenames != NULL && !thunar_application_process_filenames (application, working_directory, filenames, NULL, startup_id, &error))
     {
@@ -304,7 +295,23 @@ error0:
 
       /* check if the name was requested successfully */
       if (!thunar_dbus_service_has_connection (dbus_service))
-        thunar_application_set_daemon (application, FALSE);
+        {
+          thunar_application_set_daemon (application, FALSE);
+
+          /* ask the running instance to manage the desktop */
+          if (!thunar_dbus_client_manage_desktop (&error))
+            {
+              g_printerr ("Thunar: %s\n", error->message);
+              g_clear_error (&error);
+            }
+        }
+      else
+        {
+          /* yeey, this instance is the active daemon, start the
+           * desktop (if enabled and not already taken by another
+           * application) */
+          thunar_desktop_window_show_all ();
+        }
 #endif
     }
   else

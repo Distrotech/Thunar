@@ -232,6 +232,7 @@ thunar_desktop_background_finalize (GObject *object)
   gdk_error_trap_push ();
   gdk_property_delete (root_window, gdk_atom_intern_static_string ("_XROOTPMAP_ID"));
   gdk_property_delete (root_window, gdk_atom_intern_static_string ("ESETROOT_PMAP_ID"));
+  gdk_flush ();
   gdk_error_trap_pop ();
 #endif
 
@@ -452,6 +453,8 @@ thunar_desktop_background_expose (ThunarDesktopBackground *background,
                        gdk_atom_intern_static_string ("_XROOTPMAP_ID"),
                        atom_pixmap, 32,
                        GDK_PROP_MODE_REPLACE, (guchar *) &pixmap_xid, 1);
+
+  gdk_flush ();
 #endif
 
   gdk_error_trap_pop ();
@@ -681,7 +684,7 @@ thunar_desktop_background_paint_finished (GObject      *source_object,
           thunar_desktop_background_expose (background, TRUE);
         }
     }
-  else if (fade_animation)
+  else if (!fade_animation)
     {
       /* animations are disabled, clear the window now */
       thunar_desktop_background_expose (background, TRUE);

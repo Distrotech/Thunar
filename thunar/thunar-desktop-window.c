@@ -26,6 +26,7 @@
 #include <thunar/thunar-private.h>
 #include <thunar/thunar-desktop-window.h>
 #include <thunar/thunar-desktop-background.h>
+#include <thunar/thunar-preferences.h>
 #include <thunar/thunar-application.h>
 
 #ifdef GDK_WINDOWING_X11
@@ -320,6 +321,16 @@ thunar_desktop_window_show_all (void)
   GtkWidget         *desktop;
   ThunarApplication *application;
   gboolean           managing_desktop;
+  gboolean           should_manage;
+  ThunarPreferences *preferences;
+
+  /* check if Thunar should manage the desktop */
+  preferences = thunar_preferences_get ();
+  g_object_get (preferences, "misc-manage-desktop", &should_manage, NULL);
+  g_object_unref (preferences);
+
+  if (!should_manage)
+    return;
 
   /* check if there are already desktop windows */
   application = thunar_application_get ();

@@ -79,6 +79,7 @@ enum
   PROP_MISC_FULL_PATH_IN_TITLE,
   PROP_MISC_HORIZONTAL_WHEEL_NAVIGATES,
   PROP_MISC_IMAGE_SIZE_IN_STATUSBAR,
+  PROP_MISC_MANAGE_DESKTOP,
   PROP_MISC_MIDDLE_CLICK_IN_TAB,
   PROP_MISC_RECURSIVE_PERMISSIONS,
   PROP_MISC_REMEMBER_GEOMETRY,
@@ -538,6 +539,19 @@ thunar_preferences_class_init (ThunarPreferencesClass *klass)
   property_pspecs[PROP_MISC_IMAGE_SIZE_IN_STATUSBAR] =
       g_param_spec_boolean ("misc-image-size-in-statusbar",
                             "MiscImageSizeInStatusbar",
+                            NULL,
+                            FALSE,
+                            EXO_PARAM_READWRITE);
+
+  /**
+   * ThunarPreferences:misc-manage-desktop:
+   *
+   * If Thunar should try to take control over the desktop to
+   * manage the backgrounds and icons.
+   **/
+  property_pspecs[PROP_MISC_MANAGE_DESKTOP] =
+      g_param_spec_boolean ("misc-manage-desktop",
+                            "MiscManageDesktop",
                             NULL,
                             FALSE,
                             EXO_PARAM_READWRITE);
