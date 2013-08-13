@@ -53,6 +53,7 @@ static gboolean opt_bulk_rename = FALSE;
 static gboolean opt_daemon = FALSE;
 static gchar   *opt_sm_client_id = NULL;
 static gboolean opt_quit = FALSE;
+static gboolean opt_no_desktop = FALSE;
 static gboolean opt_version = FALSE;
 
 
@@ -63,8 +64,10 @@ static GOptionEntry option_entries[] =
   { "bulk-rename", 'B', 0, G_OPTION_ARG_NONE, &opt_bulk_rename, N_ ("Open the bulk rename dialog"), NULL, },
 #ifdef HAVE_DBUS
   { "daemon", 0, 0, G_OPTION_ARG_NONE, &opt_daemon, N_ ("Run in daemon mode"), NULL, },
+  { "no-desktop", 0, 0, G_OPTION_ARG_NONE, &opt_no_desktop, N_ ("Do not try to control the desktop in daemon mode"), NULL, },
 #else
   { "daemon", 0, 0, G_OPTION_ARG_NONE, &opt_daemon, N_ ("Run in daemon mode (not supported)"), NULL, },
+  { "no-desktop", 0, 0, G_OPTION_ARG_NONE, &opt_no_desktop, N_ ("Do not try to control the desktop (not supported)"), NULL, },
 #endif
   { "sm-client-id", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &opt_sm_client_id, NULL, NULL, },
 #ifdef HAVE_DBUS
@@ -299,13 +302,14 @@ error0:
           thunar_application_set_daemon (application, FALSE);
 
           /* ask the running instance to manage the desktop */
-          if (!thunar_dbus_client_manage_desktop (&error))
+          if (!opt_no_desktop
+              && !thunar_dbus_client_manage_desktop (&error))
             {
               g_printerr ("Thunar: %s\n", error->message);
               g_clear_error (&error);
             }
         }
-      else
+      else if (!opt_no_desktop)
         {
           /* yeey, this instance is the active daemon, start the
            * desktop (if enabled and not already taken by another
