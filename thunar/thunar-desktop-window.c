@@ -62,6 +62,8 @@ struct _ThunarDesktopWindow
   GtkWindow __parent__;
 
   ThunarDesktopBackground *background;
+
+  guint                    screen_changed_idle_id;
 };
 
 
@@ -115,14 +117,11 @@ thunar_desktop_window_size_request (GtkWidget      *widget,
 
 
 
-static void
-thunar_desktop_window_screen_changed (GdkScreen           *screen,
-                                      ThunarDesktopWindow *window)
+static gboolean
+thunar_desktop_window_screen_changed_idle (gpointer data)
 {
-  GdkWindow *gdk_window;
-
-  _thunar_return_if_fail (GDK_IS_SCREEN (screen));
-  _thunar_return_if_fail (THUNAR_DESKTOP_WINDOW (window));
+  ThunarDesktopWindow *window = THUNAR_DESKTOP_WINDOW (data);
+  GdkWindow           *gdk_window;
 
   /* release background */
   if (window->background != NULL)
@@ -134,6 +133,34 @@ thunar_desktop_window_screen_changed (GdkScreen           *screen,
   /* allocate bg and set it on the window */
   gdk_window = gtk_widget_get_window (GTK_WIDGET (window));
   window->background = thunar_desktop_background_new (gdk_window);
+
+  return FALSE;
+}
+
+
+
+static void
+thunar_desktop_window_screen_changed_idle_destoyed (gpointer data)
+{
+  THUNAR_DESKTOP_WINDOW (data)->screen_changed_idle_id = 0;
+}
+
+
+
+static void
+thunar_desktop_window_screen_changed (GdkScreen           *screen,
+                                      ThunarDesktopWindow *window)
+{
+  _thunar_return_if_fail (GDK_IS_SCREEN (screen));
+  _thunar_return_if_fail (THUNAR_DESKTOP_WINDOW (window));
+
+  if (window->screen_changed_idle_id == 0)
+    {
+      /* avoid multiple calls of screen changed during session startup */
+      window->screen_changed_idle_id =
+          g_idle_add_full (G_PRIORITY_LOW, thunar_desktop_window_screen_changed_idle,
+                           window, thunar_desktop_window_screen_changed_idle_destoyed);
+    }
 }
 
 
@@ -179,6 +206,10 @@ thunar_desktop_window_unrealize (GtkWidget *widget)
   ThunarDesktopWindow *window = THUNAR_DESKTOP_WINDOW (widget);
   GdkScreen           *screen;
   GdkWindow           *root;
+
+  /* no more new backgrounds */
+  if (window->screen_changed_idle_id != 0)
+    g_source_remove (window->screen_changed_idle_id);
 
   /* drop background */
   if (window->background != NULL)
