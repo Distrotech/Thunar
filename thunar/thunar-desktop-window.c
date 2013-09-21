@@ -121,6 +121,9 @@ thunar_desktop_window_screen_changed (GdkScreen           *screen,
 {
   GdkWindow *gdk_window;
 
+  _thunar_return_if_fail (GDK_IS_SCREEN (screen));
+  _thunar_return_if_fail (THUNAR_DESKTOP_WINDOW (window));
+
   /* release background */
   if (window->background != NULL)
     {
@@ -159,9 +162,9 @@ thunar_desktop_window_realize (GtkWidget *widget)
                        GDK_PROP_MODE_REPLACE, (gpointer) &xid, 1);
 
   /* watch screen changes */
-  g_signal_connect_swapped (G_OBJECT (screen), "size-changed",
+  g_signal_connect (G_OBJECT (screen), "size-changed",
     G_CALLBACK (thunar_desktop_window_screen_changed), widget);
-  g_signal_connect_swapped (G_OBJECT (screen), "monitors-changed",
+  g_signal_connect (G_OBJECT (screen), "monitors-changed",
     G_CALLBACK (thunar_desktop_window_screen_changed), widget);
 
   /* prepare bg */

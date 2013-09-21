@@ -453,9 +453,9 @@ thunar_desktop_background_expose (ThunarDesktopBackground *background,
                        gdk_atom_intern_static_string ("_XROOTPMAP_ID"),
                        atom_pixmap, 32,
                        GDK_PROP_MODE_REPLACE, (guchar *) &pixmap_xid, 1);
+#endif
 
   gdk_flush ();
-#endif
 
   gdk_error_trap_pop ();
 }
